@@ -11,6 +11,7 @@ import {
     navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false);
@@ -34,6 +35,7 @@ export default function Header() {
 
                     <div className="gap-2 hidden md:flex">
                         <AuthButtons isLoggedIn={isLoggedIn} onClose={() => setIsOpen(false)} />
+                        <ThemeToggle />
                     </div>
 
                     <Button
@@ -152,6 +154,7 @@ function MobileMenu({
                         </Button>
                     </>
                 )}
+                <ThemeToggle />
             </div>
         </div>
     );
