@@ -24,7 +24,7 @@ export default function RootLayout({
                 >
                     <Header />
                     <div className="pt-6">
-                    {children}
+                        {children}
                     </div>
                 </ThemeProvider>
             </body>
