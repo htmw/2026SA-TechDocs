@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/header";
-import { ThemeProvider } from "@/components/theme-provider"
+import Providers from "@/components/providers/providers";
 
 export const metadata: Metadata = {
     title: "NutriAI",
@@ -16,17 +16,10 @@ export default function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <body>
-                <ThemeProvider
-                    attribute="class"
-                    defaultTheme="system"
-                    enableSystem
-                    disableTransitionOnChange
-                >
+                <Providers>
                     <Header />
-                    <div className="pt-6">
-                        {children}
-                    </div>
-                </ThemeProvider>
+                    {children}
+                </Providers>
             </body>
         </html>
     );
