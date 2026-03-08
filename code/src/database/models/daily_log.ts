@@ -1,7 +1,8 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
 export interface IDailyLog {
-    user_id: string;
+    _id: Types.ObjectId;
+    user_id: Types.ObjectId;
     date: Date;
     morning_weight: number;
     energy_rating: number; // 1-10 scale
@@ -82,11 +83,9 @@ const HungerEventSchema = new Schema(
         },
         suggested_actions: {
             type: [String],
-            required: true,
         },
         reasoning: {
             type: String,
-            required: true,
         },
     },
     { _id: false }
@@ -114,11 +113,9 @@ const CravingEventSchema = new Schema(
         },
         suggested_actions: {
             type: [String],
-            required: true,
         },
         reasoning: {
             type: String,
-            required: true,
         },
     },
     { _id: false }
@@ -174,7 +171,8 @@ const ComplianceSchema = new Schema(
 
 const DailyLogSchema = new Schema({
     user_id: {
-        type: String,
+        type: Schema.Types.ObjectId,
+        ref: "User",
         required: true,
     },
     date: {
@@ -203,23 +201,18 @@ const DailyLogSchema = new Schema({
     },
     meals: {
         type: [MealLogSchema],
-        required: true,
     },
     hunger_events: {
         type: [HungerEventSchema],
-        required: true,
     },
     craving_events: {
         type: [CravingEventSchema],
-        required: true,
     },
     prediction: {
         type: PredictionSchema,
-        required: true,
     },
     compliance: {
         type: ComplianceSchema,
-        required: true,
     },
 });
 

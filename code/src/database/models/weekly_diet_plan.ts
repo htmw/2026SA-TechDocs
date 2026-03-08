@@ -1,18 +1,5 @@
-import { Model, Schema, Types, model } from 'mongoose';
-
-export interface IWeeklyDietPlan {
-    user_id: Types.ObjectId;
-    week_start: Date;
-    meals: IMealPlan[];
-}
-
-export interface IMealPlan {
-    day: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
-    breakfast: string;
-    lunch: string;
-    dinner: string;
-    snacks?: string;
-}
+import { IWeeklyDietPlan } from '@/lib/types/mongo_daily_log_types';
+import { Model, Schema, model } from 'mongoose';
 
 //Methods Interface
 export interface IWeeklyDietPlanMethods {
