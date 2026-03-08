@@ -4,7 +4,13 @@ import { ClientUser } from "@/lib/types/mongo_user_types"
 export interface ApiError {
     code: string
     message: string
-    fields?: Record<string, string | string[] | undefined>
+    fields?: Record<
+        string,
+        string |
+        string[] |
+        Record<string, string | Record<string, string> | string[] | undefined> |
+        undefined
+    >
 }
 
 export interface ApiResponse<T> {
@@ -13,7 +19,7 @@ export interface ApiResponse<T> {
     error?: ApiError
 }
 
-export function createErrorResponse(code: string, message: string, fields?: Record<string, string | string[] | undefined>): ApiResponse<null> {
+export function createErrorResponse(code: string, message: string, fields?: Record<string, string | string[] | Record<string, string | Record<string, string> | string[] | undefined> | undefined>): ApiResponse<null> {
     return {
         success: false,
         error: {

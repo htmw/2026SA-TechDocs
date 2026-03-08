@@ -1,6 +1,7 @@
 "use client"
 
 import { LoginResponseBody } from "@/app/api/auth/login/route"
+import { useAppForm } from "@/components/form/form"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -11,12 +12,10 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Spinner } from "@/components/ui/spinner"
 import { useAuth } from "@/lib/hooks/useAuthProvider"
 import type { ApiResponse, AuthState } from "@/lib/types/shared"
 import { LoginZodSchema } from "@/lib/zod_schemas/login_schema"
-import { useForm } from "@tanstack/react-form-nextjs"
 import Link from "next/dist/client/link"
 import { useRouter, useSearchParams } from "next/navigation"
 
@@ -26,10 +25,10 @@ export default function Login() {
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get('callbackUrl') || "/";
 
-    const form = useForm({
+    const form = useAppForm({
         defaultValues: {
-            email: '',
-            password: '',
+            email: "",
+            password: "",
         },
         validators: {
             onBlur: LoginZodSchema,
@@ -80,13 +79,7 @@ export default function Login() {
                 </CardAction>
             </CardHeader>
             <CardContent>
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        form.handleSubmit()
-                    }}
-                >
+                <form>
                     <form.Subscribe
                         selector={(state) => state.errorMap.onSubmit}
                         children={(submitError) => {
@@ -97,80 +90,25 @@ export default function Login() {
                         }}
                     />
                     <div className="flex flex-col gap-6">
-                        <div className="grid gap-2">
-                            <form.Field
-                                name="email"
-                                children={(field) => {
-                                    const showError = !field.state.meta.isValid && field.state.meta.isDirty;
-
-                                    return (
-                                        <Field data-invalid={showError}>
-                                            <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-                                            <Input
-                                                id={field.name}
-                                                name={field.name}
-                                                value={field.state.value}
-                                                type="email"
-                                                onBlur={field.handleBlur}
-                                                onChange={(e) => field.handleChange(e.target.value)}
-                                                placeholder="user@nutriai.com"
-                                                aria-invalid={showError}
-                                            />
-                                            {showError && (
-                                                <FieldError errors={field.state.meta.errors} />
-                                            )}
-                                        </Field>
-                                    )
-                                }}
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <form.Field
-                                name="password"
-                                children={(field) => {
-                                    const showError = !field.state.meta.isValid && field.state.meta.isDirty;
-
-                                    return (
-                                        <Field data-invalid={showError}>
-                                            <div className="flex items-center">
-                                                <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                                                <a
-                                                    href="#"
-                                                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                                                >
-                                                    Forgot your password?
-                                                </a>
-                                            </div>
-                                            <Input
-                                                id={field.name}
-                                                name={field.name}
-                                                value={field.state.value}
-                                                type="password"
-                                                onBlur={field.handleBlur}
-                                                onChange={(e) => field.handleChange(e.target.value)}
-                                                placeholder="Enter your password"
-                                                aria-invalid={showError}
-                                            />
-                                            {showError && (
-                                                <FieldError errors={field.state.meta.errors} />
-                                            )}
-                                        </Field>
-                                    )
-                                }}
-                            />
-                        </div>
+                        <form.AppField
+                            name="email"
+                            children={(field) =>
+                                <field.EmailField label="Email" placeholder="user@nutriai.com" />
+                            }
+                        />
+                        <form.AppField
+                            name="password"
+                            children={(field) =>
+                                <field.PasswordField label="Password" />
+                            }
+                        />
                     </div>
                 </form>
             </CardContent>
             <CardFooter className="flex-col gap-2">
-                <form.Subscribe
-                    selector={(state) => [state.canSubmit, state.isSubmitting]}
-                    children={([canSubmit, isSubmitting]) => (
-                        <Button type="submit" className="w-full" disabled={isSubmitting} onClick={() => form.handleSubmit({ submitAction: 'continue' })}>
-                            {isSubmitting ? '...' : 'Login'}
-                        </Button>
-                    )}
-                />
+                <form.AppForm>
+                    <form.SubmitButton label="Login" submittingLabel={<Spinner />} />
+                </form.AppForm>
             </CardFooter>
         </Card>
     )
