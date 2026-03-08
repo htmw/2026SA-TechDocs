@@ -1,10 +1,11 @@
 import { getCurrentSession } from "@/app/actions";
 import { createErrorResponse, createSuccessResponse } from "@/lib/types/shared";
+import { normalizeDocument } from "@/lib/utils/database_utils";
 import { SetupZodSchema } from "@/lib/zod_schemas/login_schema";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 
-export async function POST(req: NextRequest, res: NextResponse){
+export async function POST(req: NextRequest){
 
     //Body must be JSON
     let body: unknown;
@@ -35,5 +36,8 @@ export async function POST(req: NextRequest, res: NextResponse){
     //Create user profile
     await user.completeFirstTimeSetup(parsed.data);
 
-    return NextResponse.json(createSuccessResponse({ user: user.getPublicProfile() }), { status: 200 });
+    const payload = { user: user.getPublicProfile() };
+    const normalizedPayload = normalizeDocument(payload);
+
+    return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 200 });
 } 

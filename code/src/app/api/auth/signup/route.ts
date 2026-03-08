@@ -5,9 +5,10 @@ import { SignupZodSchema } from "@/lib/zod_schemas/login_schema";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 import { User } from "@/database/models/user";
+import { normalizeDocument } from "@/lib/utils/database_utils";
 
-export async function POST(req: NextRequest, res: NextResponse) {
-    
+export async function POST(req: NextRequest) {
+
     //Body must be JSON
     let body: unknown;
     try {
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
         user: user!.getPublicProfile(),
         session: session!,
     };
+    const normalizedPayload = normalizeDocument(payload);
 
-    return NextResponse.json(createSuccessResponse(payload), { status: 200 });
+    return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 200 });
 }

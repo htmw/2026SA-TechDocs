@@ -7,13 +7,14 @@ import { User } from "@/database/models/user";
 import { Session } from "@/database/models/session";
 import { ClientUser } from "@/lib/types/mongo_user_types";
 import { ClientSession } from "@/lib/types/mongo_session_types";
+import { normalizeDocument } from "@/lib/utils/database_utils";
 
 export interface LoginResponseBody {
     user: ClientUser,
     session: ClientSession,
 }
 
-export async function POST(req: NextRequest, res: NextResponse) {
+export async function POST(req: NextRequest) {
 
     let body: unknown;
     try {
@@ -62,5 +63,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
         session: session!,
     };
 
-    return NextResponse.json(createSuccessResponse(payload), { status: 200 });
+    const normalizedPayload = normalizeDocument(payload);
+
+    return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 200 });
 }
