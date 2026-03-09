@@ -1,4 +1,5 @@
 import { ToPrimitive } from "@/lib/types/mongo_primitive_types";
+import { AvgCalories, AvgSleep, CurrentEnergy, Gender } from "@/lib/zod_schemas/profile_setup_schema";
 import { Types } from "mongoose";
 
 export interface IUser {
@@ -18,13 +19,12 @@ export interface IUserProfile {
     height?: number;
     weight?: number;
     occupation?: string;
-    fitness_level?: string;
+    fitness_level?: number;
     hobbies?: string[];
-    avg_calories?: number;
-    current_energy?: number;
-    gender?: string;
-    avg_sleep?: number;
-    bmi?: number;
+    avg_calories?: AvgCalories;
+    current_energy?: CurrentEnergy;
+    gender?: Gender;
+    avg_sleep?: AvgSleep;
 }
 
 export type IPublicUser =

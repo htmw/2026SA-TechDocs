@@ -4,14 +4,14 @@ import { useFieldContext } from "@/components/form/form"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
-export function TextField({ 
+export function NumberField({ 
     label, 
     required, 
-    placeholder,
+    placeholder 
 }: { 
     label: string, 
     required?: boolean, 
-    placeholder?: string,
+    placeholder?: string 
 }) {
     const field = useFieldContext<string>();
     const showError = !field.state.meta.isValid && field.state.meta.isTouched;
@@ -27,10 +27,10 @@ export function TextField({
                     id={field.name}
                     name={field.name}
                     value={field.state.value}
-                    type="text"
+                    type="number"
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
-                    placeholder={placeholder || ""}
+                    placeholder={placeholder}
                     aria-invalid={showError}
                 />
                 {showError && (

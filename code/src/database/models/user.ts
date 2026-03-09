@@ -1,51 +1,47 @@
 import { IPublicUser, IUser, IUserProfile } from "@/lib/types/mongo_user_types";
+import { avg_calories_enum, avg_sleep_enum, current_energy_enum, gender_enum } from "@/lib/zod_schemas/profile_setup_schema";
 import mongoose, { Schema, Model, HydratedDocument, Types } from "mongoose";
 
 export const UserProfileSchema = new Schema<IUserProfile>(
     {
-        dob: { 
+        dob: {
             type: Date,
         },
-        height: { 
-            type: Number, 
-            min: 0, 
+        height: {
+            type: Number,
+            min: 0,
         },
-        weight: { 
-            type: Number, 
-            min: 0, 
+        weight: {
+            type: Number,
+            min: 0,
         },
-        occupation: { 
-            type: String, 
-            trim: true, 
-        },
-        fitness_level: { 
-            type: String, 
+        occupation: {
+            type: String,
             trim: true,
         },
-        hobbies: [{ 
-            type: String, 
-            trim: true 
+        fitness_level: {
+            type: Number,
+        },
+        hobbies: [{
+            type: String,
+            trim: true
         }],
-        avg_calories: { 
-            type: Number, 
-            min: 0, 
+        avg_calories: {
+            type: String,
+            enum: avg_calories_enum,
         },
-        current_energy: { 
-            type: Number, 
-            min: 0, 
+        current_energy: {
+            type: String,
+            enum: current_energy_enum,
         },
-        gender: { 
-            type: String, 
-            trim: true, 
+        gender: {
+            type: String,
+            enum: gender_enum,
         },
-        avg_sleep: { 
-            type: Number, 
-            min: 0, 
-        },
-        bmi: { 
-            type: Number, 
-            min: 0, 
-        },
+        avg_sleep: {
+            type: String,
+            enum: avg_sleep_enum,
+        }
     },
     { _id: false }
 );
@@ -103,7 +99,7 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
 );
 
 //Static Methods
-UserSchema.statics.getAll = function(){
+UserSchema.statics.getAll = function () {
     return this.find({});
 }
 
@@ -123,11 +119,11 @@ UserSchema.statics.getUserPassword = async function (id: Types.ObjectId) {
     return user.password;
 };
 
-UserSchema.statics.createUserAccount = async function(
+UserSchema.statics.createUserAccount = async function (
     name: string,
     email: string,
     password: string,
-){
+) {
     const existingUser = await this.findByEmail(email);
     if (existingUser) {
         //TODO: throw more detailed error
@@ -165,7 +161,6 @@ UserSchema.methods.completeFirstTimeSetup = async function (profileData: Partial
     this.setup_complete = true;
     return await this.updateProfile(profileData);
 }
-
 
 UserSchema.methods.updateProfile = async function (profileData: Partial<IUserProfile>) {
     this.profile = {

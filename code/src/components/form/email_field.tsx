@@ -5,14 +5,25 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
 
-export function EmailField({ label, placeholder }: { label: string, placeholder?: string }) {
+export function EmailField({
+    label,
+    placeholder,
+    required
+}: {
+    label: string,
+    required?: boolean,
+    placeholder?: string
+}) {
     const field = useFieldContext<string>();
-    const showError = field.state.meta.isTouched && !field.state.meta.isValid;
+    const showError = !field.state.meta.isValid && field.state.meta.isTouched;
 
     return (
         <Field data-invalid={showError}>
             <div className="grid gap-2">
-                <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+                <FieldLabel htmlFor={field.name}>
+                    {label}
+                    {required && <span className="text-destructive">*</span>}
+                </FieldLabel>
                 <Input
                     id={field.name}
                     name={field.name}

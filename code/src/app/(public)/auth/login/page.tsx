@@ -83,7 +83,6 @@ export default function Login() {
                     <form.Subscribe
                         selector={(state) => state.errorMap.onSubmit}
                         children={(submitError) => {
-                            console.log(submitError);
                             return submitError ? (
                                 <div className="flex flex-col gap-6 text-sm text-red-500">{String(submitError)}</div>
                             ) : null

@@ -47,7 +47,7 @@ export default function Signup() {
                 const data = await res.json() as ApiResponse<LoginResponseBody>;
 
                 if (data.success) {
-                    router.replace(callbackUrl);
+                    router.replace("/setup");
                     router.refresh();
                     setAuthState(data.data as AuthState);
                     return;

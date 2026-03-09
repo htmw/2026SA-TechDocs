@@ -1,7 +1,7 @@
 import { getCurrentSession } from "@/app/actions";
 import { createErrorResponse, createSuccessResponse } from "@/lib/types/shared";
 import { normalizeDocument } from "@/lib/utils/database_utils";
-import { ProfileZodSchema } from "@/lib/zod_schemas/login_schema";
+import { ProfileZodSchema } from "@/lib/zod_schemas/profile_setup_schema";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     }
 
     //Validate body with profile schema
-    const parsed = ProfileZodSchema.safeParse(body);
+    const parsed = ProfileZodSchema.partial().safeParse(body);
     if (!parsed.success) {
         return NextResponse.json(createErrorResponse("VALIDATION_ERROR", "The request body is not valid", z.flattenError(parsed.error).fieldErrors), { status: 422 });
     }
