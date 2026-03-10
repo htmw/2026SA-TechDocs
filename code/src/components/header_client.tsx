@@ -5,9 +5,7 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme_toggle";
-import { logoutAction } from "@/app/actions";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/hooks/useAuthProvider";
+import { useLogout } from "@/lib/hooks/useLogout";
 
 type NavLink = {
     href: string;
@@ -63,20 +61,8 @@ function AuthButtons({
     isLoggedIn: boolean;
     onClose?: () => void;
 }) {
-    const { setAuthState } = useAuth();
-    const router = useRouter();
-
     if (isLoggedIn) {
-        const logout = async (e: React.MouseEvent<HTMLAnchorElement>) => {
-            e.preventDefault();
-            const res = await logoutAction();
-            if (res.success) {
-                router.push("/");
-                router.refresh();
-                setAuthState({ user: null, session: null });
-            }
-            onClose?.();
-        };
+        const { logout } = useLogout();
 
         return (
             <>
@@ -86,7 +72,7 @@ function AuthButtons({
                     </Link>
                 </Button>
                 <Button asChild variant="ghost" className="flex-1">
-                    <Link href="/" onClick={logout}>
+                    <Link href="/" onClick={() => logout(onClose)}>
                         Logout
                     </Link>
                 </Button>
