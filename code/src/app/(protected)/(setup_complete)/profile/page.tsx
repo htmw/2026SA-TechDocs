@@ -91,7 +91,7 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="mx-auto max-w-4xl p-6">
+        <div className="mx-auto max-w-4xl">
             {/* screen heading */}
             <div className="mb-6">
                 <h1 className="text-3xl font-bold">Build Your Profile</h1>

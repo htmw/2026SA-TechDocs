@@ -13,10 +13,5 @@ export default async function ProtectedLayout({
         return <ClientRedirectWrapper />;
     }
 
-    //redirect to setup if logged in but setup not complete
-    if(user && !user.setup_complete){
-        return redirect("/setup");
-    }
-
     return <>{children}</>;
 }
