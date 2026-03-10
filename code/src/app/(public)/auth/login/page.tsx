@@ -23,7 +23,7 @@ export default function Login() {
     const { setAuthState } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const callbackUrl = searchParams.get('callbackUrl') || "/";
+    const callbackUrl = searchParams.get('callbackUrl') || "/dashboard";
 
     const form = useAppForm({
         defaultValues: {
@@ -64,51 +64,56 @@ export default function Login() {
     })
 
     return (
-        <Card className="w-full">
-            <CardHeader>
-                <CardTitle>Login to your account</CardTitle>
-                <CardDescription>
-                    Enter your email below to login to your account
-                </CardDescription>
-                <CardAction>
-                    <Button asChild variant="link">
-                        <Link href="/auth/signup">
-                            Sign Up
-                        </Link>
-                    </Button>
-                </CardAction>
-            </CardHeader>
-            <CardContent>
-                <form>
-                    <form.Subscribe
-                        selector={(state) => state.errorMap.onSubmit}
-                        children={(submitError) => {
-                            return submitError ? (
-                                <div className="flex flex-col gap-6 text-sm text-red-500">{String(submitError)}</div>
-                            ) : null
-                        }}
-                    />
-                    <div className="flex flex-col gap-6">
-                        <form.AppField
-                            name="email"
-                            children={(field) =>
-                                <field.EmailField label="Email" placeholder="user@nutriai.com" />
-                            }
-                        />
-                        <form.AppField
-                            name="password"
-                            children={(field) =>
-                                <field.PasswordField label="Password" />
-                            }
-                        />
-                    </div>
-                </form>
-            </CardContent>
-            <CardFooter className="flex-col gap-2">
+        <form
+            onSubmit={(e) => {
+                e.preventDefault()
+                form.handleSubmit()
+            }}
+        >
+            <Card className="w-full">
+                <CardHeader>
+                    <CardTitle>Login to your account</CardTitle>
+                    <CardDescription>
+                        Enter your email below to login to your account
+                    </CardDescription>
+                    <CardAction>
+                        <Button asChild variant="link">
+                            <Link href="/auth/signup">
+                                Sign Up
+                            </Link>
+                        </Button>
+                    </CardAction>
+                </CardHeader>
                 <form.AppForm>
-                    <form.SubmitButton label="Login" submittingLabel={<Spinner />} />
+                    <CardContent>
+                        <form.Subscribe
+                            selector={(state) => state.errorMap.onSubmit}
+                            children={(submitError) => {
+                                return submitError ? (
+                                    <div className="flex flex-col gap-6 text-sm text-red-500">{String(submitError)}</div>
+                                ) : null
+                            }}
+                        />
+                        <div className="flex flex-col gap-6">
+                            <form.AppField
+                                name="email"
+                                children={(field) =>
+                                    <field.EmailField label="Email" placeholder="user@nutriai.com" />
+                                }
+                            />
+                            <form.AppField
+                                name="password"
+                                children={(field) =>
+                                    <field.PasswordField label="Password" />
+                                }
+                            />
+                        </div>
+                    </CardContent>
+                    <CardFooter className="flex-col gap-2">
+                        <form.SubmitButton label="Login" submittingLabel={<Spinner />} />
+                    </CardFooter>
                 </form.AppForm>
-            </CardFooter>
-        </Card>
+            </Card>
+        </form>
     )
 }

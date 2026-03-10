@@ -1,6 +1,7 @@
 "use client"
 
-import { useFieldContext } from "@/components/form/form"
+import React from "react";
+import { useFieldContext, useFormContext } from "@/components/form/form"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
@@ -15,7 +16,17 @@ export function EmailField({
     placeholder?: string
 }) {
     const field = useFieldContext<string>();
-    const showError = !field.state.meta.isValid && field.state.meta.isTouched;
+    const form = useFormContext();
+
+    // only show errors after the field has been touched at least once,
+    // and hide them while the field is active (focused again). 
+    // also display errors when the form is being submitted so that untouched
+    // fields reveal validation on button press.
+    const [isFocused, setIsFocused] = React.useState(false);
+    const showError =
+        !field.state.meta.isValid &&
+        (field.state.meta.isTouched || form.state.isSubmitting) &&
+        !isFocused;
 
     return (
         <Field data-invalid={showError}>
@@ -29,7 +40,16 @@ export function EmailField({
                     name={field.name}
                     value={field.state.value}
                     type="email"
-                    onBlur={field.handleBlur}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => {
+                        field.handleBlur();
+                        setIsFocused(false);
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            field.handleBlur();
+                        }
+                    }}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder={placeholder || ""}
                     aria-invalid={showError}

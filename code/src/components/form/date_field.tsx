@@ -1,6 +1,6 @@
 "use client"
 
-import { useFieldContext } from "@/components/form/form"
+import { useFieldContext, useFormContext } from "@/components/form/form"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -26,7 +26,12 @@ export function DateField({
     const [date, setDate] = React.useState<Date | undefined>(undefined)
 
     const field = useFieldContext<string>();
-    const showError = !field.state.meta.isValid && field.state.meta.isTouched;
+    const form = useFormContext();
+    const [isFocused, setIsFocused] = React.useState(false);
+    const showError =
+        !field.state.meta.isValid &&
+        (field.state.meta.isTouched || form.state.isSubmitting) &&
+        !isFocused;
 
     return (
         <Field data-invalid={showError}>
@@ -41,6 +46,13 @@ export function DateField({
                             variant="outline"
                             id="date"
                             className="justify-start font-normal"
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={() => setIsFocused(false)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    field.handleBlur();
+                                }
+                            }}
                         >
                             {date ? date.toLocaleDateString() : "Select date"}
                         </Button>

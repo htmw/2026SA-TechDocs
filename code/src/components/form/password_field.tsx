@@ -1,6 +1,7 @@
 "use client"
 
-import { useFieldContext } from "@/components/form/form"
+import React from "react";
+import { useFieldContext, useFormContext } from "@/components/form/form"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
@@ -16,7 +17,12 @@ export function PasswordField({
     placeholder?: string 
 }) {
     const field = useFieldContext<string>();
-    const showError = !field.state.meta.isValid && field.state.meta.isTouched;
+    const form = useFormContext();
+    const [isFocused, setIsFocused] = React.useState(false);
+    const showError =
+        !field.state.meta.isValid &&
+        (field.state.meta.isTouched || form.state.isSubmitting) &&
+        !isFocused;
 
     return (
         <Field data-invalid={showError}>
@@ -40,7 +46,16 @@ export function PasswordField({
                     name={field.name}
                     value={field.state.value}
                     type="password"
-                    onBlur={field.handleBlur}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => {
+                        field.handleBlur();
+                        setIsFocused(false);
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            field.handleBlur();
+                        }
+                    }}
                     onChange={(e) => field.handleChange(e.target.value)}
                     placeholder={placeholder || ""}
                     aria-invalid={showError}

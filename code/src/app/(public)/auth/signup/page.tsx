@@ -17,13 +17,11 @@ import { useAuth } from "@/lib/hooks/useAuthProvider"
 import { ApiResponse, AuthState } from "@/lib/types/shared"
 import { SignupZodSchema } from "@/lib/zod_schemas/login_schema"
 import Link from "next/dist/client/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 export default function Signup() {
     const { setAuthState } = useAuth();
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const callbackUrl = searchParams.get('callbackUrl') || "/";
 
     const form = useAppForm({
         defaultValues: {
@@ -34,7 +32,6 @@ export default function Signup() {
         },
         validators: {
             onBlur: SignupZodSchema,
-
             onSubmitAsync: async ({ value }) => {
                 const res = await fetch('/api/auth/signup', {
                     method: 'POST',
@@ -66,64 +63,69 @@ export default function Signup() {
     })
 
     return (
-        <Card className="w-full">
-            <CardHeader>
-                <CardTitle>Sign Up</CardTitle>
-                <CardDescription>
-                    Make an account today to start using NutriAI
-                </CardDescription>
-                <CardAction>
-                    <Button asChild variant="link">
-                        <Link href="/auth/login">
-                            Login
-                        </Link>
-                    </Button>
-                </CardAction>
-            </CardHeader>
-            <CardContent>
+        <form
+            onSubmit={(e) => {
+                e.preventDefault()
+                form.handleSubmit()
+            }}
+        >
+            <Card className="w-full">
+                <CardHeader>
+                    <CardTitle>Sign Up</CardTitle>
+                    <CardDescription>
+                        Make an account today to start using NutriAI
+                    </CardDescription>
+                    <CardAction>
+                        <Button asChild variant="link">
+                            <Link href="/auth/login">
+                                Login
+                            </Link>
+                        </Button>
+                    </CardAction>
+                </CardHeader>
                 <form.AppForm>
-                    <form.Subscribe
-                        selector={(state) => state.errorMap.onSubmit}
-                        children={(submitError) => {
-                            console.log(submitError);
-                            return submitError ? (
-                                <div className="flex flex-col gap-6 text-sm text-red-500">{String(submitError)}</div>
-                            ) : null
-                        }}
-                    />
-                    <div className="flex flex-col gap-6">
-                        <form.AppField
-                            name="name"
-                            children={(field) =>
-                                <field.TextField label="Name" placeholder="John Doe" />
-                            }
+                    <CardContent>
+                        <form.Subscribe
+                            selector={(state) => state.errorMap.onSubmit}
+                            children={(submitError) => {
+                                console.log(submitError);
+                                return submitError ? (
+                                    <div className="flex flex-col gap-6 text-sm text-red-500">{String(submitError)}</div>
+                                ) : null
+                            }}
                         />
-                        <form.AppField
-                            name="email"
-                            children={(field) =>
-                                <field.EmailField label="Email" placeholder="user@nutriai.com" />
-                            }
-                        />
-                        <form.AppField
-                            name="password"
-                            children={(field) =>
-                                <field.PasswordField label="Password" />
-                            }
-                        />
-                        <form.AppField
-                            name="confirm_password"
-                            children={(field) =>
-                                <field.PasswordField label="Confirm Password" />
-                            }
-                        />
-                    </div>
+                        <div className="flex flex-col gap-6">
+                            <form.AppField
+                                name="name"
+                                children={(field) =>
+                                    <field.TextField label="Name" placeholder="John Doe" />
+                                }
+                            />
+                            <form.AppField
+                                name="email"
+                                children={(field) =>
+                                    <field.EmailField label="Email" placeholder="user@nutriai.com" />
+                                }
+                            />
+                            <form.AppField
+                                name="password"
+                                children={(field) =>
+                                    <field.PasswordField label="Password" />
+                                }
+                            />
+                            <form.AppField
+                                name="confirm_password"
+                                children={(field) =>
+                                    <field.PasswordField label="Confirm Password" />
+                                }
+                            />
+                        </div>
+                    </CardContent>
+                    <CardFooter className="flex-col gap-2">
+                        <form.SubmitButton label="Sign Up" submittingLabel={<Spinner />} />
+                    </CardFooter>
                 </form.AppForm>
-            </CardContent>
-            <CardFooter className="flex-col gap-2">
-                <form.AppForm>
-                    <form.SubmitButton label="Sign Up" submittingLabel={<Spinner />} />
-                </form.AppForm>
-            </CardFooter>
-        </Card>
+            </Card>
+        </form>
     )
 }
