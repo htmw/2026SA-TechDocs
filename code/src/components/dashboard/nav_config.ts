@@ -1,4 +1,4 @@
-import { Calculator, Calendar, LayoutDashboard, Settings, LucideIcon, CircleUser } from "lucide-react";
+import { Calculator, Calendar, LayoutDashboard, Settings, LucideIcon, CircleUser, MessageCircle, Flag } from "lucide-react";
 
 export type NavItem = { title: string; url: string; icon: LucideIcon };
 
@@ -17,6 +17,16 @@ export const navMainItems: NavItem[] = [
         title: "Daily Log",
         url: "/daily-log",
         icon: Calendar,
+    },
+    {
+        title: "Goals",
+        url: "/goals",
+        icon: Flag,
+    },
+    {
+        title: "Chat",
+        url: "/chat",
+        icon: MessageCircle,
     },
 ];
 
