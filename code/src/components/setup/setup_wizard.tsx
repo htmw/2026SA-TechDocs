@@ -90,103 +90,107 @@ export default function ProfileSetupWizard() {
     const values = form.state.values;
 
     return (
-        <div className="w-full max-w-xl overflow-hidden">
-            <form.Subscribe
-                selector={(state) => state.errorMap.onSubmit}
-                children={(submitError) => {
-                    return submitError ? (
-                        <div className="flex flex-col gap-6 text-sm text-red-500 text-center pb-4">{String(submitError)}</div>
-                    ) : null
-                }}
-            />
-            <div className="mb-4 flex justify-center gap-2">
-                {Array.from({ length: TOTAL_STEPS }).map((_, index) => (
-                    <div
-                        key={index}
-                        className={cn(
-                            "h-2 w-2 rounded-full transition-all",
-                            index === step ? "bg-primary w-6" : "bg-muted-foreground/30",
-                        )}
-                    />
-                ))}
-            </div>
-            <div
-                className="flex transition-transform duration-300 ease-in-out"
-                style={{ transform: `translateX(-${step * 100}%)` }}
-            >
-                <div className="w-full shrink-0 px-1">
-                    <BasicInfoStep form={form as any} onNext={nextStep} />
-                </div>
-
-                <div className="w-full shrink-0 px-1">
-                    <OptionStep
-                        title="What is your gender?"
-                        description="Choose the option that best describes you."
-                        options={gender_options}
-                        value={values.gender}
-                        onSelect={(value) => selectAndAdvance("gender", value)}
-                        onBack={prevStep}
-                    />
-                </div>
-
-                <div className="w-full shrink-0 px-1">
-                    <OptionStep
-                        title="What is your fitness level?"
-                        description="Pick a number from 0 to 5."
-                        options={fitness_options}
-                        value={values.fitness_level}
-                        onSelect={(value) => selectAndAdvance("fitness_level", value)}
-                        onBack={prevStep}
-                    />
-                </div>
-
-                <div className="w-full shrink-0 px-1">
-                    <OptionStep
-                        title="What is your average daily calorie intake?"
-                        description="Choose the option that best describes you."
-                        options={calorie_options}
-                        value={values.avg_calories}
-                        onSelect={(value) => selectAndAdvance("avg_calories", value)}
-                        onBack={prevStep}
-                    />
-                </div>
-
-                <div className="w-full shrink-0 px-1">
-                    <OptionStep
-                        title="How much sleep do you get on average?"
-                        description="Choose the range closest to your normal routine."
-                        options={sleep_options}
-                        value={values.avg_sleep}
-                        onSelect={(value) => selectAndAdvance("avg_sleep", value)}
-                        onBack={prevStep}
-                    />
-                </div>
-
-                <div className="w-full shrink-0 px-1">
-                    <OptionStep
-                        title="How are your current energy levels?"
-                        description="Pick the option that feels most accurate."
-                        options={energy_options}
-                        value={values.current_energy}
-                        onSelect={(value) => selectAndAdvance("current_energy", value)}
-                        onBack={prevStep}
-                    />
-                </div>
-
-                <div className="w-full shrink-0 px-1">
+        <>
+            <form.AppForm>
+                <div className="w-full overflow-hidden">
                     <form.Subscribe
-                        selector={(state) => state.isSubmitting}
-                        children={(isSubmitting) => (
-                            <ReviewStep
-                                values={values}
-                                onBack={prevStep}
-                                onSubmit={() => form.handleSubmit({ submitAction: 'continue' })}
-                                isSubmitting={isSubmitting}
-                            />
-                        )}
+                        selector={(state) => state.errorMap.onSubmit}
+                        children={(submitError) => {
+                            return submitError ? (
+                                <div className="flex flex-col gap-6 text-sm text-red-500 text-center pb-4">{String(submitError)}</div>
+                            ) : null
+                        }}
                     />
+                    <div className="mb-4 flex justify-center gap-2">
+                        {Array.from({ length: TOTAL_STEPS }).map((_, index) => (
+                            <div
+                                key={index}
+                                className={cn(
+                                    "h-2 w-2 rounded-full transition-all",
+                                    index === step ? "bg-primary w-6" : "bg-muted-foreground/30",
+                                )}
+                            />
+                        ))}
+                    </div>
+                    <div
+                        className="flex transition-transform duration-300 ease-in-out"
+                        style={{ transform: `translateX(-${step * 100}%)` }}
+                    >
+                        <div className="w-full shrink-0 px-1">
+                            <BasicInfoStep form={form as any} onNext={nextStep} />
+                        </div>
+
+                        <div className="w-full shrink-0 px-1">
+                            <OptionStep
+                                title="What is your gender?"
+                                description="Choose the option that best describes you."
+                                options={gender_options}
+                                value={values.gender}
+                                onSelect={(value) => selectAndAdvance("gender", value)}
+                                onBack={prevStep}
+                            />
+                        </div>
+
+                        <div className="w-full shrink-0 px-1">
+                            <OptionStep
+                                title="What is your fitness level?"
+                                description="Pick a number from 0 to 5."
+                                options={fitness_options}
+                                value={values.fitness_level}
+                                onSelect={(value) => selectAndAdvance("fitness_level", value)}
+                                onBack={prevStep}
+                            />
+                        </div>
+
+                        <div className="w-full shrink-0 px-1">
+                            <OptionStep
+                                title="What is your average daily calorie intake?"
+                                description="Choose the option that best describes you."
+                                options={calorie_options}
+                                value={values.avg_calories}
+                                onSelect={(value) => selectAndAdvance("avg_calories", value)}
+                                onBack={prevStep}
+                            />
+                        </div>
+
+                        <div className="w-full shrink-0 px-1">
+                            <OptionStep
+                                title="How much sleep do you get on average?"
+                                description="Choose the range closest to your normal routine."
+                                options={sleep_options}
+                                value={values.avg_sleep}
+                                onSelect={(value) => selectAndAdvance("avg_sleep", value)}
+                                onBack={prevStep}
+                            />
+                        </div>
+
+                        <div className="w-full shrink-0 px-1">
+                            <OptionStep
+                                title="How are your current energy levels?"
+                                description="Pick the option that feels most accurate."
+                                options={energy_options}
+                                value={values.current_energy}
+                                onSelect={(value) => selectAndAdvance("current_energy", value)}
+                                onBack={prevStep}
+                            />
+                        </div>
+
+                        <div className="w-full shrink-0 px-1">
+                            <form.Subscribe
+                                selector={(state) => state.isSubmitting}
+                                children={(isSubmitting) => (
+                                    <ReviewStep
+                                        values={values}
+                                        onBack={prevStep}
+                                        onSubmit={() => form.handleSubmit({ submitAction: 'continue' })}
+                                        isSubmitting={isSubmitting}
+                                    />
+                                )}
+                            />
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </form.AppForm>
+        </>
     );
 }
