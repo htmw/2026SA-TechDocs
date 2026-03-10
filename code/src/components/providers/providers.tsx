@@ -5,6 +5,7 @@ import { AuthProvider } from "@/lib/hooks/useAuthProvider";
 import { ThemeProvider } from "@/components/providers/theme_provider"
 import { AuthState } from "@/lib/types/shared";
 import { normalizeDocument } from "@/lib/utils/database_utils";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default async function Providers({
     children
@@ -15,7 +16,7 @@ export default async function Providers({
     const normalizedSession = normalizeDocument(session);
     const normalizedUser = normalizeDocument(user?.getPublicProfile() ?? null);
     const normalized = { session: normalizedSession, user: normalizedUser } as AuthState;
-    
+
     return (
         <>
             <AuthProvider initialValue={normalized}>
@@ -25,7 +26,9 @@ export default async function Providers({
                     enableSystem
                     disableTransitionOnChange
                 >
-                    {children}
+                    <TooltipProvider>
+                        {children}
+                    </TooltipProvider>
                 </ThemeProvider>
             </AuthProvider>
         </>
