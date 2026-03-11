@@ -52,10 +52,10 @@ export async function POST(req: NextRequest) {
     await setSessionTokenCookie(sessionToken, session.expires_at);
 
     const payload = {
-        user: user!.getPublicProfile(),
+        user: user.getPublicProfile(),
         session: session!,
     };
     const normalizedPayload = normalizeDocument(payload);
 
-    return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 200 });
+    return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 201 });
 }

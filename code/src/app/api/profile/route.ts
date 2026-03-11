@@ -56,5 +56,5 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(createErrorResponse("PROFILE_NOT_SETUP", "Your profile setup is not complete"), { status: 400 });
     }
 
-    return NextResponse.json(createSuccessResponse({ user: user.getPublicProfile() }), { status: 200 });
+    return NextResponse.json(createSuccessResponse({ user: user.getPublicProfile() }), { status: 201 });
 }
