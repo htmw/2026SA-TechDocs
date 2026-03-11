@@ -163,6 +163,9 @@ UserSchema.methods.completeFirstTimeSetup = async function (profileData: Partial
 }
 
 UserSchema.methods.updateProfile = async function (profileData: Partial<IUserProfile>) {
+    if(profileData.dob){
+        profileData.dob.setUTCHours(0, 0, 0, 0);
+    }
     this.profile = {
         ...this.profile,
         ...profileData,
