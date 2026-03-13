@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/providers/theme_provider"
 import { AuthState } from "@/lib/types/shared";
 import { normalizeDocument } from "@/lib/utils/database_utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import ClientProviders from "@/components/providers/client_providers";
 
 export default async function Providers({
     children
@@ -27,7 +28,9 @@ export default async function Providers({
                     disableTransitionOnChange
                 >
                     <TooltipProvider>
-                        {children}
+                        <ClientProviders>
+                            {children}
+                        </ClientProviders>
                     </TooltipProvider>
                 </ThemeProvider>
             </AuthProvider>
