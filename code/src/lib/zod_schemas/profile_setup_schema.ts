@@ -17,6 +17,7 @@ export const ProfileZodSchema = z.object({
     weight: z.string().min(1, "Weight is required").transform((v) => Number(v) || 0),
     height: z.string().min(1, "Height is required").transform((v) => Number(v) || 0),
     occupation: z.string().min(1, "Occupation is required").transform((s) => s?.trim()),
+    timezone: z.string().min(1, "Timezone is required").transform((s) => s?.trim()),
 
     fitness_level: z.coerce.number("Fitness is required").min(0).max(5),
 

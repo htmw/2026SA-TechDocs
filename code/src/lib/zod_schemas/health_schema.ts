@@ -24,6 +24,7 @@ export type CravingTrigger = typeof craving_triggers_enum[number];
 
 export const DailyLogZodSchema = z.object({
     date: z.coerce.date(),
+    timezone: z.string(),
     morning_weight: z.number().positive("Morning weight must be a positive number"),
     energy_rating: z.enum(energy_rating_enum, `Energy rating is required (${energy_rating_enum.join(" | ")})`),
     sleep_hours: z.number().min(0).max(24, "Sleep hours must be between 0 and 24"),

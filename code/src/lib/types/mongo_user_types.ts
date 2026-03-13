@@ -19,6 +19,7 @@ export interface IUserProfile {
     height?: number;
     weight?: number;
     occupation?: string;
+    timezone?: string;
     fitness_level?: number;
     hobbies?: string[];
     avg_calories?: AvgCalories;
