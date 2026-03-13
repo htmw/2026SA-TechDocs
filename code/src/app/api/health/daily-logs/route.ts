@@ -2,7 +2,9 @@ import { getCurrentSession } from "@/app/actions";
 import { DailyLog } from "@/database/models/daily_log";
 import { createErrorResponse, createSuccessResponse } from "@/lib/types/shared";
 import { normalizeDocument } from "@/lib/utils/database_utils";
+import { getTimezoneDayString, normalizeDateToTimezoneDay } from "@/lib/utils/utils";
 import { DailyLogZodSchema } from "@/lib/zod_schemas/health_schema";
+import { isValid } from "date-fns";
 import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 
@@ -32,9 +34,22 @@ export async function POST(req: NextRequest) {
     if (!session || !user) {
         return NextResponse.json(createErrorResponse("NOT_AUTHENTICATED", "You must be logged in to perform this action"), { status: 401 });
     }
+    
+    const timezone = user.profile?.timezone || "UTC";
+    const parsed_date = normalizeDateToTimezoneDay(getTimezoneDayString(parsed.data.date, timezone), timezone);
+
+    if (!isValid(parsed_date)) {
+        return NextResponse.json(
+            createErrorResponse("INVALID_DATE_PARAM", "The 'date' parameter is not a valid date"),
+            { status: 400 }
+        );
+    }
+
+    console.log(parsed_date);
+
 
     //Check if daily log already exists for this date
-    const dailyLogExists = await DailyLog.hasDailyLog(user._id, parsed.data.date);
+    const dailyLogExists = await DailyLog.hasDailyLog(user._id, parsed_date);
     if (dailyLogExists) {
         return NextResponse.json(createErrorResponse("DAILY_LOG_EXISTS", "A daily log for this date already exists"), { status: 409 });
     }
@@ -56,6 +71,8 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
+    const start_date =searchParams.get("start_date");
+    const end_date = searchParams.get("end_date");
     const limitParam = searchParams.get("limit");
 
     let limit = 10;
@@ -77,8 +94,34 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(createErrorResponse("NOT_AUTHENTICATED", "You must be logged in to perform this action"), { status: 401 });
     }
 
+    const timezone = user.profile?.timezone || "UTC";
+    let parsed_start_date: Date | null = start_date ? normalizeDateToTimezoneDay(start_date, timezone) : null;
+    let parsed_end_date: Date | null = end_date ? normalizeDateToTimezoneDay(end_date, timezone) : null;
+
+    if (!isValid(parsed_start_date)) {
+        parsed_start_date = null;
+    }
+
+    if (!isValid(parsed_end_date)) {
+        parsed_end_date = null;
+    }
+
+    // Build query for daily logs (optionally filtered by start/end date)
+    const query: Record<string, unknown> = { user_id: user._id };
+
+    const dateQuery: Record<string, unknown> = {};
+    if (parsed_start_date) {
+        dateQuery.$gte = parsed_start_date;
+    }
+    if (parsed_end_date) {
+        dateQuery.$lte = parsed_end_date;
+    }
+    if (Object.keys(dateQuery).length > 0) {
+        query.date = dateQuery;
+    }
+
     // get daily logs sorted by the most recent
-    const logs = await DailyLog.find({ user_id: user._id })
+    const logs = await DailyLog.find(query)
         .sort({ date: -1 })
         .limit(limit)
         .exec();
