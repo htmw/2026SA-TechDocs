@@ -17,11 +17,12 @@ import Link from "next/link"
 import { useLogout } from "@/lib/hooks/useLogout"
 
 import { navMainItems, navFooterItems } from "@/components/dashboard/nav_config"
+import { Avatar, AvatarImage } from "@/components/ui/avatar"
 
-export function AppSidebar({ 
-    ...props 
-}: 
-React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+    ...props
+}:
+    React.ComponentProps<typeof Sidebar>) {
     const { logout } = useLogout();
 
     return (
@@ -34,7 +35,14 @@ React.ComponentProps<typeof Sidebar>) {
                             className="data-[slot=sidebar-menu-button]:p-1.5!"
                         >
                             <a href="/">
-                                <span className="text-base font-semibold">NutriAI</span>
+                                <Avatar size="sm">
+                                    <AvatarImage
+                                        src="/nutriai_logo.png"
+                                        alt="nutriai"
+                                        className="grayscale"
+                                    />
+                                </Avatar>
+                                <span className="text-xl font-semibold">NutriAI</span>
                             </a>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

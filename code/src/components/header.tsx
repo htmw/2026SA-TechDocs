@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { getCurrentSession } from "@/app/actions";
 import HeaderClient from "./header_client";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 
 const navLinks = [
     { href: "/#features", label: "Features" },
@@ -23,8 +24,14 @@ export default async function Header() {
         <header className="bg-background border-b border-border">
             <div className="max-w-7xl mx-auto px-4">
                 <div className="flex justify-between items-center h-16">
-                    <Link href="/" className="text-2xl font-bold">
-                        NutriAI
+                    <Link href="/" className="flex flex-row items-center gap-1">
+                        <Avatar size="sm">
+                            <AvatarImage
+                                src="/nutriai_logo.png"
+                                alt="nutriai"
+                            />
+                        </Avatar>
+                        <span className="text-xl font-semibold">NutriAI</span>
                     </Link>
 
                     <DesktopNav navLinks={navLinks} />
