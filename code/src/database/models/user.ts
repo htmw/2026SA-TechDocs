@@ -2,6 +2,8 @@ import { IPublicUser, IUser, IUserProfile } from "@/lib/types/mongo_user_types";
 import { avg_calories_enum, avg_sleep_enum, current_energy_enum, gender_enum } from "@/lib/zod_schemas/profile_setup_schema";
 import mongoose, { Schema, Model, HydratedDocument, Types } from "mongoose";
 
+// export const DietRestrictions = new Schema
+
 export const UserProfileSchema = new Schema<IUserProfile>(
     {
         dob: {
@@ -14,6 +16,9 @@ export const UserProfileSchema = new Schema<IUserProfile>(
         weight: {
             type: Number,
             min: 0,
+        },
+        timezone: {
+            type: String,
         },
         occupation: {
             type: String,
@@ -41,7 +46,7 @@ export const UserProfileSchema = new Schema<IUserProfile>(
         avg_sleep: {
             type: String,
             enum: avg_sleep_enum,
-        }
+        },
     },
     { _id: false }
 );
@@ -163,7 +168,7 @@ UserSchema.methods.completeFirstTimeSetup = async function (profileData: Partial
 }
 
 UserSchema.methods.updateProfile = async function (profileData: Partial<IUserProfile>) {
-    if(profileData.dob){
+    if (profileData.dob) {
         profileData.dob.setUTCHours(0, 0, 0, 0);
     }
     this.profile = {

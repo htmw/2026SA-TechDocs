@@ -1,16 +1,12 @@
 import SetupCard from "@/components/setup/setup_card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
-
-type Option<T extends string | number> = {
-    label: string;
-    value: T;
-};
+import { OptionList } from "@/lib/utils/options";
 
 type OptionStepProps<T extends string | number> = {
     title: string;
     description?: string;
-    options: Option<T>[];
+    options: OptionList<T>;
     value?: T;
     onSelect: (value: T) => void;
     onBack: () => void;

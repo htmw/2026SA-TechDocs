@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { OptionList, makeLabelMap } from "../utils/options";
 
 export const avg_calories_enum = ["lt-1000", "1000-1500", "1500-2000", "2000-2500", "gt-2500"] as const;
 export type AvgCalories = typeof avg_calories_enum[number];
@@ -37,57 +38,47 @@ export const BasicInfoSchema = ProfileZodSchema.pick({
     height: true,
     dob: true,
     occupation: true,
+    timezone: true,
 });
 
-export const gender_options = [
-    { label: "Male", value: "male" as const },
-    { label: "Female", value: "female" as const },
-    { label: "Other", value: "other" as const },
+export const gender_options: OptionList<Gender> = [
+    { label: "Male", value: "male" },
+    { label: "Female", value: "female" },
+    { label: "Other", value: "other" },
 ];
 
-export const fitness_options = [
-    { label: "0", value: 0 as const },
-    { label: "1", value: 1 as const },
-    { label: "2", value: 2 as const },
-    { label: "3", value: 3 as const },
-    { label: "4", value: 4 as const },
-    { label: "5", value: 5 as const },
+export const fitness_options: OptionList<number> = [
+    { label: "0", value: 0 },
+    { label: "1", value: 1 },
+    { label: "2", value: 2 },
+    { label: "3", value: 3 },
+    { label: "4", value: 4 },
+    { label: "5", value: 5 },
 ];
 
-export const sleep_options = [
-    { label: "Less than 5 hours of sleep", value: "lt-5" as const },
-    { label: "5-7 hours of sleep", value: "5-7" as const },
-    { label: "7-9 hours of sleep", value: "7-9" as const },
-    { label: "9-11 hours of sleep", value: "9-11" as const },
-    { label: "More than 11 hours of sleep", value: "gt-11" as const },
+export const sleep_options: OptionList<AvgSleep> = [
+    { label: "Less than 5 hours of sleep", value: "lt-5" },
+    { label: "5-7 hours of sleep", value: "5-7" },
+    { label: "7-9 hours of sleep", value: "7-9" },
+    { label: "9-11 hours of sleep", value: "9-11" },
+    { label: "More than 11 hours of sleep", value: "gt-11" },
 ];
 
-export const calorie_options = [
-    { label: "Less than 1000 Calories", value: "lt-1000" as const },
-    { label: "1000-1500 Calories", value: "1000-1500" as const },
-    { label: "1500-2000 Calories", value: "1500-2000" as const },
-    { label: "2000-2500 Calories", value: "2000-2500" as const },
-    { label: "More than 2500 Calories", value: "gt-2500" as const },
+export const calorie_options: OptionList<AvgCalories> = [
+    { label: "Less than 1000 Calories", value: "lt-1000" },
+    { label: "1000-1500 Calories", value: "1000-1500" },
+    { label: "1500-2000 Calories", value: "1500-2000" },
+    { label: "2000-2500 Calories", value: "2000-2500" },
+    { label: "More than 2500 Calories", value: "gt-2500" },
 ];
 
-export const energy_options = [
-    { label: "Low Energy", value: "low" as const },
-    { label: "Mild Energy", value: "medium" as const },
-    { label: "High Energy", value: "high" as const },
+export const energy_options: OptionList<CurrentEnergy> = [
+    { label: "Low Energy", value: "low" },
+    { label: "Mild Energy", value: "medium" },
+    { label: "High Energy", value: "high" },
 ];
 
-export const calorie_label_map = Object.fromEntries(
-    calorie_options.map((option) => [option.value, option.label]),
-) as Record<(typeof calorie_options)[number]["value"], string>;
-
-export const gender_label_map = Object.fromEntries(
-    gender_options.map((option) => [option.value, option.label]),
-) as Record<(typeof gender_options)[number]["value"], string>;
-
-export const sleep_label_map = Object.fromEntries(
-    sleep_options.map((option) => [option.value, option.label]),
-) as Record<(typeof sleep_options)[number]["value"], string>;
-
-export const energy_label_map = Object.fromEntries(
-    energy_options.map((option) => [option.value, option.label]),
-) as Record<(typeof energy_options)[number]["value"], string>;
+export const calorie_label_map = makeLabelMap(calorie_options);
+export const gender_label_map = makeLabelMap(gender_options);
+export const sleep_label_map = makeLabelMap(sleep_options);
+export const energy_label_map = makeLabelMap(energy_options);
