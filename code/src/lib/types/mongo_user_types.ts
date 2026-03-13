@@ -2,6 +2,11 @@ import { ToPrimitive } from "@/lib/types/mongo_primitive_types";
 import { AvgCalories, AvgSleep, CurrentEnergy, Gender } from "@/lib/zod_schemas/profile_setup_schema";
 import { Types } from "mongoose";
 
+export interface IDietRestriction {
+    allergies?: string[];//convert to enum later
+    religious?: string[];//convert to enum later
+}
+
 export interface IUser {
     _id: Types.ObjectId;
     name: string;
@@ -32,3 +37,4 @@ export type IPublicUser =
     Omit<IUser, "password">;
 
 export type ClientUser = ToPrimitive<IPublicUser>;   
+export type ClientUserProfile = ToPrimitive<IUserProfile>;   

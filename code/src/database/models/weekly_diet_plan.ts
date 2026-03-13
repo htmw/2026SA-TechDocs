@@ -1,4 +1,4 @@
-import { IWeeklyDietPlan } from '@/lib/types/mongo_daily_log_types';
+import { IWeeklyDietPlan } from '@/lib/types/mongo_weekly_diet_plan';
 import { Model, Schema, model } from 'mongoose';
 
 //Methods Interface

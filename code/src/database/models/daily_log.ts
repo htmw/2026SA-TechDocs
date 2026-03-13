@@ -1,55 +1,7 @@
-import { craving_intensity_enum, craving_triggers_enum, craving_type_enum, CravingIntensity, CravingTrigger, CravingType, DailyLogValues, energy_rating_enum, EnergyRating, hunger_level_enum, HungerLevel, meal_type_enum, MealType, stress_level_enum, StressLevel } from "@/lib/zod_schemas/health_schema";
-import mongoose, { Schema, Document, Model, Types, HydratedDocument } from "mongoose";
-
-export interface IDailyLog {
-    _id: Types.ObjectId;
-    user_id: Types.ObjectId;
-    date: Date;
-    morning_weight: number;
-    energy_rating: EnergyRating;
-    sleep_hours: number;
-    stress_level: StressLevel;
-    meals: IMealLog[];
-    hunger_events: IHungerEvent[];
-    craving_events: ICravingEvent[];
-    prediction: IPrediction;
-    compliance: ICompliance;
-}
-
-export interface IMealLog {
-    meal_type: MealType;
-    description: string;
-    calories: number;
-}
-
-export interface IHungerEvent {
-    occurred_at: Date;
-    hunger_level: HungerLevel;
-    suggested_actions: string[];
-    reasoning: string;
-}
-
-export interface ICravingEvent {
-    occurred_at: Date;
-    craving_type: CravingType;
-    intensity: CravingIntensity;
-    trigger: CravingTrigger;
-    suggested_actions: string[];
-    reasoning: string;
-}
-
-export interface IPrediction {
-    appetite_risk_score: number; // 1-10 scale
-    over_eating_risk_probability: number;
-    weight_loss_success_probability: number;
-    projected_timeline_days: number;
-}
-
-export interface ICompliance {
-    commitment_rate: number; // 1-10 scale
-    portion_control_score: number; // 1-10 scale
-    consistency_score: number; // 1-10 scale
-}
+import { ICravingEvent, IDailyLog, IHungerEvent } from "@/lib/types/mongo_daily_log_types";
+import { craving_intensity_enum, craving_triggers_enum, craving_type_enum, DailyLogValues, energy_rating_enum, hunger_level_enum, meal_type_enum, stress_level_enum } from "@/lib/zod_schemas/health_schema";
+import { startOfDay } from "date-fns";
+import mongoose, { Schema, Model, Types, HydratedDocument } from "mongoose";
 
 const MealLogSchema = new Schema(
     {
@@ -87,8 +39,7 @@ const HungerEventSchema = new Schema(
         reasoning: {
             type: String,
         },
-    },
-    { _id: false }
+    }
 );
 
 const CravingEventSchema = new Schema(
@@ -118,8 +69,7 @@ const CravingEventSchema = new Schema(
         reasoning: {
             type: String,
         },
-    },
-    { _id: false }
+    }
 );
 
 const PredictionSchema = new Schema(
@@ -181,6 +131,10 @@ const DailyLogSchema = new Schema(
             type: Date,
             required: true,
         },
+        timezone: {
+            type: String,
+            required: true,
+        },
         morning_weight: {
             type: Number,
             required: true,
@@ -225,14 +179,17 @@ DailyLogSchema.index(
 
 //Methods Interface
 export interface IDailyLogMethods {
-    getCravingEvent(occurred_at: Date): ICravingEvent | null;
+    getCravingEventByTime(date: Date): ICravingEvent | null;
+    getCravingEvent(id: Types.ObjectId): ICravingEvent | null;
     addCravingEvent(event: ICravingEvent): Promise<HydratedDocument<IDailyLog, IDailyLogMethods>>;
-    updateCravingEvent(occurred_at: Date, updates: Partial<ICravingEvent>): Promise<ICravingEvent | null>;
-    deleteCravingEvent(occurred_at: Date): Promise<boolean>;
-    getHungerEvent(occurred_at: Date): IHungerEvent | null;
+    updateCravingEvent(id: Types.ObjectId, updates: Partial<ICravingEvent>): Promise<ICravingEvent | null>;
+    deleteCravingEvent(id: Types.ObjectId): Promise<boolean>;
+
+    getHungerEventByTime(date: Date): IHungerEvent | null;
+    getHungerEvent(id: Types.ObjectId): IHungerEvent | null;
     addHungerEvent(event: IHungerEvent): Promise<HydratedDocument<IDailyLog, IDailyLogMethods>>;
-    updateHungerEvent(occurred_at: Date, updates: Partial<IHungerEvent>): Promise<IHungerEvent | null>;
-    deleteHungerEvent(occurred_at: Date): Promise<boolean>;
+    updateHungerEvent(id: Types.ObjectId, updates: Partial<IHungerEvent>): Promise<IHungerEvent | null>;
+    deleteHungerEvent(id: Types.ObjectId): Promise<boolean>;
 }
 
 //Model Interface, which includes both the document and the methods
@@ -243,36 +200,30 @@ export interface DailyLogModel extends Model<IDailyLog, {}, IDailyLogMethods> {
 }
 
 DailyLogSchema.statics.getDailyLogByDate = async function (user_id: Types.ObjectId, date: Date): Promise<HydratedDocument<IDailyLog, IDailyLogMethods> | null> {
-    
-    //normalize date to midnight
-    date.setUTCHours(0, 0, 0, 0);
-
-    return await this.findOne({ user_id, date }).exec();
+    const dayStart = startOfDay(date);
+    return await this.findOne({ user_id, date: dayStart }).exec();
 }
 
 DailyLogSchema.statics.hasDailyLog = async function (user_id: Types.ObjectId, date: Date): Promise<boolean> {
-    
-    //normalize date to midnight
-    date.setUTCHours(0, 0, 0, 0);
-
-    const log = await this.findOne({ user_id, date }).exec();
+    const dayStart = startOfDay(date);
+    const log = await this.findOne({ user_id, date: dayStart }).exec();
     return !!log;
 }
 
 DailyLogSchema.statics.createDailyLog = async function (user_id: Types.ObjectId, {
     date,
+    timezone,
     morning_weight,
     energy_rating,
     sleep_hours,
     stress_level
 }: DailyLogValues): Promise<HydratedDocument<IDailyLog, IDailyLogMethods>> {
-
-    //normalize date to midnight
-    date.setUTCHours(0, 0, 0, 0);
+    const dayStart = startOfDay(date);
 
     const dailyLog = this.create({
         user_id,
-        date,
+        date: dayStart,
+        timezone,
         morning_weight,
         energy_rating,
         sleep_hours,
@@ -283,11 +234,13 @@ DailyLogSchema.statics.createDailyLog = async function (user_id: Types.ObjectId,
 };
 
 // methods for craving events
-DailyLogSchema.methods.getCravingEvent = function (occurred_at: Date) {
-    const found = this.craving_events.find((e: ICravingEvent) => {
-        return e.occurred_at.getTime() === occurred_at.getTime()
-    });
-    console.log(found);
+DailyLogSchema.methods.getCravingEventByTime = function (date: Date) {
+    const found = this.craving_events.find((e: ICravingEvent) => e.occurred_at.getTime() === date.getTime());
+    return found || null;
+}
+
+DailyLogSchema.methods.getCravingEvent = function (id: Types.ObjectId) {
+    const found = this.craving_events.find((e: ICravingEvent) => e._id.equals(id));
     return found || null;
 };
 
@@ -301,8 +254,8 @@ DailyLogSchema.methods.addCravingEvent = async function (event: ICravingEvent) {
     return this;
 };
 
-DailyLogSchema.methods.updateCravingEvent = async function (occurred_at: Date, updates: Partial<ICravingEvent>) {
-    const event = this.getCravingEvent(occurred_at);
+DailyLogSchema.methods.updateCravingEvent = async function (id: Types.ObjectId, updates: Partial<ICravingEvent>) {
+    const event = this.getCravingEvent(id);
     if (!event) {
         return null;
     }
@@ -311,8 +264,8 @@ DailyLogSchema.methods.updateCravingEvent = async function (occurred_at: Date, u
     return event;
 };
 
-DailyLogSchema.methods.deleteCravingEvent = async function (occurred_at: Date) {
-    const idx = this.craving_events.findIndex((e: ICravingEvent) => e.occurred_at.getTime() === occurred_at.getTime());
+DailyLogSchema.methods.deleteCravingEvent = async function (id: Types.ObjectId) {
+    const idx = this.craving_events.findIndex((e: ICravingEvent) => e._id.equals(id));
     if (idx === -1) {
         return false;
     }
@@ -322,8 +275,13 @@ DailyLogSchema.methods.deleteCravingEvent = async function (occurred_at: Date) {
 };
 
 // hunger event helpers
-DailyLogSchema.methods.getHungerEvent = function (occurred_at: Date) {
-    const found = this.hunger_events.find((e: IHungerEvent) => e.occurred_at.getTime() === occurred_at.getTime());
+DailyLogSchema.methods.getHungerEventByTime = function (date: Date) {
+    const found = this.hunger_events.find((e: IHungerEvent) => e.occurred_at.getTime() === date.getTime());
+    return found || null;
+}
+
+DailyLogSchema.methods.getHungerEvent = function (id: Types.ObjectId) {
+    const found = this.hunger_events.find((e: IHungerEvent) => e._id.equals(id));
     return found || null;
 };
 
@@ -336,8 +294,8 @@ DailyLogSchema.methods.addHungerEvent = async function (event: IHungerEvent) {
     return this;
 };
 
-DailyLogSchema.methods.updateHungerEvent = async function (occurred_at: Date, updates: Partial<IHungerEvent>) {
-    const ev = this.getHungerEvent(occurred_at);
+DailyLogSchema.methods.updateHungerEvent = async function (id: Types.ObjectId, updates: Partial<IHungerEvent>) {
+    const ev = this.getHungerEvent(id);
     if (!ev) {
         return null;
     }
@@ -346,8 +304,8 @@ DailyLogSchema.methods.updateHungerEvent = async function (occurred_at: Date, up
     return ev;
 };
 
-DailyLogSchema.methods.deleteHungerEvent = async function (occurred_at: Date) {
-    const idx = this.hunger_events.findIndex((e: IHungerEvent) => e.occurred_at.getTime() === occurred_at.getTime());
+DailyLogSchema.methods.deleteHungerEvent = async function (id: Types.ObjectId) {
+    const idx = this.hunger_events.findIndex((e: IHungerEvent) => e._id.equals(id));
     if (idx === -1) {
         return false;
     }
@@ -357,5 +315,5 @@ DailyLogSchema.methods.deleteHungerEvent = async function (occurred_at: Date) {
 };
 
 export const DailyLog =
-    (mongoose.models.DailyLog as DailyLogModel) ||
+    (mongoose.models["Daily_Log"] as DailyLogModel) ||
     mongoose.model<IDailyLog, DailyLogModel>("Daily_Log", DailyLogSchema);
