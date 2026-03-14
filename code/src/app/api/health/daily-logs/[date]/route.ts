@@ -7,7 +7,7 @@ import { DailyLogValues, DailyLogZodSchema } from "@/lib/zod_schemas/health_sche
 import { NextResponse } from "next/server";
 import z from "zod";
 
-type LocalRouteParams = { date: string, id: string };
+type LocalRouteParams = { date: string };
 type RouteLocals = {
     parsed_date?: Date;
 };
