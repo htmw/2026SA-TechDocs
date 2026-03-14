@@ -1,11 +1,19 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
-import { format, parse, startOfDay } from "date-fns";
+import { format, getHours, parse, startOfDay } from "date-fns";
 import { tz, TZDate } from "@date-fns/tz";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
+}
+
+export function getDayPeriod(date: Date, timeZone: string) {
+    const hour = getHours(date, { in: tz(timeZone) });
+
+    if (hour >= 5 && hour < 12) return "Morning";
+    if (hour >= 12 && hour < 18) return "Afternoon";
+    return "Evening";
 }
 
 export function normalizeDateToTimezoneDay(date: string, timeZone: string) {
