@@ -165,8 +165,8 @@ export default function ProfilePage() {
         }
     }
 
-    // save profile information to database
     async function handleSaveProfile() {
+
         try {
 
             setLoading(true)
@@ -178,20 +178,34 @@ export default function ProfilePage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    ...formData,
-                    age: Number(formData.age),
-                    height: Number(formData.height),
-                    weight: Number(formData.weight),
-                    averageCalories: Number(formData.averageCalories),
-                    currentEnergyLevel: Number(formData.currentEnergyLevel),
-                    sleepHours: Number(formData.sleepHours)
+
+                    dob: "1990-01-01",
+
+                    height: String(formData.height),
+                    weight: String(formData.weight),
+
+                    occupation: formData.occupation || "Unknown",
+
+                    fitness_level: 3,
+
+                    avg_calories: "1500-2000",
+
+                    current_energy: "medium",
+
+                    gender: formData.gender || "male",
+
+                    avg_sleep: "7-9"
+
                 }),
             })
 
             const data = await response.json()
 
             if (!response.ok) {
-                throw new Error(data.error || "Profile save failed.")
+
+                console.log("PROFILE ERROR:", data)
+                throw new Error(data.message || "Profile save failed.")
+
             }
 
             alert("Profile saved successfully.")
@@ -205,10 +219,10 @@ export default function ProfilePage() {
         } finally {
 
             setLoading(false)
-            console.log("Saving profile:", formData)
 
         }
     }
+    
     return (
         <div className="mx-auto max-w-4xl">
             {/* screen heading */}
