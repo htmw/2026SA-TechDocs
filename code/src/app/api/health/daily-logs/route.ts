@@ -1,77 +1,55 @@
-import { getCurrentSession } from "@/app/actions";
 import { DailyLog } from "@/database/models/daily_log";
 import { createErrorResponse, createSuccessResponse } from "@/lib/types/shared";
 import { normalizeDocument } from "@/lib/utils/database_utils";
 import { getTimezoneDayString, normalizeDateToTimezoneDay } from "@/lib/utils/utils";
 import { DailyLogZodSchema } from "@/lib/zod_schemas/health_schema";
 import { isValid } from "date-fns";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import { createApiRoute } from "@/lib/api/route";
 import z from "zod";
 
 //This route only handles top level daily log data (not meals, hunger events, or craving events - those have their own routes)
 
-export async function POST(req: NextRequest) {
-    //Body must be JSON
-    let body: unknown;
-    try {
-        body = await req.json();
-    } catch (e) {
-        return NextResponse.json(
-            createErrorResponse("INVALID_JSON_BODY", "The request body is not valid JSON"),
-            { status: 400 }
-        );
-    }
-    
-    //Validate body with daily log schema
-    const parsed = DailyLogZodSchema.safeParse(body);
+export const POST = createApiRoute(
+    async ({ user, body }) => {
+        const parsed = body as z.infer<typeof DailyLogZodSchema>;
 
-    if (!parsed.success) {
-        return NextResponse.json(createErrorResponse("VALIDATION_ERROR", "The request body is not valid", z.flattenError(parsed.error).fieldErrors), { status: 422 });
-    }
+        const timezone = user.profile?.timezone || "UTC";
+        const parsed_date = normalizeDateToTimezoneDay(getTimezoneDayString(parsed.date, timezone), timezone);
 
-    //Check if authenticated
-    const { session, user } = await getCurrentSession();
-    if (!session || !user) {
-        return NextResponse.json(createErrorResponse("NOT_AUTHENTICATED", "You must be logged in to perform this action"), { status: 401 });
-    }
-    
-    const timezone = user.profile?.timezone || "UTC";
-    const parsed_date = normalizeDateToTimezoneDay(getTimezoneDayString(parsed.data.date, timezone), timezone);
+        if (!isValid(parsed_date)) {
+            return NextResponse.json(
+                createErrorResponse("INVALID_DATE_PARAM", "The 'date' parameter is not a valid date"),
+                { status: 400 }
+            );
+        }
 
-    if (!isValid(parsed_date)) {
-        return NextResponse.json(
-            createErrorResponse("INVALID_DATE_PARAM", "The 'date' parameter is not a valid date"),
-            { status: 400 }
-        );
-    }
+        //Check if daily log already exists for this date
+        const dailyLogExists = await DailyLog.hasDailyLog(user._id, parsed_date);
+        if (dailyLogExists) {
+            return NextResponse.json(createErrorResponse("DAILY_LOG_EXISTS", "A daily log for this date already exists"), { status: 409 });
+        }
 
-    console.log(parsed_date);
+        //Create daily log
+        const createdLog = await DailyLog.createDailyLog(user._id, parsed);
+        if (!createdLog) {
+            return NextResponse.json(createErrorResponse("DAILY_LOG_CREATION_FAILED", "Failed to create daily log"), { status: 500 });
+        }
 
+        const payload = {
+            daily_log: createdLog,
+        };
 
-    //Check if daily log already exists for this date
-    const dailyLogExists = await DailyLog.hasDailyLog(user._id, parsed_date);
-    if (dailyLogExists) {
-        return NextResponse.json(createErrorResponse("DAILY_LOG_EXISTS", "A daily log for this date already exists"), { status: 409 });
-    }
+        const normalizedPayload = normalizeDocument(payload);
 
-    //Create daily log
-    const createdLog = await DailyLog.createDailyLog(user._id, parsed.data);
-    if (!createdLog) {
-        return NextResponse.json(createErrorResponse("DAILY_LOG_CREATION_FAILED", "Failed to create daily log"), { status: 500 });
-    }
+        return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 201 });
+    },
+    { body_schema: DailyLogZodSchema }
+);
 
-    const payload = {
-        daily_log: createdLog,
-    };
-
-    const normalizedPayload = normalizeDocument(payload);
-
-    return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 201 });
-}
-
-export async function GET(req: NextRequest) {
+export const GET = createApiRoute(async ({ user, req }) => {
     const { searchParams } = new URL(req.url);
-    const start_date =searchParams.get("start_date");
+    const start_date = searchParams.get("start_date");
     const end_date = searchParams.get("end_date");
     const limitParam = searchParams.get("limit");
 
@@ -86,12 +64,6 @@ export async function GET(req: NextRequest) {
         }
         // cap limit of 100
         limit = Math.min(parsed, 100);
-    }
-
-    // authenticate user
-    const { session, user } = await getCurrentSession();
-    if (!session || !user) {
-        return NextResponse.json(createErrorResponse("NOT_AUTHENTICATED", "You must be logged in to perform this action"), { status: 401 });
     }
 
     const timezone = user.profile?.timezone || "UTC";
@@ -129,4 +101,4 @@ export async function GET(req: NextRequest) {
     const payload = { daily_logs: logs };
     const normalizedPayload = normalizeDocument(payload);
     return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 200 });
-}
+});
