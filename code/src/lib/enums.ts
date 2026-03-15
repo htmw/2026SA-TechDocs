@@ -32,6 +32,18 @@ export function createLabeledEnum<const T extends Record<string, string>>(map: T
     };
 }
 
+// Day of the week
+export const day_of_week = createLabeledEnum({
+    monday: "Monday",
+    tuesday: "Tuesday",
+    wednesday: "Wednesday",
+    thursday: "Thursday",
+    friday: "Friday",
+    saturday: "Saturday",
+    sunday: "Sunday",
+} as const);
+export type DayOfWeek = keyof typeof day_of_week.map;
+
 /******************************************
  * 
  * PROFILE 
