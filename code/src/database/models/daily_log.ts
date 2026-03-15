@@ -1,13 +1,14 @@
 import { ICravingEvent, IDailyLog, IHungerEvent } from "@/lib/types/mongo_daily_log_types";
-import { craving_intensity_enum, craving_triggers_enum, craving_type_enum, DailyLogValues, energy_rating_enum, hunger_level_enum, meal_type_enum, stress_level_enum } from "@/lib/zod_schemas/health_schema";
 import { startOfDay } from "date-fns";
 import mongoose, { Schema, Model, Types, HydratedDocument } from "mongoose";
+import { DailyLogValues } from "@/lib/zod_schemas/health_schema";
+import { craving_intensity, craving_triggers, craving_type, energy_rating, hunger_level, meal_type, stress_level } from "@/lib/enums";
 
 const MealLogSchema = new Schema(
     {
         meal_type: {
             type: String,
-            enum: meal_type_enum,
+            enum: meal_type.values,
             required: true,
         },
         description: {
@@ -30,7 +31,7 @@ const HungerEventSchema = new Schema(
         },
         hunger_level: {
             type: String,
-            enum: hunger_level_enum,
+            enum: hunger_level.values,
             required: true,
         },
         suggested_actions: {
@@ -50,17 +51,17 @@ const CravingEventSchema = new Schema(
         },
         craving_type: {
             type: String,
-            enum: craving_type_enum,
+            enum: craving_type.values,
             required: true,
         },
         intensity: {
             type: String,
-            enum: craving_intensity_enum,
+            enum: craving_intensity.values,
             required: true,
         },
         trigger: {
             type: String,
-            enum: craving_triggers_enum,
+            enum: craving_triggers.values,
             required: true,
         },
         suggested_actions: {
@@ -141,7 +142,7 @@ const DailyLogSchema = new Schema(
         },
         energy_rating: {
             type: String,
-            enum: energy_rating_enum,
+            enum: energy_rating.values,
         },
         sleep_hours: {
             type: Number,
@@ -149,7 +150,7 @@ const DailyLogSchema = new Schema(
         },
         stress_level: {
             type: String,
-            stress_level_enum: stress_level_enum,
+            enum: stress_level.values,
         },
         meals: {
             type: [MealLogSchema],

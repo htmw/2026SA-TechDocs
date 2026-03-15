@@ -1,5 +1,5 @@
 import { ToPrimitive } from "@/lib/types/mongo_primitive_types";
-import { CravingIntensity, CravingTrigger, CravingType, EnergyRating, HungerLevel, MealType, StressLevel } from "@/lib/zod_schemas/health_schema";
+import { CravingIntensity, CravingTrigger, CravingType, EnergyRating, HungerLevel, MealType, StressLevel } from "@/lib/enums";
 import { Types } from "mongoose";
 
 export interface IDailyLog {

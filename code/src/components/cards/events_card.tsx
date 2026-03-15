@@ -28,8 +28,8 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { ClientCravingEvent, ClientHungerEvent } from "@/lib/types/mongo_daily_log_types";
-import { craving_intensity_label_map, craving_trigger_label_map, craving_type_label_map, hunger_level_label_map } from "@/lib/zod_schemas/health_schema";
 import { format } from "date-fns";
+import { craving_intensity, craving_triggers, craving_type, hunger_level } from "@/lib/enums";
 
 type EventsCardProps<T> = {
     events: T[];
@@ -237,10 +237,10 @@ export function HungerEventsCard({
                     icon={<Flame className="size-4 text-muted-foreground" />}
                     event_label="Hunger Event"
                     occurred_at={new Date(event.occurred_at)}
-                    badge_content={hunger_level_label_map[event.hunger_level]}
+                    badge_content={hunger_level.map[event.hunger_level]}
                     detail_items={[
                         { label: "Occurred At", value: new Date(event.occurred_at).toLocaleString() },
-                        { label: "Hunger Level", value: hunger_level_label_map[event.hunger_level] },
+                        { label: "Hunger Level", value: hunger_level.map[event.hunger_level] },
                     ]}
                     suggested_actions={event.suggested_actions}
                     onDelete={onDelete}
@@ -272,12 +272,12 @@ export function CravingEventsCard({
                     icon={<Siren className="h-4 w-4 text-muted-foreground" />}
                     event_label="Craving Event"
                     occurred_at={new Date(event.occurred_at)}
-                    badge_content={craving_intensity_label_map[event.intensity]}
+                    badge_content={craving_intensity.map[event.intensity]}
                     detail_items={[
                         { label: "Occurred At", value: new Date(event.occurred_at).toLocaleString() },
-                        { label: "Craving Type", value: craving_type_label_map[event.craving_type] },
-                        { label: "Intensity", value: craving_intensity_label_map[event.intensity] },
-                        { label: "Trigger", value: craving_trigger_label_map[event.trigger] },
+                        { label: "Craving Type", value: craving_type.map[event.craving_type] },
+                        { label: "Intensity", value: craving_intensity.map[event.intensity] },
+                        { label: "Trigger", value: craving_triggers.map[event.trigger] },
                     ]}
                     suggested_actions={event.suggested_actions}
                     onDelete={onDelete}

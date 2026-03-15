@@ -1,5 +1,5 @@
 import { ToPrimitive } from "@/lib/types/mongo_primitive_types";
-import { AvgCalories, AvgSleep, CurrentEnergy, Gender } from "@/lib/zod_schemas/profile_setup_schema";
+import { AvgCalories, AvgSleep, CurrentEnergy, Gender } from "@/lib/enums";
 import { Types } from "mongoose";
 
 export interface IDietRestriction {

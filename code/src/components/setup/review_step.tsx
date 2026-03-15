@@ -2,8 +2,8 @@ import { ProfileSetupValues } from "@/lib/zod_schemas/profile_setup_schema";
 import SetupCard from "@/components/setup/setup_card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
-import { calorie_label_map, energy_label_map, gender_label_map, sleep_label_map } from "@/lib/zod_schemas/profile_setup_schema";
 import { Spinner } from "@/components/ui/spinner";
+import { avg_calories, avg_sleep, current_energy, gender } from "@/lib/enums";
 
 type ReviewStepProps = {
     values: ProfileSetupValues;
@@ -61,20 +61,20 @@ export default function ReviewStep({
                 <ReviewRow label="Occupation" value={values.occupation} />
                 <ReviewRow
                     label="Gender"
-                    value={values.gender ? gender_label_map[values.gender] : ""}
+                    value={values.gender ? gender.map[values.gender] : ""}
                 />
                 <ReviewRow label="Fitness Level" value={String(values.fitness_level ?? "")} />
                 <ReviewRow
                     label="Calories"
-                    value={values.avg_calories ? calorie_label_map[values.avg_calories] : ""}
+                    value={values.avg_calories ? avg_calories.map[values.avg_calories] : ""}
                 />
                 <ReviewRow
                     label="Sleep"
-                    value={values.avg_sleep ? sleep_label_map[values.avg_sleep] : ""}
+                    value={values.avg_sleep ? avg_sleep.map[values.avg_sleep] : ""}
                 />
                 <ReviewRow
                     label="Energy"
-                    value={values.current_energy ? energy_label_map[values.current_energy] : ""}
+                    value={values.current_energy ? current_energy.map[values.current_energy] : ""}
                 />
             </div>
         </SetupCard>

@@ -3,14 +3,14 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils/utils";
-import { AvgCalories, AvgSleep, CurrentEnergy, Gender, ProfileSetupValues } from "@/lib/zod_schemas/profile_setup_schema";
 import BasicInfoStep from "@/components/setup/basic_info_step";
 import OptionStep from "@/components/setup/option_step";
-import { calorie_options, energy_options, fitness_options, gender_options, sleep_options } from "@/lib/zod_schemas/profile_setup_schema";
 import ReviewStep from "@/components/setup/review_step";
 import { useAppForm } from "@/components/form/form";
 import { ApiResponse } from "@/lib/types/shared";
 import { useRouter } from "next/navigation";
+import { avg_calories, avg_sleep, AvgCalories, AvgSleep, current_energy, CurrentEnergy, energy_rating, fitness_level, FitnessLevel, gender, Gender } from "@/lib/enums";
+import { ProfileSetupValues } from "@/lib/zod_schemas/profile_setup_schema";
 
 const TOTAL_STEPS = 7;
 
@@ -28,7 +28,7 @@ export default function ProfileSetupWizard() {
             height: "" as unknown as number,
             occupation: "" as unknown as string,
 
-            fitness_level: "" as unknown as number,
+            fitness_level: "" as unknown as FitnessLevel,
 
             avg_calories: "" as unknown as AvgCalories,
             current_energy: "" as unknown as CurrentEnergy,
@@ -124,7 +124,7 @@ export default function ProfileSetupWizard() {
                             <OptionStep
                                 title="What is your gender?"
                                 description="Choose the option that best describes you."
-                                options={gender_options}
+                                options={gender.entries}
                                 value={values.gender}
                                 onSelect={(value) => selectAndAdvance("gender", value)}
                                 onBack={prevStep}
@@ -135,7 +135,7 @@ export default function ProfileSetupWizard() {
                             <OptionStep
                                 title="What is your fitness level?"
                                 description="Pick a number from 0 to 5."
-                                options={fitness_options}
+                                options={fitness_level.entries}
                                 value={values.fitness_level}
                                 onSelect={(value) => selectAndAdvance("fitness_level", value)}
                                 onBack={prevStep}
@@ -146,7 +146,7 @@ export default function ProfileSetupWizard() {
                             <OptionStep
                                 title="What is your average daily calorie intake?"
                                 description="Choose the option that best describes you."
-                                options={calorie_options}
+                                options={avg_calories.entries}
                                 value={values.avg_calories}
                                 onSelect={(value) => selectAndAdvance("avg_calories", value)}
                                 onBack={prevStep}
@@ -157,7 +157,7 @@ export default function ProfileSetupWizard() {
                             <OptionStep
                                 title="How much sleep do you get on average?"
                                 description="Choose the range closest to your normal routine."
-                                options={sleep_options}
+                                options={avg_sleep.entries}
                                 value={values.avg_sleep}
                                 onSelect={(value) => selectAndAdvance("avg_sleep", value)}
                                 onBack={prevStep}
@@ -168,7 +168,7 @@ export default function ProfileSetupWizard() {
                             <OptionStep
                                 title="How are your current energy levels?"
                                 description="Pick the option that feels most accurate."
-                                options={energy_options}
+                                options={current_energy.entries}
                                 value={values.current_energy}
                                 onSelect={(value) => selectAndAdvance("current_energy", value)}
                                 onBack={prevStep}

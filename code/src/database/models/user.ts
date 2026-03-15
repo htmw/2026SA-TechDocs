@@ -1,5 +1,5 @@
+import { avg_calories, avg_sleep, current_energy, gender } from "@/lib/enums";
 import { IPublicUser, IUser, IUserProfile } from "@/lib/types/mongo_user_types";
-import { avg_calories_enum, avg_sleep_enum, current_energy_enum, gender_enum } from "@/lib/zod_schemas/profile_setup_schema";
 import mongoose, { Schema, Model, HydratedDocument, Types } from "mongoose";
 
 // export const DietRestrictions = new Schema
@@ -33,19 +33,19 @@ export const UserProfileSchema = new Schema<IUserProfile>(
         }],
         avg_calories: {
             type: String,
-            enum: avg_calories_enum,
+            enum: avg_calories.values,
         },
         current_energy: {
             type: String,
-            enum: current_energy_enum,
+            enum: current_energy.values,
         },
         gender: {
             type: String,
-            enum: gender_enum,
+            enum: gender.values,
         },
         avg_sleep: {
             type: String,
-            enum: avg_sleep_enum,
+            enum: avg_sleep.values,
         },
     },
     { _id: false }

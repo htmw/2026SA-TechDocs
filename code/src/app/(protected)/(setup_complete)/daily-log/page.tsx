@@ -8,11 +8,11 @@ import { NutritionSummaryCard } from "@/components/cards/macro_card";
 import { CravingEventsCard, HungerEventsCard } from "@/components/cards/events_card";
 import { endOfWeek, format, startOfWeek } from "date-fns";
 import { useCreateDailyLog, useDailyLog, useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log";
-import { craving_intensity_enum, craving_triggers_enum, craving_type_enum, energy_rating_label_map, hunger_level_enum, stress_level_label_map } from "@/lib/zod_schemas/health_schema";
 import { QuickActionsCard } from "@/components/cards/quick_actions_card";
 import { tz } from "@date-fns/tz";
 import { useCravingEvents, useCreateCravingEvent, useDeleteCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
 import { useCreateHungerEvent, useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/api-hooks/use-hunger-events";
+import { craving_intensity, craving_triggers, craving_type, energy_rating, hunger_level, stress_level } from "@/lib/enums";
 
 const breakfast: MealSummary[] = [
     {
@@ -70,9 +70,9 @@ async function generateRandomCheckin(date: Date) {
         date: formatted_date,
         event: {
             occurred_at: formatted_date,
-            craving_type: randomFrom(craving_type_enum),
-            intensity: randomFrom(craving_intensity_enum),
-            trigger: randomFrom(craving_triggers_enum),
+            craving_type: randomFrom(craving_type.values),
+            intensity: randomFrom(craving_intensity.values),
+            trigger: randomFrom(craving_triggers.values),
             suggested_actions: [
                 "Drink a glass of water",
                 "Take a 5-minute walk",
@@ -90,9 +90,9 @@ async function generateRandomCravingEvent(date: Date) {
         date: formatted_date,
         event: {
             occurred_at: new Date().toISOString(),
-            craving_type: randomFrom(craving_type_enum),
-            intensity: randomFrom(craving_intensity_enum),
-            trigger: randomFrom(craving_triggers_enum),
+            craving_type: randomFrom(craving_type.values),
+            intensity: randomFrom(craving_intensity.values),
+            trigger: randomFrom(craving_triggers.values),
             suggested_actions: [
                 "Some snack 1",
                 "Some action 2",
@@ -111,7 +111,7 @@ async function generateRandomHungerEvent(date: Date) {
         date: formatted_date,
         event: {
             occurred_at: new Date().toISOString(),
-            hunger_level: randomFrom(hunger_level_enum),
+            hunger_level: randomFrom(hunger_level.values),
             suggested_actions: [
                 "Some recipe 1",
                 "Some action 2",
@@ -129,9 +129,9 @@ async function generateRandomDailyLog() {
     return {
         date: new Date().toISOString(),
         morning_weight: Math.floor(Math.random() * 40 + 200),
-        energy_rating: randomFrom(Object.keys(energy_rating_label_map)),
+        energy_rating: randomFrom(energy_rating.values),
         sleep_hours: Math.floor(Math.random() * 4 + 6),
-        stress_level: randomFrom(Object.keys(stress_level_label_map)),
+        stress_level: randomFrom(stress_level.values),
         timezone: "America/New_York",
     };
 }
@@ -158,9 +158,9 @@ export default function DailyLogPage() {
 
     const check_in_opts: DailyCheckInSummaryCardProps | undefined = daily_log ? {
         morning_weight: daily_log.morning_weight,
-        energy_rating: energy_rating_label_map[daily_log.energy_rating],
+        energy_rating: energy_rating.map[daily_log.energy_rating],
         sleep_hours: daily_log.sleep_hours,
-        stress_level: stress_level_label_map[daily_log.stress_level]
+        stress_level: stress_level.map[daily_log.stress_level]
     } as DailyCheckInSummaryCardProps : undefined;
 
     return (
