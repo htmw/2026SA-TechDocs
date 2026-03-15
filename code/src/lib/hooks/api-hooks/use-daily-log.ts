@@ -5,14 +5,6 @@ import { ClientHungerEvent, ClientCravingEvent, ClientDailyLog } from "@/lib/typ
 import callApi from "@/lib/api";
 import { format } from "date-fns";
 
-interface HungerEventResponse {
-    hunger_events: ClientHungerEvent[];
-}
-
-interface CravingEventResponse {
-    craving_events: ClientCravingEvent[];
-}
-
 interface DailyLogsResponse {
     daily_logs: ClientDailyLog[];
 }
@@ -20,6 +12,11 @@ interface DailyLogsResponse {
 interface DailyLogResponse {
     daily_log: ClientDailyLog;
 }
+
+export type CreateDailyLogInput = Pick<
+    ClientDailyLog,
+    "date" | "timezone" | "morning_weight" | "energy_rating" | "sleep_hours" | "stress_level"
+>;
 
 export function useDailyLogs(start_date?: Date, end_date?: Date) {
     const formatted_start_date = start_date ? format(start_date, "yyyy-MM-dd") : undefined;
@@ -43,101 +40,6 @@ export function useDailyLog(date: Date) {
         }
     });
 }
-
-export function useHungerEvents(date: Date) {
-    const formatted_date = format(date, "yyyy-MM-dd");
-    return useQuery<ClientHungerEvent[], Error>({
-        queryKey: ["hungerEvents", formatted_date],
-        queryFn: async () => {
-            const res = await callApi<HungerEventResponse>(`/api/health/daily-logs/${formatted_date}/hunger-events`);
-            return res.hunger_events;
-        }
-    });
-}
-
-export function useCravingEvents(date: Date) {
-    const formatted_date = format(date, "yyyy-MM-dd");
-    return useQuery<ClientCravingEvent[], Error>({
-        queryKey: ["cravingEvents", formatted_date],
-        queryFn: async () => {
-            const res = await callApi<CravingEventResponse>(`/api/health/daily-logs/${formatted_date}/craving-events`);
-            return res.craving_events;
-        }
-    });
-}
-
-export function useDeleteHungerEvent() {
-    const qc = useQueryClient();
-
-    return useMutation<null, Error, { date: string; id: string }, unknown>({
-        mutationFn: ({ date, id }) =>
-            callApi<null>(`/api/health/daily-logs/${date}/hunger-events/${id}`, { method: "DELETE" }),
-        onSuccess: (_data: null) => {
-            qc.invalidateQueries({ queryKey: ["hungerEvents"] });
-        },
-        onError: (error: Error) => {
-            console.error("Error deleting hunger event:", error.message);
-        }
-    });
-}
-
-// mirror the hunger hook but operate on cravings
-export function useDeleteCravingEvent() {
-    const qc = useQueryClient();
-
-    return useMutation<null, Error, { date: string; id: string }, unknown>({
-        mutationFn: ({ date, id }) =>
-            callApi<null>(`/api/health/daily-logs/${date}/craving-events/${id}`, { method: "DELETE" }),
-        onSuccess: (_data: null) => {
-            qc.invalidateQueries({ queryKey: ["cravingEvents"] });
-        },
-    });
-}
-
-export function useCreateCravingEvent() {
-    const qc = useQueryClient();
-
-    return useMutation<
-        ClientCravingEvent,
-        Error,
-        { date: string; event: Omit<ClientCravingEvent, "_id"> },
-        unknown
-    >({
-        mutationFn: ({ date, event }) =>
-            callApi<ClientCravingEvent>(`/api/health/daily-logs/${date}/craving-events`, {
-                method: "POST",
-                body: JSON.stringify(event),
-            }),
-        onSuccess: (_data: ClientCravingEvent, variables) => {
-            qc.invalidateQueries({ queryKey: ["cravingEvents", variables.date] });
-        },
-    });
-}
-
-export function useCreateHungerEvent() {
-    const qc = useQueryClient();
-
-    return useMutation<
-        ClientHungerEvent,
-        Error,
-        { date: string; event: Omit<ClientHungerEvent, "_id"> },
-        unknown
-    >({
-        mutationFn: ({ date, event }) =>
-            callApi<ClientHungerEvent>(`/api/health/daily-logs/${date}/hunger-events`, {
-                method: "POST",
-                body: JSON.stringify(event),
-            }),
-        onSuccess: (_data: ClientHungerEvent, variables) => {
-            qc.invalidateQueries({ queryKey: ["hungerEvents", variables.date] });
-        },
-    });
-}
-
-export type CreateDailyLogInput = Pick<
-    ClientDailyLog,
-    "date" | "timezone" | "morning_weight" | "energy_rating" | "sleep_hours" | "stress_level"
->;
 
 export function useCreateDailyLog() {
     const qc = useQueryClient();

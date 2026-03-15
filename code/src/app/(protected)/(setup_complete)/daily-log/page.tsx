@@ -7,10 +7,12 @@ import { DailyCheckInSummaryCard, DailyCheckInSummaryCardProps } from "@/compone
 import { NutritionSummaryCard } from "@/components/cards/macro_card";
 import { CravingEventsCard, HungerEventsCard } from "@/components/cards/events_card";
 import { endOfWeek, format, startOfWeek } from "date-fns";
-import { useCravingEvents, useCreateCravingEvent, useCreateDailyLog, useCreateHungerEvent, useDailyLog, useDailyLogs, useDeleteCravingEvent, useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/api-hooks/use-daily-log";
+import { useCreateDailyLog, useDailyLog, useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log";
 import { craving_intensity_enum, craving_triggers_enum, craving_type_enum, energy_rating_label_map, hunger_level_enum, stress_level_label_map } from "@/lib/zod_schemas/health_schema";
 import { QuickActionsCard } from "@/components/cards/quick_actions_card";
 import { tz } from "@date-fns/tz";
+import { useCravingEvents, useCreateCravingEvent, useDeleteCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
+import { useCreateHungerEvent, useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/api-hooks/use-hunger-events";
 
 const breakfast: MealSummary[] = [
     {
