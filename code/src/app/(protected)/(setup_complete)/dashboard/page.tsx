@@ -3,7 +3,7 @@
 import { GreetingsCard } from "@/components/cards/greetings_card";
 import { WeightCard } from "@/components/cards/weight_card";
 import { useAuth } from "@/lib/hooks/useAuthProvider"
-import { useDailyLogs } from "@/lib/hooks/useDailyLog";
+import { useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log";
 import { format } from "date-fns";
 
 export default function DashboardPage() {

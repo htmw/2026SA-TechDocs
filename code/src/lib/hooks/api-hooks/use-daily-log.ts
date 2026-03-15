@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ClientHungerEvent, ClientCravingEvent, ClientDailyLog } from "@/lib/types/mongo_daily_log_types";
 import callApi from "@/lib/api";
 import { format } from "date-fns";
-import { ApiResponse } from "@/lib/types/shared";
 
 interface HungerEventResponse {
     hunger_events: ClientHungerEvent[];
