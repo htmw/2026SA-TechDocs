@@ -2,8 +2,6 @@ import { avg_calories, avg_sleep, current_energy, gender } from "@/lib/enums";
 import { IPublicUser, IUser, IUserProfile } from "@/lib/types/mongo_user_types";
 import mongoose, { Schema, Model, HydratedDocument, Types } from "mongoose";
 
-// export const DietRestrictions = new Schema
-
 export const UserProfileSchema = new Schema<IUserProfile>(
     {
         dob: {
@@ -47,6 +45,10 @@ export const UserProfileSchema = new Schema<IUserProfile>(
             type: String,
             enum: avg_sleep.values,
         },
+        goals: {
+            type: [String],
+            enum: avg_sleep.values,
+        },
     },
     { _id: false }
 );
@@ -54,18 +56,20 @@ export const UserProfileSchema = new Schema<IUserProfile>(
 //Methods Interface
 export interface IUserMethods {
     getPublicProfile(): IPublicUser;
-    completeFirstTimeSetup(profileData: Partial<IUserProfile>): Promise<HydratedDocument<IUser, IUserMethods> | null>;
-    updateProfile(profileData: Partial<IUserProfile>): Promise<HydratedDocument<IUser, IUserMethods>>;
+    completeFirstTimeSetup(profileData: Partial<IUserProfile>): Promise<HydratedUser | null>;
+    updateProfile(profileData: Partial<IUserProfile>): Promise<HydratedUser>;
 }
 
 //Model Interface, which includes both the document and the methods
 export interface UserModel extends Model<IUser, {}, IUserMethods> {
-    findByEmail(email: string): Promise<HydratedDocument<IUser, IUserMethods> | null>;
-    findByUserId(id: Types.ObjectId): Promise<HydratedDocument<IUser, IUserMethods> | null>;
+    getAll(): Promise<HydratedUser[]>;
+    findByEmail(email: string): Promise<HydratedUser | null>;
+    findByUserId(id: Types.ObjectId): Promise<HydratedUser | null>;
     getUserPassword(id: Types.ObjectId): Promise<string | null>;
-    createUserAccount(name: string, email: string, password: string): Promise<HydratedDocument<IUser, IUserMethods>>;
-    getAll(): Promise<HydratedDocument<IUser, IUserMethods>[]>;
+    createUserAccount(name: string, email: string, password: string): Promise<HydratedUser>;
 }
+
+export type HydratedUser = HydratedDocument<IUser, IUserMethods>;
 
 const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
     {
@@ -89,9 +93,6 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
             type: UserProfileSchema,
             required: true,
         },
-        goals: {
-            type: [String],
-        },
         setup_complete: {
             type: Boolean,
             required: true,
@@ -100,84 +101,83 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
     },
     {
         timestamps: true, // adds createdAt and updatedAt fields
+        statics: {
+            getAll() {
+                return this.find({});
+            },
+
+            findByEmail(email: string) {
+                return this.findOne({ email });
+            },
+
+            async findByUserId(id: Types.ObjectId) {
+                return await this.findById(id);
+            },
+
+            async getUserPassword(id: Types.ObjectId) {
+                const user = await this.findById(id, { password: 1 }).exec();
+                if (!user) {
+                    return null;
+                }
+                return user.password;
+            },
+
+            async createUserAccount(
+                name: string,
+                email: string,
+                password: string,
+            ) {
+                const existingUser = await this.findByEmail(email);
+                if (existingUser) {
+                    //TODO: throw more detailed error
+                    return null;
+                }
+
+                const user = this.create({
+                    name,
+                    email,
+                    password,
+                    profile: {}, // initialize with empty profile
+                });
+
+                return user;
+            }
+        },
+        methods: {
+            getPublicProfile(): IPublicUser {
+                return {
+                    _id: this._id,
+                    name: this.name,
+                    email: this.email,
+                    profile: this.profile,
+                    setup_complete: this.setup_complete,
+                    createdAt: this.createdAt,
+                    updatedAt: this.updatedAt,
+                };
+            },
+
+            async completeFirstTimeSetup(profileData: Partial<IUserProfile>) {
+                if (this.setup_complete) {
+                    return null;
+                }
+                this.setup_complete = true;
+                return await this.updateProfile(profileData);
+            },
+
+            async updateProfile(profileData: Partial<IUserProfile>) {
+                if (profileData.dob) {
+                    profileData.dob.setUTCHours(0, 0, 0, 0);
+                }
+                this.profile = {
+                    ...this.profile,
+                    ...profileData,
+                };
+
+                return await this.save();
+            }
+        }
     }
 );
-
-//Static Methods
-UserSchema.statics.getAll = function () {
-    return this.find({});
-}
-
-UserSchema.statics.findByUserId = async function (id: Types.ObjectId) {
-    return await this.findById(id);
-};
-
-UserSchema.statics.findByEmail = function (email: string) {
-    return this.findOne({ email });
-};
-
-UserSchema.statics.getUserPassword = async function (id: Types.ObjectId) {
-    const user = await this.findById(id, { password: 1 }).exec();
-    if (!user) {
-        return null;
-    }
-    return user.password;
-};
-
-UserSchema.statics.createUserAccount = async function (
-    name: string,
-    email: string,
-    password: string,
-) {
-    const existingUser = await this.findByEmail(email);
-    if (existingUser) {
-        //TODO: throw more detailed error
-        return null;
-    }
-
-    const user = this.create({
-        name,
-        email,
-        password,
-        profile: {}, // initialize with empty profile
-    });
-
-    return user;
-}
-
-//Document Methods
-UserSchema.methods.getPublicProfile = function (): IPublicUser {
-    return {
-        _id: this._id,
-        name: this.name,
-        email: this.email,
-        profile: this.profile,
-        goals: this.goals,
-        setup_complete: this.setup_complete,
-        createdAt: this.createdAt,
-        updatedAt: this.updatedAt,
-    };
-};
-
-UserSchema.methods.completeFirstTimeSetup = async function (profileData: Partial<IUserProfile>) {
-    if (this.setup_complete) {
-        return null;
-    }
-    this.setup_complete = true;
-    return await this.updateProfile(profileData);
-}
-
-UserSchema.methods.updateProfile = async function (profileData: Partial<IUserProfile>) {
-    if (profileData.dob) {
-        profileData.dob.setUTCHours(0, 0, 0, 0);
-    }
-    this.profile = {
-        ...this.profile,
-        ...profileData,
-    };
-
-    return await this.save();
-}
 
 export const User =
     (mongoose.models.User as UserModel) ||

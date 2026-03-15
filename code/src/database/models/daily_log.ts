@@ -146,7 +146,7 @@ export interface DailyLogModel extends Model<IDailyLog, {}, IDailyLogMethods> {
 /**
  * The hyddrated document type, which includes both the properties of IDailyLog and the methods defined in IDailyLogMethods
  */
-type HydratedDailyLog = HydratedDocument<IDailyLog, IDailyLogMethods>;
+export type HydratedDailyLog = HydratedDocument<IDailyLog, IDailyLogMethods>;
 
 const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
     {

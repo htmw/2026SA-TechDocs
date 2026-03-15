@@ -4,7 +4,7 @@ import { Types } from "mongoose";
 
 export interface IDietRestriction {
     allergies?: string[];//convert to enum later
-    religious?: string[];//convert to enum later
+    preferences?: string[];//convert to enum later
 }
 
 export interface IUser {
@@ -13,7 +13,6 @@ export interface IUser {
     email: string;
     password: string;
     profile: IUserProfile;
-    goals: string[];
     setup_complete: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -31,6 +30,7 @@ export interface IUserProfile {
     current_energy?: CurrentEnergy;
     gender?: Gender;
     avg_sleep?: AvgSleep;
+    goals?: string[];
 }
 
 export type IPublicUser =
