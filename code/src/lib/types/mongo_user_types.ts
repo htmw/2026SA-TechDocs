@@ -1,5 +1,5 @@
 import { ToPrimitive } from "@/lib/types/mongo_primitive_types";
-import { AvgCalories, AvgSleep, CurrentEnergy, Gender } from "@/lib/enums";
+import { AvgCalories, AvgSleep, CurrentEnergy, FitnessLevel, Gender } from "@/lib/enums";
 import { Types } from "mongoose";
 
 export interface IDietRestriction {
@@ -25,7 +25,7 @@ export interface IUserProfile {
     weight?: number;
     occupation?: string;
     timezone?: string;
-    fitness_level?: number;
+    fitness_level?: FitnessLevel;
     hobbies?: string[];
     avg_calories?: AvgCalories;
     current_energy?: CurrentEnergy;
