@@ -17,7 +17,9 @@ export const ProfileZodSchema = z.object({
     current_energy: z.enum(current_energy.values, "Current energy level is required"),
     gender: z.enum(gender.values, "Gender is required"),
     avg_sleep: z.enum(avg_sleep.values, "Average sleep is required"),
-    // hobbies: z.array(z.string().transform((s) => s.trim())).optional(),//ignored for now
+    
+    goals: z.array(z.string().transform((s) => s.trim())).optional(),
+    hobbies: z.array(z.string().transform((s) => s.trim())).optional(),
 });
 
 export type ProfileSetupValues = z.infer<typeof ProfileZodSchema>;
