@@ -25,12 +25,12 @@ export interface IUserProfile {
     occupation?: string;
     timezone?: string;
     fitness_level?: FitnessLevel;
-    hobbies?: string[];
     avg_calories?: AvgCalories;
     current_energy?: CurrentEnergy;
     gender?: Gender;
     avg_sleep?: AvgSleep;
     goals?: string[];
+    hobbies?: string[];
 }
 
 export type IPublicUser =

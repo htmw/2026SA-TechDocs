@@ -1,4 +1,4 @@
-import { avg_calories, avg_sleep, current_energy, gender } from "@/lib/enums";
+import { avg_calories, avg_sleep, current_energy, fitness_level, gender } from "@/lib/enums";
 import { IPublicUser, IUser, IUserProfile } from "@/lib/types/mongo_user_types";
 import mongoose, { Schema, Model, HydratedDocument, Types } from "mongoose";
 
@@ -15,20 +15,17 @@ export const UserProfileSchema = new Schema<IUserProfile>(
             type: Number,
             min: 0,
         },
-        timezone: {
-            type: String,
-        },
         occupation: {
             type: String,
             trim: true,
         },
-        fitness_level: {
-            type: Number,
-        },
-        hobbies: [{
+        timezone: {
             type: String,
-            trim: true
-        }],
+        },
+        fitness_level: {
+            type: String,
+            enum: fitness_level.values,
+        },
         avg_calories: {
             type: String,
             enum: avg_calories.values,
@@ -49,6 +46,10 @@ export const UserProfileSchema = new Schema<IUserProfile>(
             type: [String],
             enum: avg_sleep.values,
         },
+        hobbies: [{
+            type: String,
+            trim: true
+        }],
     },
     { _id: false }
 );
