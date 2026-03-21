@@ -30,19 +30,20 @@ export const WeeklyDietPlanSchema = new Schema<IWeeklyDietPlan, WeeklyDietPlanMo
                     enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
                 },
                 breakfast: {
-                    type: String,
-                    required: true,
+                    recipe: { type: String, required: true },
+                    vitamins: { type: String, required: false },
                 },
                 lunch: {
-                    type: String,
-                    required: true,
+                    recipe: { type: String, required: true },
+                    vitamins: { type: String, required: false },
                 },
                 dinner: {
-                    type: String,
-                    required: true,
+                    recipe: { type: String, required: true },
+                    vitamins: { type: String, required: false },
                 },
                 snacks: {
-                    type: String,
+                    recipe: { type: String, required: true },
+                    vitamins: { type: String, required: false },
                 },
             },
         ],

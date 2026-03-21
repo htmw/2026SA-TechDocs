@@ -22,6 +22,7 @@ export interface IMealLog {
     meal_type: MealType;
     description: string;
     calories: number;
+    vitamins?: string;
 }
 
 export interface IHungerEvent {
