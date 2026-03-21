@@ -19,6 +19,10 @@ const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
             type: Number,
             required: true,
         },
+        vitamins: {
+            type: String,
+            required: false,
+        },
     },
     { _id: false }
 );

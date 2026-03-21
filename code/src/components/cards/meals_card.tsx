@@ -22,6 +22,7 @@ export type MealSummary = {
     protein: number;
     sodium: number;
     fat: number;
+    vitamins?: string;
     serving?: string;
     logged_at?: string;
 };
@@ -90,6 +91,9 @@ export function MealsCard({
                                             <Badge variant="outline">{meal.calories} cal</Badge>
                                             <Badge variant="outline">{meal.protein}g protein</Badge>
                                             <Badge variant="outline">{meal.fat}g fat</Badge>
+                                            {meal.vitamins && (
+                                                <Badge variant="outline">{meal.vitamins}</Badge>
+                                            )}
                                         </ItemDescription>
                                     </ItemContent>
 
