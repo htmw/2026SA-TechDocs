@@ -18,6 +18,10 @@ const MealLogSchema = new Schema(
             type: Number,
             required: true,
         },
+        vitamins: {
+            type: String,
+            required: false,
+        },
     },
     { _id: false }
 );

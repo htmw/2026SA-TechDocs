@@ -1,12 +1,17 @@
 import { ToPrimitive } from "@/lib/types/mongo_primitive_types";
 import { Types } from "mongoose";
 
+export interface IRecipe {
+    recipe: string;
+    vitamins?: string;
+}
+
 export interface IMealPlan {
     day: "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
-    breakfast: string;
-    lunch: string;
-    dinner: string;
-    snacks?: string;
+    breakfast: IRecipe;
+    lunch: IRecipe;
+    dinner: IRecipe;
+    snacks?: IRecipe;
 }
 
 //Main Document
