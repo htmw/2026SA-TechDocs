@@ -1,5 +1,6 @@
 import { MealType } from "@/lib/enums";
 import { Types } from "mongoose";
+import { ToPrimitive } from "./mongo_primitive_types";
 
 export interface IFood {
     _id: Types.ObjectId;
@@ -16,3 +17,5 @@ export interface IFood {
     cholesterol: number;
     water_intake: number;
 }
+
+export type ClientFood = ToPrimitive<IFood>;
