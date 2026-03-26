@@ -20,7 +20,12 @@ export interface IMealLog {
     meal_type: MealType;
     description: string;
     calories: number;
-    vitamins?: string;
+    protein: number;
+    sodium: number;
+    fat: number;
+    servings?: string;
+    vitamins?: string[];
+    logged_at: Date;
 }
 
 export interface IHungerEvent {
