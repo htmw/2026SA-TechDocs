@@ -1,4 +1,4 @@
-import { ICompliance, ICravingEvent, IDailyLog, IHungerEvent, IMealLog, IPrediction } from "@/lib/types/mongo_daily_log_types";
+import { ICravingEvent, IDailyLog, IHungerEvent, IMealLog } from "@/lib/types/mongo_daily_log_types";
 import { startOfDay } from "date-fns";
 import mongoose, { Schema, Model, Types, HydratedDocument } from "mongoose";
 import { DailyLogValues } from "@/lib/zod_schemas/health_schema";
@@ -77,54 +77,6 @@ const CravingEventSchema = new Schema<ICravingEvent, DailyLogModel>(
     }
 );
 
-const PredictionSchema = new Schema<IPrediction, DailyLogModel>(
-    {
-        appetite_risk_score: {
-            type: Number,
-            min: 1,
-            max: 10,
-            required: true,
-        },
-        over_eating_risk_probability: {
-            type: Number,
-            required: true,
-        },
-        weight_loss_success_probability: {
-            type: Number,
-            required: true,
-        },
-        projected_timeline_days: {
-            type: Number,
-            required: true,
-        },
-    },
-    { _id: false }
-);
-
-const ComplianceSchema = new Schema<ICompliance, DailyLogModel>(
-    {
-        commitment_rate: {
-            type: Number,
-            min: 1,
-            max: 10,
-            required: true,
-        },
-        portion_control_score: {
-            type: Number,
-            min: 1,
-            max: 10,
-            required: true,
-        },
-        consistency_score: {
-            type: Number,
-            min: 1,
-            max: 10,
-            required: true,
-        },
-    },
-    { _id: false }
-);
-
 //Methods Interface
 export interface IDailyLogMethods {
     getCravingEventByTime(this: HydratedDailyLog, date: Date): ICravingEvent | null;
@@ -191,12 +143,6 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
         },
         craving_events: {
             type: [CravingEventSchema],
-        },
-        prediction: {
-            type: PredictionSchema,
-        },
-        compliance: {
-            type: ComplianceSchema,
         }
     },
     {

@@ -14,8 +14,6 @@ export interface IDailyLog {
     meals: IMealLog[];
     hunger_events: IHungerEvent[];
     craving_events: ICravingEvent[];
-    prediction: IPrediction;
-    compliance: ICompliance;
 }
 
 export interface IMealLog {
@@ -43,22 +41,7 @@ export interface ICravingEvent {
     reasoning: string;
 }
 
-export interface IPrediction {
-    appetite_risk_score: number; // 1-10 scale
-    over_eating_risk_probability: number;
-    weight_loss_success_probability: number;
-    projected_timeline_days: number;
-}
-
-export interface ICompliance {
-    commitment_rate: number; // 1-10 scale
-    portion_control_score: number; // 1-10 scale
-    consistency_score: number; // 1-10 scale
-}
-
 export type ClientDailyLog = ToPrimitive<IDailyLog>;
 export type ClientMealLog = ToPrimitive<IMealLog>;
 export type ClientHungerEvent = ToPrimitive<IHungerEvent>;
 export type ClientCravingEvent = ToPrimitive<ICravingEvent>;
-export type ClientPrediction = ToPrimitive<IPrediction>;
-export type ClientCompliance = ToPrimitive<ICompliance>;
