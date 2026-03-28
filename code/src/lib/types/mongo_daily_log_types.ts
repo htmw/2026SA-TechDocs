@@ -1,6 +1,7 @@
 import { ToPrimitive } from "@/lib/types/mongo_primitive_types";
 import { CravingIntensity, CravingTrigger, CravingType, EnergyRating, HungerLevel, MealType, StressLevel } from "@/lib/enums";
 import { Types } from "mongoose";
+import { IFood } from "./mongo_food_types";
 
 export interface IDailyLog {
     _id: Types.ObjectId;
@@ -17,13 +18,10 @@ export interface IDailyLog {
 }
 
 export interface IMealLog {
+    _id: Types.ObjectId;
     meal_type: MealType;
-    description: string;
-    calories: number;
-    protein: number;
-    sodium: number;
-    fat: number;
-    servings?: string;
+    food_id: Types.ObjectId | IFood;
+    servings?: number;
     vitamins?: string[];
     logged_at: Date;
 }

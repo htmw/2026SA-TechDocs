@@ -1,4 +1,4 @@
-import { craving_intensity, craving_triggers, craving_type, energy_rating, hunger_level, stress_level } from "@/lib/enums";
+import { craving_intensity, craving_triggers, craving_type, energy_rating, hunger_level, meal_type, MealType, stress_level } from "@/lib/enums";
 import z from "zod";
 
 export const DailyLogZodSchema = z.object({
@@ -26,6 +26,13 @@ export const HungerEventZodSchema = z.object({
     reasoning: z.string().optional(),
 });
 
+export const MealZodSchema = z.object({
+    meal_type: z.enum(meal_type.values, `Meal type is required (${meal_type.values.join(" | ")})`),
+    food_id: z.string(),
+    servings: z.number(),
+    vitamins: z.array(z.string()).optional(),
+    logged_at: z.coerce.date(),
+});
 
 export type DailyLogValues = z.infer<typeof DailyLogZodSchema>;
 
