@@ -3,6 +3,7 @@ import { startOfDay } from "date-fns";
 import mongoose, { Schema, Model, Types, HydratedDocument } from "mongoose";
 import { DailyLogValues } from "@/lib/zod_schemas/health_schema";
 import { craving_intensity, craving_triggers, craving_type, energy_rating, hunger_level, meal_type, stress_level } from "@/lib/enums";
+import { Food } from "./food";
 
 const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
     {
@@ -11,20 +12,24 @@ const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
             enum: meal_type.values,
             required: true,
         },
-        description: {
-            type: String,
+        food_id: {
+            type: Types.ObjectId,
+            ref: "Food",
             required: true,
         },
-        calories: {
+        servings: {
             type: Number,
-            required: true,
-        },
-        vitamins: {
-            type: String,
             required: false,
         },
-    },
-    { _id: false }
+        vitamins: {
+            type: [String],
+            required: false,
+        },
+        logged_at: {
+            type: Date,
+            required: true,
+        },
+    }
 );
 
 const HungerEventSchema = new Schema<IHungerEvent, DailyLogModel>(
@@ -90,6 +95,12 @@ export interface IDailyLogMethods {
     addHungerEvent(this: HydratedDailyLog, event: IHungerEvent): Promise<HydratedDailyLog | null>;
     updateHungerEvent(this: HydratedDailyLog, id: Types.ObjectId, updates: Partial<IHungerEvent>): Promise<IHungerEvent | null>;
     deleteHungerEvent(this: HydratedDailyLog, id: Types.ObjectId): Promise<boolean>;
+
+    getMealByTime(this: HydratedDailyLog, date: Date): Promise<IMealLog | null>;
+    getMeal(this: HydratedDailyLog, id: Types.ObjectId): Promise<IMealLog | null>;
+    addMeal(this: HydratedDailyLog, meal: IMealLog): Promise<HydratedDailyLog | null>;
+    updateMeal(this: HydratedDailyLog, id: Types.ObjectId, updates: Partial<IMealLog>): Promise<IMealLog | null>;
+    deleteMeal(this: HydratedDailyLog, id: Types.ObjectId): Promise<boolean>;
 }
 
 //Model Interface, which includes both the document and the methods
@@ -188,7 +199,7 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
                 await this.save();
                 return true;
             },
-            
+
             getHungerEventByTime(this: HydratedDailyLog, date: Date) {
                 const found = this.hunger_events.find((e: IHungerEvent) => e.occurred_at.getTime() === date.getTime());
                 return found || null;
@@ -207,7 +218,7 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
                 await this.save();
                 return this;
             },
-        
+
             async updateHungerEvent(this: HydratedDailyLog, id: Types.ObjectId, updates: Partial<IHungerEvent>) {
                 const ev = this.getHungerEvent(id);
                 if (!ev) {
@@ -227,12 +238,56 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
                 await this.save();
                 return true;
             },
+
+            async getMealByTime(this: HydratedDailyLog, date: Date) {
+                await this.populate({ path: "meals.food_id", model: Food });
+                const meal = this.meals.find((m: IMealLog) => m.logged_at.getTime() === date.getTime());
+                return meal || null;
+            },
+
+            async getMeal(this: HydratedDailyLog, id: Types.ObjectId) {
+                await this.populate({ path: "meals.food_id", model: Food });
+                const found = this.meals.find((m: IMealLog) => m._id.equals(id));
+                return found || null;
+            },
+
+            async addMeal(this: HydratedDailyLog, meal: IMealLog) {
+                if (await this.getMealByTime(meal.logged_at)) {
+                    return null;
+                }
+                this.meals.push(meal);
+                await this.save();
+                await this.populate({ path: "meals.food_id", model: Food });
+                return this;
+            },
+
+            async updateMeal(this: HydratedDailyLog, id: Types.ObjectId, updates: Partial<IMealLog>) {
+                const meal = await this.getMeal(id);
+                if (!meal) {
+                    return null;
+                }
+                Object.assign(meal, updates);
+                await this.save();
+                await this.populate({ path: "meals.food_id", model: Food });
+                return this.meals.find((m: IMealLog) => m._id.equals(id)) || null;
+            },
+
+            async deleteMeal(this: HydratedDailyLog, id: Types.ObjectId) {
+                const idx = this.meals.findIndex((m: IMealLog) => m._id.equals(id));
+                if (idx === -1) {
+                    return false;
+                }
+                this.meals.splice(idx, 1);
+                await this.save();
+                await this.populate({ path: "meals.food_id", model: Food });
+                return true;
+            }
         },
         statics: {
 
             async getDailyLogByDate(user_id: Types.ObjectId, date: Date): Promise<HydratedDailyLog | null> {
                 const dayStart = startOfDay(date);
-                return await this.findOne({ user_id, date: dayStart }).exec();
+                return await this.findOne({ user_id, date: dayStart }).populate({ path: "meals.food_id", model: Food }).exec();                
             },
 
             async hasDailyLog(user_id: Types.ObjectId, date: Date): Promise<boolean> {
