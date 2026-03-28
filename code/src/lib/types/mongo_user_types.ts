@@ -25,7 +25,7 @@ export interface IUserProfile {
     weight?: number;
     occupation?: string;
     timezone?: string;
-    fitness_level?: number;
+    fitnessLevel?: "Sedentary" | "Moderate" | "Active";
     hobbies?: string[];
     avg_calories?: AvgCalories;
     current_energy?: CurrentEnergy;
