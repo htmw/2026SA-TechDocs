@@ -91,8 +91,6 @@ const FoodSchema = new Schema<IFood, FoodModel, IFoodMethods>(
     }
 );
 
-FoodSchema.index({ food_item: 1 }, { unique: true});
-
 export const Food =
     (mongoose.models["Food"] as FoodModel) ||
     mongoose.model<IFood, FoodModel>("Food", FoodSchema);

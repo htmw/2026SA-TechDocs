@@ -2,8 +2,8 @@ import { ICravingEvent, IDailyLog, IHungerEvent, IMealLog } from "@/lib/types/mo
 import { startOfDay } from "date-fns";
 import mongoose, { Schema, Model, Types, HydratedDocument } from "mongoose";
 import { DailyLogValues } from "@/lib/zod_schemas/health_schema";
-import { craving_intensity, craving_triggers, craving_type, energy_rating, hunger_level, meal_type, stress_level } from "@/lib/enums";
-import { Food } from "./food";
+import { craving_intensity, craving_triggers, craving_type, energy_rating, food_type, hunger_level, meal_type, stress_level } from "@/lib/enums";
+import "./food";
 
 const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
     {
@@ -13,8 +13,13 @@ const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
             required: true,
         },
         food_id: {
-            type: Types.ObjectId,
-            ref: "Food",
+            type: Schema.Types.ObjectId,
+            ref: subdoc => subdoc.food_type,
+            required: true,
+        },
+        food_type: {
+            type: String,
+            enum: food_type.values,
             required: true,
         },
         servings: {
@@ -240,13 +245,13 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
             },
 
             async getMealByTime(this: HydratedDailyLog, date: Date) {
-                await this.populate({ path: "meals.food_id", model: Food });
+                await this.populate({ path: "meals.food_id" });
                 const meal = this.meals.find((m: IMealLog) => m.logged_at.getTime() === date.getTime());
                 return meal || null;
             },
 
             async getMeal(this: HydratedDailyLog, id: Types.ObjectId) {
-                await this.populate({ path: "meals.food_id", model: Food });
+                await this.populate({ path: "meals.food_id" });
                 const found = this.meals.find((m: IMealLog) => m._id.equals(id));
                 return found || null;
             },
@@ -257,7 +262,7 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
                 }
                 this.meals.push(meal);
                 await this.save();
-                await this.populate({ path: "meals.food_id", model: Food });
+                await this.populate({ path: "meals.food_id" });
                 return this;
             },
 
@@ -268,7 +273,7 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
                 }
                 Object.assign(meal, updates);
                 await this.save();
-                await this.populate({ path: "meals.food_id", model: Food });
+                await this.populate({ path: "meals.food_id" });
                 return this.meals.find((m: IMealLog) => m._id.equals(id)) || null;
             },
 
@@ -279,7 +284,7 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
                 }
                 this.meals.splice(idx, 1);
                 await this.save();
-                await this.populate({ path: "meals.food_id", model: Food });
+                await this.populate({ path: "meals.food_id" });
                 return true;
             }
         },
@@ -287,7 +292,7 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
 
             async getDailyLogByDate(user_id: Types.ObjectId, date: Date): Promise<HydratedDailyLog | null> {
                 const dayStart = startOfDay(date);
-                return await this.findOne({ user_id, date: dayStart }).populate({ path: "meals.food_id", model: Food }).exec();                
+                return await this.findOne({ user_id, date: dayStart }).populate({ path: "meals.food_id" }).exec();                
             },
 
             async hasDailyLog(user_id: Types.ObjectId, date: Date): Promise<boolean> {

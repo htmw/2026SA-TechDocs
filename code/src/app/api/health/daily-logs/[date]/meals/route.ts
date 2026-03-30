@@ -24,7 +24,14 @@ export const POST = createRoute(
         const parsed = body as z.infer<typeof MealZodSchema>;
         const parsed_date = locals.parsed_date!;
 
-        const daily_log = await DailyLog.getDailyLogByDate(user!._id, parsed_date);
+        let daily_log;
+        try {
+            daily_log = await DailyLog.getDailyLogByDate(user!._id, parsed_date);
+        } catch (err) {
+            console.error("Error fetching daily log:", err);
+            return NextResponse.json(createErrorResponse("DAILY_LOG_FETCH_ERROR", "An error occurred while fetching the daily log"), { status: 500 });
+        }
+        
         if (!daily_log) {
             return NextResponse.json(createErrorResponse("DAILY_LOG_NOT_FOUND", "No daily log found for the specified date"), { status: 404 });
         }
@@ -47,10 +54,20 @@ export const GET = createRoute(
     async ({ user, locals }) => {
         const parsed_date = locals.parsed_date!;
 
-        const daily_log = await DailyLog.getDailyLogByDate(user!._id, parsed_date);
+        let daily_log;
+        try {
+            daily_log = await DailyLog.getDailyLogByDate(user!._id, parsed_date);
+        } catch (err) {
+            console.error("Error fetching daily log:", err);
+            return NextResponse.json(createErrorResponse("DAILY_LOG_FETCH_ERROR", "An error occurred while fetching the daily log"), { status: 500 });
+        }
+
         if (!daily_log) {
             return NextResponse.json(createErrorResponse("DAILY_LOG_NOT_FOUND", "No daily log found for the specified date"), { status: 404 });
         }
+
+        // Ensure nested meal food refs are populated from the correct model (Food/Recipe/Custom)
+        await daily_log.populate({ path: "meals.food_id" });
 
         const payload = { meals: daily_log.meals || [] };
         const normalizedPayload = normalizeDocument(payload);

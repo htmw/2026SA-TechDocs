@@ -132,6 +132,14 @@ export const meal_type = createLabeledEnum({
 } as const);
 export type MealType = keyof typeof meal_type.map;
 
+// Food Type
+export const food_type = createLabeledEnum({
+    Recipe: "Recipe",
+    Food: "Food",
+    // Custom: "Custom", //future feature to allow users to add custom meals
+} as const);
+export type FoodType = keyof typeof food_type.map;
+
 // Hunger Level
 export const hunger_level = createLabeledEnum({
     little: "Little",
