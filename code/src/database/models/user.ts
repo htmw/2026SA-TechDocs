@@ -24,7 +24,7 @@ export const UserProfileSchema = new Schema<IUserProfile>(
             type: String,
             trim: true,
         },
-        fitnessLevel: {
+        fitness_level: {
             type: String,
             enum: ["Sedentary", "Moderate", "Active"],
         },

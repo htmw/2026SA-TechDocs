@@ -5,33 +5,33 @@ import { useState, useEffect } from "react"
 
 export default function ProfilePage() {
     // profile form state
-type ProfileForm = {
-    name: string
-    age: string
-    height: string
-    weight: string
-    occupation: string
-    fitnessLevel: string
-    hobbies: string[]
-    averageCalories: string
-    currentEnergyLevel: string
-    gender: string
-    sleepHours: string
-}
+    type ProfileForm = {
+        name: string
+        age: string
+        height: string
+        weight: string
+        occupation: string
+        fitnessLevel: string
+        hobbies: string[]
+        averageCalories: string
+        currentEnergyLevel: string
+        gender: string
+        sleepHours: string
+    }
 
-const [formData, setFormData] = useState<ProfileForm>({
-    name: "",
-    age: "",
-    height: "",
-    weight: "",
-    occupation: "",
-    fitnessLevel: "",
-    hobbies: [], 
-    averageCalories: "",
-    currentEnergyLevel: "",
-    gender: "",
-    sleepHours: "",
-})
+    const [formData, setFormData] = useState<ProfileForm>({
+        name: "",
+        age: "",
+        height: "",
+        weight: "",
+        occupation: "",
+        fitnessLevel: "",
+        hobbies: [],
+        averageCalories: "",
+        currentEnergyLevel: "",
+        gender: "",
+        sleepHours: "",
+    })
 
     // calculated output state
     const [bmi, setBmi] = useState("")
@@ -181,13 +181,13 @@ const [formData, setFormData] = useState<ProfileForm>({
                     height: Number(formData.height),
                     weight: Number(formData.weight),
                     occupation: formData.occupation,
-                    fitnessLevel: formData.fitnessLevel,
+                    fitness_level: formData.fitnessLevel,
                     hobbies: formData.hobbies,
-                    averageCalories: formData.averageCalories,
-                    currentEnergyLevel: formData.currentEnergyLevel,
+                    avg_calories: formData.averageCalories,
+                    current_energy: formData.currentEnergyLevel,
                     gender: formData.gender,
-                    sleepHours: formData.sleepHours,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone 
+                    avg_sleep: formData.sleepHours,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
                 }),
             })
 
@@ -201,13 +201,13 @@ const [formData, setFormData] = useState<ProfileForm>({
             }
 
             setSuccessMessage("Profile saved successfully.")
-            console.log("SAVE SUCCESS:", data) 
+            console.log("SAVE SUCCESS:", data)
 
         } catch (error) {
             setErrorMessage(error instanceof Error ? error.message : "Failed to save profile.")
-        } 
+        }
     }
-    
+
     return (
         <div className="mx-auto max-w-4xl">
             {/* screen heading */}
@@ -329,7 +329,7 @@ const [formData, setFormData] = useState<ProfileForm>({
                                     </summary>
 
                                     <div className="absolute z-10 mt-2 w-full rounded-lg border bg-background text-foreground p-2 shadow">
-                                        {hobby_options.map((opt: { label: string; value: string }) =>  {
+                                        {hobby_options.map((opt: { label: string; value: string }) => {
                                             const isChecked = formData.hobbies.includes(opt.value)
 
                                             return (

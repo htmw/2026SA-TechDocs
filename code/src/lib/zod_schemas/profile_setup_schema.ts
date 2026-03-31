@@ -20,11 +20,11 @@ export const ProfileZodSchema = z.object({
     height: z.coerce.number().min(1, "Height is required"),
     occupation: z.string().optional(),
     timezone: z.string().min(1), 
-    fitnessLevel: z.enum(["Sedentary", "Moderate", "Active"]),
-    averageCalories: z.enum(avg_calories_enum),
-    currentEnergyLevel: z.enum(current_energy_enum),
+    fitness_level: z.enum(["Sedentary", "Moderate", "Active"]),
+    avg_calories: z.enum(avg_calories_enum),
+    current_energy: z.enum(current_energy_enum),
     gender: z.enum(["male", "female", "other"]),
-    sleepHours: z.enum(avg_sleep_enum),
+    avg_sleep: z.enum(avg_sleep_enum),
     hobbies: z.array(z.string()).optional(),
     name: z.string().min(1, "Name is required"),
 });
@@ -46,12 +46,9 @@ export const gender_options = [
 ];
 
 export const fitness_options = [
-    { label: "0", value: 0 as const },
-    { label: "1", value: 1 as const },
-    { label: "2", value: 2 as const },
-    { label: "3", value: 3 as const },
-    { label: "4", value: 4 as const },
-    { label: "5", value: 5 as const },
+    { label: "Sedentary", value: "Sedentary" as const },
+    { label: "Moderate", value: "Moderate" as const },
+    { label: "Active", value: "Active" as const },
 ];
 
 export const sleep_options = [

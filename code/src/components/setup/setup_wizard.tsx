@@ -28,7 +28,7 @@ export default function ProfileSetupWizard() {
             height: "" as unknown as number,
             occupation: "" as unknown as string,
 
-            fitness_level: "" as unknown as number,
+            fitness_level: "" as unknown as "Sedentary" | "Moderate" | "Active",
 
             avg_calories: "" as unknown as AvgCalories,
             current_energy: "" as unknown as CurrentEnergy,
