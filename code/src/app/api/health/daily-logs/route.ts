@@ -31,10 +31,11 @@ export const POST = createApiRoute(
         }
 
         //Create daily log
-        const createdLog = await DailyLog.createDailyLog(user._id, parsed);
-        if (!createdLog) {
-            return NextResponse.json(createErrorResponse("DAILY_LOG_CREATION_FAILED", "Failed to create daily log"), { status: 500 });
-        }
+        try {
+            const createdLog = await DailyLog.createDailyLog(user._id, parsed);
+            if (!createdLog) {
+                return NextResponse.json(createErrorResponse("DAILY_LOG_CREATION_FAILED", "Failed to create daily log"), { status: 500 });
+            }
 
         const payload = {
             daily_log: createdLog,
@@ -43,6 +44,12 @@ export const POST = createApiRoute(
         const normalizedPayload = normalizeDocument(payload);
 
         return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 201 });
+    } catch (error: any) {
+        if (error.code === 11000) {
+            return NextResponse.json(createErrorResponse("DAILY_LOG_EXISTS", "A daily log for this date already exists"), { status: 409 });
+        }
+        throw error;  
+    }
     },
     { body_schema: DailyLogZodSchema }
 );
