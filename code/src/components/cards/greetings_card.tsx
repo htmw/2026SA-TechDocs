@@ -5,6 +5,7 @@ import { Sunrise, Sun, Moon } from "lucide-react";
 import { getDayPeriod } from "@/lib/utils/utils";
 import { format } from "date-fns";
 import { tz } from "@date-fns/tz";
+import { TrendNotificationCard } from "@/components/cards/trend_notification_card";
 
 const icons = {
     Morning: Sunrise,
@@ -15,9 +16,11 @@ const icons = {
 export function GreetingsCard({
     name,
     timezone,
+    trends,
 }: {
     name: string;
     timezone?: string;
+    trends: string[];
 }) {
     const todays_date = new Date();
     timezone = timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -42,6 +45,11 @@ export function GreetingsCard({
                 </div>
 
                 <Icon className="h-6 w-6 text-muted-foreground" />
+            </CardContent>
+            <CardContent className="flex flex-col gap-2">
+                {trends.map((trend, index) => (
+                <TrendNotificationCard key={index} trend_text={trend} label={trend.toLowerCase().includes("up") ? "warning" : "info"} />
+            ))}
             </CardContent>
         </Card>
     );

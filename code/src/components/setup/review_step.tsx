@@ -58,7 +58,7 @@ export default function ReviewStep({
                 <ReviewRow label="Weight" value={String(values.weight ?? "")} />
                 <ReviewRow label="Height" value={String(values.height)} />
                 <ReviewRow label="Date of Birth" value={values.dob.toLocaleDateString()} />
-                <ReviewRow label="Occupation" value={values.occupation} />
+                <ReviewRow label="Occupation" value={values.occupation ?? ""} />
                 <ReviewRow
                     label="Gender"
                     value={values.gender ? gender.map[values.gender] : ""}

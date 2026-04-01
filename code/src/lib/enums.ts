@@ -63,14 +63,43 @@ export type AvgCalories = keyof typeof avg_calories.map;
 
 // Fitness Level
 export const fitness_level = createLabeledEnum({
-    "0": "0 - Not active at all",
-    "1": "1 - Light activity",
-    "2": "2 - Moderate activity",
-    "3": "3 - Active",
-    "4": "4 - Very active",
-    "5": "5 - Extremely active",
+    "sedentary": "Sedentary",
+    "moderate": "Moderate",
+    "active": "Active",
 } as const);
 export type FitnessLevel = keyof typeof fitness_level.map;
+
+// Occupation options used in the profile form dropdown.
+// Each option provides a display label and the value stored in the database.
+export const occupation_options = createLabeledEnum({
+    "Student": "Student",
+    "Software Developer": "Software Developer",
+    "Nurse": "Nurse",
+    "Teacher": "Teacher",
+    "Engineer": "Engineer",
+    "Construction Worker": "Construction Worker",
+    "Retail Worker": "Retail Worker",
+    "Manager": "Manager",
+    "Unemployed": "Unemployed",
+    "Other": "Other",
+} as const);
+export type Occupation = keyof typeof occupation_options.map;
+
+// Hobby options used for multi-select in the profile form.
+// Users can select multiple hobbies which are stored as an array of values
+export const hobby_options = createLabeledEnum({
+    "Gym": "Gym",
+    "Running": "Running",
+    "Walking": "Walking",
+    "Gaming": "Gaming",
+    "Reading": "Reading",
+    "Cooking": "Cooking",
+    "Traveling": "Traveling",
+    "Sports": "Sports",
+    "Music": "Music",
+    "None": "None",
+} as const);
+export type Hobby = keyof typeof hobby_options.map;
 
 // Current Energy
 export const current_energy = createLabeledEnum({
