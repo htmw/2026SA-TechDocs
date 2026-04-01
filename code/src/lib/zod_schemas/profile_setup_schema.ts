@@ -15,21 +15,18 @@ export type AvgSleep = typeof avg_sleep_enum[number];
 export const timezones = Intl.supportedValuesOf('timeZone');
 
 export const ProfileZodSchema = z.object({
-    dob: z.coerce.date("Date of birth is required"),
-    weight: z.string().min(1, "Weight is required").transform((v) => Number(v) || 0),
-    height: z.string().min(1, "Height is required").transform((v) => Number(v) || 0),
-    occupation: z.string().min(1, "Occupation is required").transform((s) => s?.trim()),
-    timezone: z.enum(timezones, "Timezone is required").transform((s) => s?.trim()),
-
-    fitness_level: z.coerce.number("Fitness is required").min(0).max(5),
-
-    avg_calories: z.enum(avg_calories_enum, "Average calories is required"),
-
-    current_energy: z.enum(current_energy_enum, "Current energy level is required"),
-    gender: z.enum(gender_enum, "Gender is required"),
-    avg_sleep: z.enum(avg_sleep_enum, "Average sleep is required"),
-
-    // hobbies: z.array(z.string().transform((s) => s.trim())).optional(),//ignored for now
+    dob: z.coerce.date(),
+    weight: z.coerce.number().min(1, "Weight is required"),
+    height: z.coerce.number().min(1, "Height is required"),
+    occupation: z.string().optional(),
+    timezone: z.string().min(1), 
+    fitness_level: z.enum(["Sedentary", "Moderate", "Active"]),
+    avg_calories: z.enum(avg_calories_enum),
+    current_energy: z.enum(current_energy_enum),
+    gender: z.enum(["male", "female", "other"]),
+    avg_sleep: z.enum(avg_sleep_enum),
+    hobbies: z.array(z.string()).optional(),
+    name: z.string().min(1, "Name is required"),
 });
 
 export type ProfileSetupValues = z.infer<typeof ProfileZodSchema>;
@@ -49,12 +46,9 @@ export const gender_options = [
 ];
 
 export const fitness_options = [
-    { label: "0", value: 0 as const },
-    { label: "1", value: 1 as const },
-    { label: "2", value: 2 as const },
-    { label: "3", value: 3 as const },
-    { label: "4", value: 4 as const },
-    { label: "5", value: 5 as const },
+    { label: "Sedentary", value: "Sedentary" as const },
+    { label: "Moderate", value: "Moderate" as const },
+    { label: "Active", value: "Active" as const },
 ];
 
 export const sleep_options = [

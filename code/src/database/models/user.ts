@@ -25,7 +25,8 @@ export const UserProfileSchema = new Schema<IUserProfile>(
             trim: true,
         },
         fitness_level: {
-            type: Number,
+            type: String,
+            enum: ["Sedentary", "Moderate", "Active"],
         },
         hobbies: [{
             type: String,
@@ -59,7 +60,7 @@ export interface IUserMethods {
 }
 
 //Model Interface, which includes both the document and the methods
-export interface UserModel extends Model<IUser, {}, IUserMethods> {
+export interface UserModel extends Model<IUser, object, IUserMethods> {
     findByEmail(email: string): Promise<HydratedDocument<IUser, IUserMethods> | null>;
     findByUserId(id: Types.ObjectId): Promise<HydratedDocument<IUser, IUserMethods> | null>;
     getUserPassword(id: Types.ObjectId): Promise<string | null>;
@@ -131,7 +132,7 @@ UserSchema.statics.createUserAccount = async function (
 ) {
     const existingUser = await this.findByEmail(email);
     if (existingUser) {
-        //TODO: throw more detailed error
+//TODO: throw more detailed error
         return null;
     }
 
@@ -139,7 +140,7 @@ UserSchema.statics.createUserAccount = async function (
         name,
         email,
         password,
-        profile: {}, // initialize with empty profile
+        profile: {} as IUserProfile, // initialize with empty profile
     });
 
     return user;

@@ -1,4 +1,4 @@
-// src/app/api/nutriai-endpoints/energy-monitor/route.ts
+// src/app/api/nutriai/energy-monitor/route.ts
 
 import { NextResponse } from "next/server"
 

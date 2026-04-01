@@ -1,19 +1,34 @@
 "use client"
 
+import { occupation_options, hobby_options } from "@/lib/utils/options"
 import { useState, useEffect } from "react"
 
 export default function ProfilePage() {
     // profile form state
-    const [formData, setFormData] = useState({
+    type ProfileForm = {
+        name: string
+        age: string
+        height: string
+        weight: string
+        occupation: string
+        fitnessLevel: string
+        hobbies: string[]
+        averageCalories: string
+        currentEnergyLevel: string
+        gender: string
+        sleepHours: string
+    }
+
+    const [formData, setFormData] = useState<ProfileForm>({
         name: "",
         age: "",
         height: "",
         weight: "",
         occupation: "",
-        fitnessLevel: "Moderate",
-        hobbies: "",
+        fitnessLevel: "",
+        hobbies: [],
         averageCalories: "",
-        currentEnergyLevel: "5",
+        currentEnergyLevel: "",
         gender: "",
         sleepHours: "",
     })
@@ -21,8 +36,8 @@ export default function ProfilePage() {
     // calculated output state
     const [bmi, setBmi] = useState("")
     const [energyScore, setEnergyScore] = useState(0)
-    const [loading, setLoading] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
+    const [successMessage, setSuccessMessage] = useState("")
 
     // --------------------------------------------
     // LOAD SAVED PROFILE WHEN PAGE OPENS
@@ -40,23 +55,37 @@ export default function ProfilePage() {
 
                 if (response.ok && data.data?.user) {
 
-                    // map only valid form fields to avoid [object Object]
+                    const profile = data.data.user.profile || {};
+                    const fitnessRaw = profile.fitnessLevel ?? ""
+                    let finalFitness = ""
+
+                    if (fitnessRaw) {
+                        const val = String(fitnessRaw).trim().toLowerCase()
+
+                        if (val.includes("sedentary") || val === "0") finalFitness = "Sedentary"
+                        else if (val.includes("moderate") || val === "1") finalFitness = "Moderate"
+                        else if (val.includes("active") || val === "2") finalFitness = "Active"
+                    }
+                    console.log("RAW FITNESS FROM DB:", profile.fitnessLevel, profile.fitness_level)
+                    console.log("FINAL FITNESS SET:", finalFitness)
+                    console.log("FULL PROFILE OBJECT:", profile)
+
                     setFormData({
                         name: data.data.user.name ?? "",
-                        age: data.data.user.age ?? "",
-                        height: data.data.user.height ?? "",
-                        weight: data.data.user.weight ?? "",
-                        occupation: data.data.user.occupation ?? "",
-                        fitnessLevel: data.data.user.fitnessLevel ?? "Moderate",
-                        hobbies: data.data.user.hobbies ?? "",
-                        averageCalories: data.data.user.averageCalories ?? "",
-                        currentEnergyLevel: data.data.user.currentEnergyLevel ?? "5",
-                        gender: data.data.user.gender ?? "",
-                        sleepHours: data.data.user.sleepHours ?? ""
+                        age: profile.dob ? String(new Date().getFullYear() - new Date(profile.dob).getFullYear()) : "",     // age not stored its calculate from dob
+                        height: profile.height ?? "",
+                        weight: profile.weight ?? "",
+                        occupation: profile.occupation ?? "",
+                        fitnessLevel: finalFitness,
+                        hobbies: profile.hobbies ?? [],
+                        averageCalories: profile.avg_calories ?? "",
+                        currentEnergyLevel: profile.current_energy ?? "",
+                        gender: profile.gender ?? "",
+                        sleepHours: profile.avg_sleep ?? ""
                     })
 
-                    const loadedHeight = Number(data.data.user.height)
-                    const loadedWeight = Number(data.data.user.weight)
+                    const loadedHeight = Number(profile.height)
+                    const loadedWeight = Number(profile.weight)
 
                     if (loadedHeight && loadedWeight) {
                         const bmiValue = (loadedWeight * 703) / (loadedHeight * loadedHeight)
@@ -67,7 +96,7 @@ export default function ProfilePage() {
 
             } catch (error) {
 
-                console.error("Failed to load profile")
+                console.error("Failed to load profile:", error)
 
             }
 
@@ -76,17 +105,39 @@ export default function ProfilePage() {
         loadProfile()
 
     }, [])
+    useEffect(() => {
+        const height = Number(formData.height)
+        const weight = Number(formData.weight)
 
-    // calculate BMI locally when height or weight changes
-    function calculateBMI(height: number, weight: number) {
-
-        if (!height || !weight) return ""
+        if (!height || !weight) {
+            setBmi("")
+            return
+        }
 
         const bmiValue = (weight * 703) / (height * height)
+        setBmi(bmiValue.toFixed(1))
+    }, [formData.height, formData.weight])
 
-        return bmiValue.toFixed(1)
+    useEffect(() => {
+        let score = 0
 
-    }
+        if (formData.sleepHours === "7-9") score += 40
+        else if (formData.sleepHours === "5-7") score += 25
+        else if (formData.sleepHours) score += 10
+
+        if (formData.currentEnergyLevel === "high") score += 40
+        else if (formData.currentEnergyLevel === "medium") score += 25
+        else if (formData.currentEnergyLevel === "low") score += 10
+
+        if (formData.fitnessLevel === "Active") score += 20
+        else if (formData.fitnessLevel === "Moderate") score += 10
+
+        setEnergyScore(score)
+    }, [
+        formData.sleepHours,
+        formData.currentEnergyLevel,
+        formData.fitnessLevel
+    ])
 
     // determine BMI category based on standard medical ranges
     function getBMICategory(bmi: number) {
@@ -107,108 +158,56 @@ export default function ProfilePage() {
         }))
     }
 
-    // call the Next.js API route to calculate BMI and energy score
-    async function handleCalculateProfile() {
-        try {
-            setLoading(true)
-            setErrorMessage("")
 
-            // --- BMI REQUEST ---
-            const bmiResponse = await fetch("/api/nutriai/bmi", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    height: formData.height,
-                    weight: formData.weight,
-                }),
-            })
-
-            const bmiText = await bmiResponse.text()
-            const bmiData = bmiText ? JSON.parse(bmiText) : {}
-
-            if (!bmiResponse.ok) {
-                throw new Error(bmiData.message || "BMI calculation failed.")
-            }
-
-            // --- ENERGY REQUEST ---
-            const energyResponse = await fetch("/api/nutriai/energy-monitor", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    sleepHours: formData.sleepHours,
-                    currentEnergyLevel: formData.currentEnergyLevel,
-                    fitnessLevel: formData.fitnessLevel,
-                }),
-            })
-
-            const energyText = await energyResponse.text()
-            const energyData = energyText ? JSON.parse(energyText) : {}
-
-            if (!energyResponse.ok) {
-                throw new Error(energyData.message || "Energy calculation failed.")
-            }
-
-            // update screen with API results
-            setBmi(String(bmiData.bmi ?? ""))
-            setEnergyScore(Number(energyData.energyScore ?? 0))
-
-        } catch (error) {
-            setErrorMessage(
-                error instanceof Error ? error.message : "Something went wrong."
-            )
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    // save profile information to database
     async function handleSaveProfile() {
+        if (!formData.fitnessLevel) {
+            setErrorMessage("Select fitness level")
+            return
+        }
         try {
-
-            setLoading(true)
             setErrorMessage("")
-
+            setSuccessMessage("") // clear old success message
+            const currentYear = new Date().getFullYear()
+            const birthYear = currentYear - Number(formData.age)
+            const dob = `${birthYear}-01-01` // simple conversion (no month/day yet)
             const response = await fetch("/api/profile", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    ...formData,
-                    age: Number(formData.age),
+                    name: formData.name,
+                    dob: dob,
                     height: Number(formData.height),
                     weight: Number(formData.weight),
-                    averageCalories: Number(formData.averageCalories),
-                    currentEnergyLevel: Number(formData.currentEnergyLevel),
-                    sleepHours: Number(formData.sleepHours)
+                    occupation: formData.occupation,
+                    fitness_level: formData.fitnessLevel,
+                    hobbies: formData.hobbies,
+                    avg_calories: formData.averageCalories,
+                    current_energy: formData.currentEnergyLevel,
+                    gender: formData.gender,
+                    avg_sleep: formData.sleepHours,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
                 }),
             })
 
             const data = await response.json()
 
             if (!response.ok) {
-                throw new Error(data.error || "Profile save failed.")
+
+                console.log("FULL ERROR RESPONSE:", data)
+                throw new Error(JSON.stringify(data) || "Profile save failed.")
+
             }
 
-            alert("Profile saved successfully.")
+            setSuccessMessage("Profile saved successfully.")
+            console.log("SAVE SUCCESS:", data)
 
         } catch (error) {
-
-            setErrorMessage(
-                error instanceof Error ? error.message : "Failed to save profile."
-            )
-
-        } finally {
-
-            setLoading(false)
-            console.log("Saving profile:", formData)
-
+            setErrorMessage(error instanceof Error ? error.message : "Failed to save profile.")
         }
     }
+
     return (
         <div className="mx-auto max-w-4xl">
             {/* screen heading */}
@@ -244,6 +243,7 @@ export default function ProfilePage() {
                                 className="w-full rounded-lg border p-2"
                                 name="age"
                                 type="number"
+                                min={1}
                                 value={formData.age}
                                 onChange={handleChange}
                             />
@@ -257,6 +257,7 @@ export default function ProfilePage() {
                                 className="w-full rounded-lg border p-2"
                                 name="height"
                                 type="number"
+                                min={1}
                                 value={formData.height}
                                 onChange={handleChange}
                             />
@@ -270,6 +271,7 @@ export default function ProfilePage() {
                                 className="w-full rounded-lg border p-2"
                                 name="weight"
                                 type="number"
+                                min={1}
                                 value={formData.weight}
                                 onChange={handleChange}
                             />
@@ -279,13 +281,21 @@ export default function ProfilePage() {
                             <label className="mb-1 block text-sm font-medium">
                                 Occupation
                             </label>
-                            <input
+                            <select
                                 className="w-full rounded-lg border p-2"
                                 name="occupation"
-                                type="text"
                                 value={formData.occupation}
                                 onChange={handleChange}
-                            />
+                                required
+                            >
+                                <option value="">Select</option>
+
+                                {occupation_options.map((opt: { label: string; value: string }) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
 
                         <div>
@@ -298,6 +308,7 @@ export default function ProfilePage() {
                                 value={formData.fitnessLevel}
                                 onChange={handleChange}
                             >
+                                <option value="">Select</option>
                                 <option value="Sedentary">Sedentary</option>
                                 <option value="Moderate">Moderate</option>
                                 <option value="Active">Active</option>
@@ -305,42 +316,79 @@ export default function ProfilePage() {
                         </div>
 
                         <div>
-                            <label className="mb-1 block text-sm font-medium">Hobbies</label>
-                            <input
-                                className="w-full rounded-lg border p-2"
-                                name="hobbies"
-                                type="text"
-                                value={formData.hobbies}
-                                onChange={handleChange}
-                            />
+                            <label className="mb-1 block text-sm font-medium">
+                                Hobbies
+                            </label>
+
+                            <div className="relative">
+                                <details className="w-full">
+                                    <summary className="cursor-pointer rounded-lg border p-2">
+                                        {formData.hobbies.length > 0
+                                            ? `${formData.hobbies.length} selected`
+                                            : "Select hobbies"}
+                                    </summary>
+
+                                    <div className="absolute z-10 mt-2 w-full rounded-lg border bg-background text-foreground p-2 shadow">
+                                        {hobby_options.map((opt: { label: string; value: string }) => {
+                                            const isChecked = formData.hobbies.includes(opt.value)
+
+                                            return (
+                                                <label key={opt.value} className="flex items-center gap-2 p-1">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => {
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                hobbies: isChecked
+                                                                    ? prev.hobbies.filter((h) => h !== opt.value)
+                                                                    : [...prev.hobbies, opt.value],
+                                                            }))
+                                                        }}
+                                                    />
+                                                    {opt.label}
+                                                </label>
+                                            )
+                                        })}
+                                    </div>
+                                </details>
+                            </div>
                         </div>
 
                         <div>
                             <label className="mb-1 block text-sm font-medium">
                                 Average Calorie Intake
                             </label>
-                            <input
+                            <select
                                 className="w-full rounded-lg border p-2"
                                 name="averageCalories"
-                                type="number"
                                 value={formData.averageCalories}
                                 onChange={handleChange}
-                            />
+                            >
+                                <option value="">Select</option>
+                                <option value="lt-1000">Less than 1000</option>
+                                <option value="1000-1500">1000-1500</option>
+                                <option value="1500-2000">1500-2000</option>
+                                <option value="2000-2500">2000-2500</option>
+                                <option value="gt-2500">More than 2500</option>
+                            </select>
                         </div>
 
                         <div>
                             <label className="mb-1 block text-sm font-medium">
                                 Current Energy Level
                             </label>
-                            <input
+                            <select
                                 className="w-full rounded-lg border p-2"
                                 name="currentEnergyLevel"
-                                type="number"
-                                min="1"
-                                max="10"
                                 value={formData.currentEnergyLevel}
                                 onChange={handleChange}
-                            />
+                            >
+                                <option value="">Select</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
                         </div>
 
                         <div>
@@ -361,34 +409,34 @@ export default function ProfilePage() {
                             <label className="mb-1 block text-sm font-medium">
                                 Average Hours of Sleep
                             </label>
-                            <input
+                            <select
                                 className="w-full rounded-lg border p-2"
                                 name="sleepHours"
-                                type="number"
                                 value={formData.sleepHours}
                                 onChange={handleChange}
-                            />
+                            >
+                                <option value="">Select</option>
+                                <option value="lt-5">Less than 5</option>
+                                <option value="5-7">5-7</option>
+                                <option value="7-9">7-9</option>
+                                <option value="9-11">9-11</option>
+                                <option value="gt-11">More than 11</option>
+                            </select>
                         </div>
-
-                        <button
-                            className="rounded-lg border bg-black px-4 py-2 text-white"
-                            type="button"
-                            onClick={handleCalculateProfile}
-                            disabled={loading}
-                        >
-                            {loading ? "Calculating..." : "Calculate BMI and Energy"}
-                        </button>
 
                         <button
                             className="rounded-lg border bg-green-600 px-4 py-2 text-white"
                             type="button"
                             onClick={handleSaveProfile}
                         >
-                            Save Profile
+                            Update Profile
                         </button>
 
                         {errorMessage ? (
                             <p className="text-sm text-red-600">{errorMessage}</p>
+                        ) : null}
+                        {successMessage ? (
+                            <p className="text-sm text-green-600">{successMessage}</p>
                         ) : null}
                     </div>
                 </div>
