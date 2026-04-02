@@ -1,34 +1,45 @@
 "use client";
 
 import { SingleWeekPicker } from "@/components/cards/single_week_picker";
+import { Button } from "@/components/ui/button";
 import { useDailyLogStatus } from "@/lib/hooks/api-hooks/use-daily-log";
 import { useFoods } from "@/lib/hooks/api-hooks/use-food";
 import { useCreateMeal, useDeleteMeal, useMeals } from "@/lib/hooks/api-hooks/use-meals";
-import { endOfWeek, startOfWeek } from "date-fns";
+import { useAuth } from "@/lib/hooks/useAuthProvider";
+import { tz } from "@date-fns/tz";
+import { endOfWeek, format, startOfWeek } from "date-fns";
 import React from "react";
 
 export default function CalorieCalculatorPage() {
+    const { user } = useAuth();
+    const timezone = user?.profile?.timezone || "UTC";
+
     // API hook to create a meal
     /**
      * Example request body
      * {
-     *   "meal_type": "breakfast",
-     *   "food_item": "Scrambled Eggs",
-     *   "calories": 180,
-     *   "protein": 12,
-     *   "carbohydrates": 2,
-     *   "fat": 14,
-     *   "fiber": 0,
-     *   "sugar": 1,
-     *   "sodium": 180,
-     *   "cholesterol": 370,
-     *   "water_intake": 250,
-     *   "serving_quantity": 2,
-     *   "servings": 3,
-     *   "logged_at": "2026-03-28T21:40:24.724Z"
+     *   "date": format(selected_date, "yyyy-MM-dd", { in: tz(timezone), }),
+     *   "meal": {
+     *          "meal_type": "breakfast",
+     *          "food_item": "Scrambled Eggs",
+     *          "calories": 180,
+     *          "protein": 12,
+     *          "carbohydrates": 2,
+     *          "fat": 14,
+     *          "fiber": 0,
+     *          "sugar": 1,
+     *          "sodium": 180,
+     *          "cholesterol": 370,
+     *          "water_intake": 250,
+     *          "serving_quantity": 2,
+     *          "servings": 3,
+     *          "logged_at": "2026-03-28T21:40:24.724Z"
+     *   }
      * }
      * 
      * create_meal.mutate(body);
+     * NOTE: User needs to checkin before they can log meals
+     * 
      */
     const create_meal = useCreateMeal();
 
@@ -41,13 +52,9 @@ export default function CalorieCalculatorPage() {
     const { data: day_status_data = [], isLoading: loading_day_statuses } = useDailyLogStatus({
         startDate: week_start,
         endDate: week_end,
-        status: "meals",
+        status: "daily_checkins",
     });
-    const day_status_array = day_status_data.map(status => {
-        if (status.meals && status.meals > 0) {
-            return status.date
-        }
-    }).filter(status => status !== undefined);
+    const day_status_array = day_status_data.map(status => status.date);
 
     const { data: meals = [], isLoading: meals_loading } = useMeals(selected_date);
 
@@ -67,12 +74,14 @@ export default function CalorieCalculatorPage() {
         limit: 5,
         sort_field: "calories",
         sort_dir: "asc",
-        food_item_contains : "Steak",
+        food_item_contains: "Steak",
         // category : "Grain", //custom field
         // calories_lt : 500,
         // sodium_lt: 100 // doesn't exist in UseFoodsParams, but you can add custom parameters if needed
         protein_gte: 30
     });
+
+    const formatted_selected_date = format(selected_date, "yyyy-MM-dd", { in: tz(timezone), });
 
     return (
         <>
@@ -87,11 +96,50 @@ export default function CalorieCalculatorPage() {
                     weekStartsOn={0}
                     day_statuses={day_status_array}
                 />
+                <Button onClick={() => {
+                    //NOTE: User needs to checkin before they can log meals
+                    create_meal.mutate(
+                        {
+                            date: formatted_selected_date,
+                            meal: {
+                                meal_type: "dinner",
+                                food_item: "Grilled Chicken Salad",
+                                calories: 350,
+                                protein: 30,
+                                carbohydrates: 10,
+                                fat: 20,
+                                fiber: 5,
+                                sugar: 5,
+                                sodium: 400,
+                                cholesterol: 75,
+                                water_intake: 300,
+                                servings: 1,
+                                logged_at: new Date().toISOString(),
+                            }
+                        });
+                }}>Add Meal For Selected Date</Button>
+                
+                <Button onClick={() => {
+                    //NOTE: User needs to checkin before they can log meals
+                    if (meals.length === 0) return;
+                    delete_meal.mutate({
+                        date: formatted_selected_date,
+                        id: meals[meals.length - 1]?._id || "", // Replace with actual meal ID to delete
+                    });
+                }}>Delete Selected Dates Last Meal</Button>
 
-                <h1>Meals</h1>
+                <h1 className="font-bold">NOTE: User needs to check in before they can log meals</h1>
+                <h1 className="font-bold">
+                    Check in status for selected date {formatted_selected_date}: 
+                    {day_status_array.includes(formatted_selected_date) ? 
+                    <p className="text-green-500">Checked in</p> :
+                    <p className="text-red-500">Not checked in</p>}
+                </h1>
+
+                <h1 className="font-bold">Meals</h1>
                 <pre>{JSON.stringify(meals, null, 2)}</pre>
                 ---
-                <h1>Foods</h1>
+                <h1 className="font-bold">Foods</h1>
                 <pre>{JSON.stringify(foods, null, 2)}</pre>
             </div>
         </>
