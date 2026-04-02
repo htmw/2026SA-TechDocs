@@ -3,12 +3,12 @@ import { Document } from "mongoose";
 export type SortOrder = 1 | -1;
 
 export interface QuerySearchConfig {
-    query_fields?: string[];
-    string_fields?: string[];
-    category_field?: string;
-    number_fields?: string[];
-    date_fields?: string[];
-    default_sort_field?: string;
+    query_fields?: string[];//which fields to query
+    string_fields?: string[];//which fields are strings
+    category_field?: string;//which fields are arrays
+    number_fields?: string[];//which fields are numbers
+    date_fields?: string[];//which fields are dates
+    default_sort_field?: string;//which field to sort by if no sort is provided
 }
 
 export interface QuerySearchResult<T> {
