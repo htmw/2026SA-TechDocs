@@ -1,112 +1,47 @@
-import { makeLabelMap, OptionList } from "@/lib/utils/options";
+import { craving_intensity, craving_triggers, craving_type, energy_rating, food_type, hunger_level, meal_type, MealType, stress_level } from "@/lib/enums";
 import z from "zod";
-
-export const energy_rating_enum = ["tired", "normal", "energetic"] as const;
-export type EnergyRating = typeof energy_rating_enum[number];
-
-export const stress_level_enum = ["relaxed", "low", "moderate", "high"] as const;
-export type StressLevel = typeof stress_level_enum[number];
-
-export const meal_type_enum = ["breakfast", "lunch", "dinner", "snack"] as const;
-export type MealType = typeof meal_type_enum[number];
-
-export const hunger_level_enum = ["little", "hungry", "starving"] as const;
-export type HungerLevel = typeof hunger_level_enum[number];
-
-export const craving_intensity_enum = ["mild", "moderate", "strong"] as const;
-export type CravingIntensity = typeof craving_intensity_enum[number];
-
-export const craving_type_enum = ["sweet", "salty", "savory", "spicy", "protein", "light", "other"] as const;
-export type CravingType = typeof craving_type_enum[number];
-
-export const craving_triggers_enum = ["stress", "boredom", "tiredness", "emotional", "habit", "late", "other"] as const;
-export type CravingTrigger = typeof craving_triggers_enum[number];
-
-export const energy_rating_options: OptionList<string> = [
-    { label: "Tired", value: "tired" },
-    { label: "Normal", value: "normal" },
-    { label: "Energetic", value: "energetic" },
-];
-
-export const stress_level_options: OptionList<string> = [
-    { label: "Relaxed", value: "relaxed" },
-    { label: "Low", value: "low" },
-    { label: "Moderate", value: "moderate" },
-    { label: "High", value: "high" },
-];
-
-export const meal_type_options: OptionList<string> = [
-    { label: "Breakfast", value: "breakfast" },
-    { label: "Lunch", value: "lunch" },
-    { label: "Dinner", value: "dinner" },
-    { label: "Snack", value: "snack" },
-];
-
-export const hunger_level_options: OptionList<string> = [
-    { label: "Little", value: "little" },
-    { label: "Hungry", value: "hungry" },
-    { label: "Starving", value: "starving" },
-];
-
-export const craving_intensity_options: OptionList<string> = [
-    { label: "Mild", value: "mild" },
-    { label: "Moderate", value: "moderate" },
-    { label: "Strong", value: "strong" },
-];
-
-export const craving_type_options: OptionList<string> = [
-    { label: "Sweet", value: "sweet" },
-    { label: "Salty", value: "salty" },
-    { label: "Savory", value: "savory" },
-    { label: "Spicy", value: "spicy" },
-    { label: "Protein", value: "protein" },
-    { label: "Light", value: "light" },
-    { label: "Other", value: "other" },
-];
-
-export const craving_trigger_options: OptionList<string> = [
-    { label: "Stress", value: "stress" },
-    { label: "Boredom", value: "boredom" },
-    { label: "Tiredness", value: "tiredness" },
-    { label: "Emotional", value: "emotional" },
-    { label: "Habit", value: "habit" },
-    { label: "Late", value: "late" },
-    { label: "Other", value: "other" },
-];
-
-export const energy_rating_label_map = makeLabelMap(energy_rating_options);
-export const stress_level_label_map = makeLabelMap(stress_level_options);
-export const meal_type_label_map = makeLabelMap(meal_type_options);
-export const hunger_level_label_map = makeLabelMap(hunger_level_options);
-export const craving_intensity_label_map = makeLabelMap(craving_intensity_options);
-export const craving_type_label_map = makeLabelMap(craving_type_options);
-export const craving_trigger_label_map = makeLabelMap(craving_trigger_options); 
 
 export const DailyLogZodSchema = z.object({
     date: z.coerce.date(),
     timezone: z.string(),
     morning_weight: z.number().positive("Morning weight must be a positive number"),
-    energy_rating: z.enum(energy_rating_enum, `Energy rating is required (${energy_rating_enum.join(" | ")})`),
+    energy_rating: z.enum(energy_rating.values, `Energy rating is required (${energy_rating.values.join(" | ")})`),
     sleep_hours: z.number().min(0).max(24, "Sleep hours must be between 0 and 24"),
-    stress_level: z.enum(stress_level_enum, `Stress level is required (${stress_level_enum.join(" | ")})`),
+    stress_level: z.enum(stress_level.values, `Stress level is required (${stress_level.values.join(" | ")})`),
 });
 
 export const CravingEventSchema = z.object({
-	occurred_at: z.coerce.date(),
-	craving_type: z.enum(craving_type_enum, `Craving type is required (${craving_type_enum.join(" | ")})`),
-	intensity: z.enum(craving_intensity_enum, `Intensity is required (${craving_intensity_enum.join(" | ")})`),
-	trigger: z.enum(craving_triggers_enum, `Trigger is required (${craving_triggers_enum.join(" | ")})`),
-	suggested_actions: z.array(z.string()).optional(),
-	reasoning: z.string().optional(),
+    occurred_at: z.coerce.date(),
+    craving_type: z.enum(craving_type.values, `Craving type is required (${craving_type.values.join(" | ")})`),
+    intensity: z.enum(craving_intensity.values, `Intensity is required (${craving_intensity.values.join(" | ")})`),
+    trigger: z.enum(craving_triggers.values, `Trigger is required (${craving_triggers.values.join(" | ")})`),
+    suggested_actions: z.array(z.string()).optional(),
+    reasoning: z.string().optional(),
 });
 
 export const HungerEventZodSchema = z.object({
-	occurred_at: z.coerce.date(),
-	hunger_level: z.enum(hunger_level_enum, `Hunger level is required (${hunger_level_enum.join(" | ")})`),
-	suggested_actions: z.array(z.string()).optional(),
-	reasoning: z.string().optional(),
+    occurred_at: z.coerce.date(),
+    hunger_level: z.enum(hunger_level.values, `Hunger level is required (${hunger_level.values.join(" | ")})`),
+    suggested_actions: z.array(z.string()).optional(),
+    reasoning: z.string().optional(),
 });
 
+export const MealZodSchema = z.object({
+    meal_type: z.enum(meal_type.values, `Meal type is required (${meal_type.values.join(" | ")})`),
+    food_item: z.string().min(2, "Food item must be at least 2 characters long").max(100, "Food item cannot exceed 100 characters"),
+    calories: z.number().positive("Calories must be a positive number"),
+    protein: z.number().min(0, "Protein cannot be negative"),
+    carbohydrates: z.number().min(0, "Carbohydrates cannot be negative"),
+    fat: z.number().min(0, "Fat cannot be negative"),
+    fiber: z.number().min(0, "Fiber cannot be negative"),
+    sugar: z.number().min(0, "Sugar cannot be negative"),
+    sodium: z.number().min(0, "Sodium cannot be negative"),
+    cholesterol: z.number().min(0, "Cholesterol cannot be negative"),
+    water_intake: z.number().min(0, "Water intake cannot be negative"),
+    servings: z.number().positive("Servings must be a positive number").optional(),
+    vitamins: z.array(z.string()).optional(),
+    logged_at: z.coerce.date(),
+});
 
 export type DailyLogValues = z.infer<typeof DailyLogZodSchema>;
 

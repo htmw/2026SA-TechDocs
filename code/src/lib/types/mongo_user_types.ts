@@ -1,10 +1,10 @@
 import { ToPrimitive } from "@/lib/types/mongo_primitive_types";
-import { AvgCalories, AvgSleep, CurrentEnergy, Gender } from "@/lib/zod_schemas/profile_setup_schema";
+import { AvgCalories, AvgSleep, CurrentEnergy, FitnessLevel, Gender } from "@/lib/enums";
 import { Types } from "mongoose";
 
 export interface IDietRestriction {
     allergies?: string[];//convert to enum later
-    religious?: string[];//convert to enum later
+    preferences?: string[];//convert to enum later
 }
 
 export interface IUser {
@@ -13,7 +13,6 @@ export interface IUser {
     email: string;
     password: string;
     profile: IUserProfile;
-    goals: string[];
     setup_complete: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -25,12 +24,13 @@ export interface IUserProfile {
     weight?: number;
     occupation?: string;
     timezone?: string;
-    fitness_level?: "Sedentary" | "Moderate" | "Active";
-    hobbies?: string[];
+    fitness_level?: FitnessLevel;
     avg_calories?: AvgCalories;
     current_energy?: CurrentEnergy;
     gender?: Gender;
     avg_sleep?: AvgSleep;
+    goals?: string[];
+    hobbies?: string[];
 }
 
 export type IPublicUser =

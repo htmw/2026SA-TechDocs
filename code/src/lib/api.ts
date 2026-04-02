@@ -2,6 +2,12 @@
 
 import { ApiResponse } from "@/lib/types/shared";
 
+/**
+ * A client function used to call API endpoints.
+ * @param input the url to call or requestinfo object
+ * @param init the request init object, used to specify method, body, etc.
+ * @returns the data returned from the API, typed as T
+ */
 export default async function callApi<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
     const res = await fetch(input, init);
     if (!res.ok) {

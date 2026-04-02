@@ -3,8 +3,8 @@
 import { getCurrentSession } from "@/app/actions";
 import { GreetingsCard } from "@/components/cards/greetings_card";
 import { WeightCard } from "@/components/cards/weight_card";
+import { useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log";
 import { useAuth } from "@/lib/hooks/useAuthProvider";
-import { useDailyLogs } from "@/lib/hooks/useDailyLog";
 import { format } from "date-fns";
 
 export default function DashboardClient({ trends }: { trends: string[] }) {
