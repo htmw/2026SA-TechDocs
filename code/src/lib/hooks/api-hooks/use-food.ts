@@ -14,8 +14,6 @@ interface FoodsResponse {
 }
 
 interface UseFoodsParams {
-    query?: string;
-    category?: string;
     page?: number;
     limit?: number;
 
