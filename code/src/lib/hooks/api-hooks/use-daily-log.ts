@@ -9,6 +9,18 @@ interface DailyLogsResponse {
     daily_logs: ClientDailyLog[];
 }
 
+interface DailyLogStatusItem {
+    date: string;
+    daily_checkins?: boolean;
+    meals?: number;
+    hunger_events?: number;
+    craving_events?: number;
+}
+
+interface DailyLogStatusResponse {
+    days: DailyLogStatusItem[];
+}
+
 interface DailyLogResponse {
     daily_log: ClientDailyLog;
 }
@@ -18,13 +30,39 @@ export type CreateDailyLogInput = Pick<
     "date" | "timezone" | "morning_weight" | "energy_rating" | "sleep_hours" | "stress_level"
 >;
 
-export function useDailyLogs(start_date?: Date, end_date?: Date) {
-    const formatted_start_date = start_date ? format(start_date, "yyyy-MM-dd") : undefined;
-    const formatted_end_date = end_date ? format(end_date, "yyyy-MM-dd") : undefined;
+export interface DailyLogsQueryOptions {
+    startDate?: Date;
+    endDate?: Date;
+    page?: number;
+    limit?: number;
+    sortField?: string;
+    sortDir?: "asc" | "desc";
+}
+
+export interface DailyLogStatusOptions {
+    startDate: Date;
+    endDate?: Date;
+    status?: "daily_checkins" | "meals" | "hunger_events" | "craving_events";
+}
+
+export function useDailyLogs(options?: DailyLogsQueryOptions) {
+    const { startDate, endDate, page, limit, sortField, sortDir } = options || {};
+    const formatted_start_date = startDate ? format(startDate, "yyyy-MM-dd") : undefined;
+    const formatted_end_date = endDate ? format(endDate, "yyyy-MM-dd") : undefined;
+
     return useQuery<ClientDailyLog[], Error>({
-        queryKey: ["dailyLogs", formatted_start_date, formatted_end_date],
+        queryKey: ["dailyLogs", formatted_start_date, formatted_end_date, page, limit, sortField, sortDir],
         queryFn: async () => {
-            const res = await callApi<DailyLogsResponse>(`/api/health/daily-logs?start_date=${formatted_start_date}&end_date=${formatted_end_date}`);
+            const params = new URLSearchParams();
+            if (formatted_start_date) params.append("start_date", formatted_start_date);
+            if (formatted_end_date) params.append("end_date", formatted_end_date);
+            if (page !== undefined) params.append("page", page.toString());
+            if (limit !== undefined) params.append("limit", limit.toString());
+            if (sortField) params.append("sort_field", sortField);
+            if (sortDir) params.append("sort_dir", sortDir);
+
+            const queryString = params.toString();
+            const res = await callApi<DailyLogsResponse>(`/api/health/daily-logs${queryString ? `?${queryString}` : ""}`);
             return res.daily_logs;
         }
     });
@@ -53,6 +91,25 @@ export function useCreateDailyLog() {
         onSuccess: (_data: ClientDailyLog, variables) => {
             qc.invalidateQueries({ queryKey: ["dailyLogs"] });
             qc.invalidateQueries({ queryKey: ["dailyLog", variables.date] });
+        },
+    });
+}
+
+export function useDailyLogStatus(options: DailyLogStatusOptions) {
+    const { startDate, endDate, status = "daily_checkins" } = options;
+    const formattedStartDate = format(startDate, "yyyy-MM-dd");
+    const formattedEndDate = endDate ? format(endDate, "yyyy-MM-dd") : undefined;
+
+    return useQuery<DailyLogStatusItem[], Error>({
+        queryKey: ["dailyLogStatus", formattedStartDate, formattedEndDate, status],
+        queryFn: async () => {
+            const params = new URLSearchParams();
+            params.append("start_date", formattedStartDate);
+            if (formattedEndDate) params.append("end_date", formattedEndDate);
+            params.append("status", status);
+
+            const res = await callApi<DailyLogStatusResponse>(`/api/health/daily-logs/status?${params.toString()}`);
+            return res.days;
         },
     });
 }

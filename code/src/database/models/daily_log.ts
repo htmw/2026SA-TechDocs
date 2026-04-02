@@ -1,8 +1,10 @@
 import { ICravingEvent, IDailyLog, IHungerEvent, IMealLog } from "@/lib/types/mongo_daily_log_types";
-import { startOfDay } from "date-fns";
+import { isValid, startOfDay } from "date-fns";
 import mongoose, { Schema, Model, Types, HydratedDocument } from "mongoose";
 import { DailyLogValues } from "@/lib/zod_schemas/health_schema";
 import { craving_intensity, craving_triggers, craving_type, energy_rating, hunger_level, meal_type, stress_level } from "@/lib/enums";
+import { buildSearch, QuerySearchConfig } from "@/lib/utils/query_filter";
+import { normalizeDateToTimezoneDay } from "@/lib/utils/utils";
 
 const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
     {
@@ -142,6 +144,10 @@ export interface DailyLogModel extends Model<IDailyLog, {}, IDailyLogMethods> {
     hasDailyLog(user_id: Types.ObjectId, date: Date): Promise<boolean>;
     createDailyLog(user_id: Types.ObjectId, data: DailyLogValues): Promise<HydratedDailyLog>;
     getDailyLogByDate(user_id: Types.ObjectId, date: Date): Promise<HydratedDailyLog | null>;
+    searchDailyLogs(user_id: Types.ObjectId, params: Record<string, string | undefined>, timezone?: string): Promise<{
+        logs: HydratedDailyLog[];
+        pagination: { page: number; limit: number; count: number };
+    }>;
 }
 
 /**
@@ -313,6 +319,57 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
             }
         },
         statics: {
+
+            async searchDailyLogs(user_id: Types.ObjectId, params: Record<string, string | undefined>, timezone: string = "UTC") {
+                const config: QuerySearchConfig = { date_fields: ["date"] };
+                const sortFields = ["date"];
+
+                let query: Record<string, any>;
+                let sort: Record<string, 1 | -1>;
+                let limit: number;
+                let page: number;
+
+                ({ query, sort, limit, page } = buildSearch(params, config, sortFields));
+
+                query = { ...query, user_id };
+
+                const start_date = params.start_date;
+                const end_date = params.end_date;
+
+                const parsed_start_date: Date | null = start_date ? normalizeDateToTimezoneDay(start_date, timezone) : null;
+                const parsed_end_date: Date | null = end_date ? normalizeDateToTimezoneDay(end_date, timezone) : null;
+
+                if (start_date && !isValid(parsed_start_date)) {
+                    throw new Error("INVALID_START_DATE");
+                }
+                if (end_date && !isValid(parsed_end_date)) {
+                    throw new Error("INVALID_END_DATE");
+                }
+
+                const dateQuery: Record<string, any> = query.date ?? {};
+                if (parsed_start_date) dateQuery.$gte = parsed_start_date;
+                if (parsed_end_date) dateQuery.$lte = parsed_end_date;
+                if (Object.keys(dateQuery).length > 0) query.date = dateQuery;
+
+                if (!sort || Object.keys(sort).length === 0) {
+                    sort = { date: -1 };
+                }
+
+                const logs = await this.find(query)
+                    .sort(sort)
+                    .limit(limit)
+                    .skip((page - 1) * limit)
+                    .exec();
+
+                return {
+                    logs,
+                    pagination: {
+                        page,
+                        limit,
+                        count: logs.length,
+                    },
+                };
+            },
 
             async getDailyLogByDate(user_id: Types.ObjectId, date: Date): Promise<HydratedDailyLog | null> {
                 const dayStart = startOfDay(date);

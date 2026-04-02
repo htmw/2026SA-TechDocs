@@ -7,7 +7,7 @@ import { DailyCheckInSummaryCard, DailyCheckInSummaryCardProps } from "@/compone
 import { NutritionSummaryCard } from "@/components/cards/macro_card";
 import { CravingEventsCard, HungerEventsCard } from "@/components/cards/events_card";
 import { endOfWeek, format, startOfWeek } from "date-fns";
-import { useCreateDailyLog, useDailyLog, useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log";
+import { useCreateDailyLog, useDailyLog, useDailyLogStatus } from "@/lib/hooks/api-hooks/use-daily-log";
 import { QuickActionsCard } from "@/components/cards/quick_actions_card";
 import { tz } from "@date-fns/tz";
 import { useCravingEvents, useCreateCravingEvent, useDeleteCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
@@ -152,12 +152,16 @@ export default function DailyLogPage() {
     const delete_hunger = useDeleteHungerEvent();
     const delete_craving = useDeleteCravingEvent();
 
-    const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs(week_start, week_end);
+    const { data: day_status_data = [], isLoading: loading_day_statuses } = useDailyLogStatus({
+        startDate: week_start,
+        endDate: week_end,
+        status: "daily_checkins",
+    });
+
     const { data: daily_log } = useDailyLog(selected_date);
 
-    const day_statuses = daily_logs.map(log => {
-        return format(log.date, "yyyy-MM-dd")
-    });
+    const day_status_array = day_status_data.map(status => status.date);
+
 
     const check_in_opts: DailyCheckInSummaryCardProps | undefined = daily_log ? {
         morning_weight: daily_log.morning_weight,
@@ -189,7 +193,7 @@ export default function DailyLogPage() {
                             setWeekEnd(end_week);
                         }}
                         weekStartsOn={0}
-                        day_statuses={day_statuses}
+                        day_statuses={day_status_array}
                     />
                     <DailyCheckInSummaryCard
                         check_in_opts={check_in_opts}
