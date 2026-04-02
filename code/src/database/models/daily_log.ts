@@ -2,8 +2,7 @@ import { ICravingEvent, IDailyLog, IHungerEvent, IMealLog } from "@/lib/types/mo
 import { startOfDay } from "date-fns";
 import mongoose, { Schema, Model, Types, HydratedDocument } from "mongoose";
 import { DailyLogValues } from "@/lib/zod_schemas/health_schema";
-import { craving_intensity, craving_triggers, craving_type, energy_rating, food_type, hunger_level, meal_type, stress_level } from "@/lib/enums";
-import "./food";
+import { craving_intensity, craving_triggers, craving_type, energy_rating, hunger_level, meal_type, stress_level } from "@/lib/enums";
 
 const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
     {
@@ -12,14 +11,44 @@ const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
             enum: meal_type.values,
             required: true,
         },
-        food_id: {
-            type: Schema.Types.ObjectId,
-            ref: subdoc => subdoc.food_type,
+        food_item: {
+            type: String,
             required: true,
         },
-        food_type: {
-            type: String,
-            enum: food_type.values,
+        calories: {
+            type: Number,
+            required: true,
+        },
+        protein: {
+            type: Number,
+            required: true,
+        },
+        carbohydrates: {
+            type: Number,
+            required: true,
+        },
+        fat: {
+            type: Number,
+            required: true,
+        },
+        fiber: {
+            type: Number,
+            required: true,
+        },
+        sugar: {
+            type: Number,
+            required: true,
+        },
+        sodium: {
+            type: Number,
+            required: true,
+        },
+        cholesterol: {
+            type: Number,
+            required: true,
+        },
+        water_intake: {
+            type: Number,
             required: true,
         },
         servings: {
@@ -245,13 +274,11 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
             },
 
             async getMealByTime(this: HydratedDailyLog, date: Date) {
-                await this.populate({ path: "meals.food_id" });
                 const meal = this.meals.find((m: IMealLog) => m.logged_at.getTime() === date.getTime());
                 return meal || null;
             },
 
             async getMeal(this: HydratedDailyLog, id: Types.ObjectId) {
-                await this.populate({ path: "meals.food_id" });
                 const found = this.meals.find((m: IMealLog) => m._id.equals(id));
                 return found || null;
             },
@@ -262,7 +289,6 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
                 }
                 this.meals.push(meal);
                 await this.save();
-                await this.populate({ path: "meals.food_id" });
                 return this;
             },
 
@@ -273,7 +299,6 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
                 }
                 Object.assign(meal, updates);
                 await this.save();
-                await this.populate({ path: "meals.food_id" });
                 return this.meals.find((m: IMealLog) => m._id.equals(id)) || null;
             },
 
@@ -284,7 +309,6 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
                 }
                 this.meals.splice(idx, 1);
                 await this.save();
-                await this.populate({ path: "meals.food_id" });
                 return true;
             }
         },
@@ -292,7 +316,7 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
 
             async getDailyLogByDate(user_id: Types.ObjectId, date: Date): Promise<HydratedDailyLog | null> {
                 const dayStart = startOfDay(date);
-                return await this.findOne({ user_id, date: dayStart }).populate({ path: "meals.food_id" }).exec();                
+                return await this.findOne({ user_id, date: dayStart }).exec();
             },
 
             async hasDailyLog(user_id: Types.ObjectId, date: Date): Promise<boolean> {

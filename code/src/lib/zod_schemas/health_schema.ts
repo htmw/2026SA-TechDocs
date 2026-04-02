@@ -28,9 +28,17 @@ export const HungerEventZodSchema = z.object({
 
 export const MealZodSchema = z.object({
     meal_type: z.enum(meal_type.values, `Meal type is required (${meal_type.values.join(" | ")})`),
-    food_id: z.string(),
-    servings: z.number(),
-    food_type: z.enum(food_type.values, `Food type is required (${food_type.values.join(" | ")})`),
+    food_item: z.string().min(2, "Food item must be at least 2 characters long").max(100, "Food item cannot exceed 100 characters"),
+    calories: z.number().positive("Calories must be a positive number"),
+    protein: z.number().min(0, "Protein cannot be negative"),
+    carbohydrates: z.number().min(0, "Carbohydrates cannot be negative"),
+    fat: z.number().min(0, "Fat cannot be negative"),
+    fiber: z.number().min(0, "Fiber cannot be negative"),
+    sugar: z.number().min(0, "Sugar cannot be negative"),
+    sodium: z.number().min(0, "Sodium cannot be negative"),
+    cholesterol: z.number().min(0, "Cholesterol cannot be negative"),
+    water_intake: z.number().min(0, "Water intake cannot be negative"),
+    servings: z.number().positive("Servings must be a positive number").optional(),
     vitamins: z.array(z.string()).optional(),
     logged_at: z.coerce.date(),
 });

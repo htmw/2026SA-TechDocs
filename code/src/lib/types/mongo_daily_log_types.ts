@@ -21,8 +21,16 @@ export interface IDailyLog {
 export interface IMealLog {
     _id: Types.ObjectId;
     meal_type: MealType;
-    food_type: FoodType;
-    food_id: Types.ObjectId | IFood | IRecipe;
+    food_item: string;
+    calories: number;
+    protein: number;
+    carbohydrates: number;
+    fat: number;
+    fiber: number;
+    sugar: number;
+    sodium: number;
+    cholesterol: number;
+    water_intake: number;
     servings?: number;
     vitamins?: string[];
     logged_at: Date;
