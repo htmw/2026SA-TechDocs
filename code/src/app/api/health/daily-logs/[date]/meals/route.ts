@@ -66,9 +66,6 @@ export const GET = createRoute(
             return NextResponse.json(createErrorResponse("DAILY_LOG_NOT_FOUND", "No daily log found for the specified date"), { status: 404 });
         }
 
-        // Ensure nested meal food refs are populated from the correct model (Food/Recipe/Custom)
-        await daily_log.populate({ path: "meals.food_id" });
-
         const payload = { meals: daily_log.meals || [] };
         const normalizedPayload = normalizeDocument(payload);
         return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 200 });
