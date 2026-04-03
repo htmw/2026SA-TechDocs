@@ -1,6 +1,6 @@
 "use client"
 
-import { occupation_options, hobby_options } from "@/lib/utils/options"
+import { fitness_level, hobby_options, occupation_options } from "@/lib/enums"
 import { useState, useEffect } from "react"
 
 export default function ProfilePage() {
@@ -290,9 +290,9 @@ export default function ProfilePage() {
                             >
                                 <option value="">Select</option>
 
-                                {occupation_options.map((opt: { label: string; value: string }) => (
-                                    <option key={opt.value} value={opt.value}>
-                                        {opt.label}
+                                {occupation_options.entries.map(([value, label]) => (
+                                    <option key={value} value={value}>
+                                        {label}
                                     </option>
                                 ))}
                             </select>
@@ -309,9 +309,11 @@ export default function ProfilePage() {
                                 onChange={handleChange}
                             >
                                 <option value="">Select</option>
-                                <option value="Sedentary">Sedentary</option>
-                                <option value="Moderate">Moderate</option>
-                                <option value="Active">Active</option>
+                                {fitness_level.entries.map(([value, label]) => (
+                                    <option key={value} value={value}>
+                                        {label}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
@@ -329,11 +331,11 @@ export default function ProfilePage() {
                                     </summary>
 
                                     <div className="absolute z-10 mt-2 w-full rounded-lg border bg-background text-foreground p-2 shadow">
-                                        {hobby_options.map((opt: { label: string; value: string }) => {
-                                            const isChecked = formData.hobbies.includes(opt.value)
+                                        {hobby_options.entries.map(([value, label]) => {
+                                            const isChecked = formData.hobbies.includes(value)
 
                                             return (
-                                                <label key={opt.value} className="flex items-center gap-2 p-1">
+                                                <label key={value} className="flex items-center gap-2 p-1">
                                                     <input
                                                         type="checkbox"
                                                         checked={isChecked}
@@ -341,12 +343,12 @@ export default function ProfilePage() {
                                                             setFormData((prev) => ({
                                                                 ...prev,
                                                                 hobbies: isChecked
-                                                                    ? prev.hobbies.filter((h) => h !== opt.value)
-                                                                    : [...prev.hobbies, opt.value],
+                                                                    ? prev.hobbies.filter((h) => h !== value)
+                                                                    : [...prev.hobbies, value],
                                                             }))
                                                         }}
                                                     />
-                                                    {opt.label}
+                                                    {label}
                                                 </label>
                                             )
                                         })}
