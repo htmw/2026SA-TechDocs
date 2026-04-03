@@ -62,7 +62,7 @@ export interface IUserMethods {
 }
 
 //Model Interface, which includes both the document and the methods
-export interface UserModel extends Model<IUser, {}, IUserMethods> {
+export interface UserModel extends Model<IUser, object, IUserMethods> {
     getAll(): Promise<HydratedUser[]>;
     findByEmail(email: string): Promise<HydratedUser | null>;
     findByUserId(id: Types.ObjectId): Promise<HydratedUser | null>;
