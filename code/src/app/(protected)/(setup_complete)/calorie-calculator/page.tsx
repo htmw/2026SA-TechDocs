@@ -188,7 +188,7 @@ export default function CalorieCalculatorPage() {
                                     carbohydrates: food.carbohydrates,
                                     fat: food.fat,
                                     fiber: food.fiber,
-                                    sugar: food.sugars,
+                                    sugar: food.sugar,
                                     sodium: food.sodium,
                                     cholesterol: food.cholesterol,
                                     water_intake: food.water_intake,
