@@ -199,19 +199,21 @@ function EventsCard<T>({
                 </CardAction>
             </CardHeader>
 
-            <CardContent className="pr-2">
-                {events.length === 0 ? (
+            {events.length === 0 ? (
+                <CardContent className="pr-6">
                     <EmptyState label={empty_label} />
-                ) : (
+                </CardContent>
+            ) : (
+                <CardContent className="pr-2">
                     <ScrollArea className={"pr-4"}>
                         <Accordion type="single" collapsible className="space-y-3 max-h-[500px]">
-                            {events.map((event) => 
+                            {events.map((event) =>
                                 renderAccordionItem(event, onDelete)
                             )}
                         </Accordion>
                     </ScrollArea>
-                )}
-            </CardContent>
+                </CardContent>
+            )}
         </Card>
     );
 }
