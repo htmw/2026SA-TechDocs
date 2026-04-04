@@ -76,7 +76,7 @@ export function StressCard({
                         <BarChart
                             accessibilityLayer
                             data={chartData}
-                            margin={{ left: 20, right: 20 }}
+                            margin={{ left: 0, right: 20 }}
                         >
                             <CartesianGrid vertical={false} />
                             <XAxis
@@ -85,9 +85,10 @@ export function StressCard({
                                 axisLine={false}
                             />
                             <YAxis
-                                hide={true}
                                 allowDecimals={false}
                                 domain={[0, 7]}
+                                tickFormatter={(v) => `${v} days`}
+                                tickMargin={12}
                             />
                             <ChartTooltip
                                 cursor={false}

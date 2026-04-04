@@ -54,7 +54,7 @@ export function WeightCard({
                             accessibilityLayer
                             data={weight_data}
                             margin={{
-                                left: 20,
+                                left: 0,
                                 right: 20,
                             }}
                         >
@@ -66,8 +66,9 @@ export function WeightCard({
                                 interval={0}
                             />
                             <YAxis
-                                hide={true}
                                 domain={['dataMin - 5', 'dataMax + 5']}
+                                tickFormatter={(v) => `${v} lbs`}
+                                tickMargin={12}
                             />
                             <ChartTooltip
                                 cursor={false}

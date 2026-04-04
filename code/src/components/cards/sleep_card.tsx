@@ -54,13 +54,14 @@ export function SleepCard({
                             accessibilityLayer
                             data={sleep_data}
                             margin={{
-                                left: 20,
+                                left: 0,
                                 right: 20,
                             }}
                         >
                             <YAxis
-                                hide={true}
                                 domain={['dataMin - 2', 'dataMax + 2']}
+                                tickFormatter={(v) => `${v} hours`}
+                                tickMargin={12}
                             />
                             <CartesianGrid vertical={false} />
                             <XAxis
