@@ -67,13 +67,11 @@ export function QuickActionsCard({
     const day_status_array = day_status_data.map(status => status.date);
     
     const createDailyLog = useCreateDailyLog()
+    const formatted_selected_date = format(selected_date, "yyyy-MM-dd", { in: tz(timezone), });
+        
+    const alreadyCheckedIn = day_status_array.includes(formatted_selected_date);
 
     function handleCheckIn() {
-        const formatted_selected_date = format(selected_date, "yyyy-MM-dd", { in: tz(timezone), });
-        
-        if (day_status_array.includes(formatted_selected_date)) {
-            return;
-        }
         setChecking(true)
         setStep(0)
         setAnswers([])
@@ -136,7 +134,7 @@ export function QuickActionsCard({
                     </Button>
                     
                 </div>
-                {checking && (
+                {checking && !alreadyCheckedIn && (
                         <div className="flex flex-col gap-2 sm:items-center sm:justify-center">
                             <br />
                             <p>{prompts[step].question}</p>
@@ -152,6 +150,12 @@ export function QuickActionsCard({
                             </div>))}
                         </div>
                         )}
+                {checking && alreadyCheckedIn && (
+                    <div className="flex flex-col gap-2 sm:items-center sm:justify-center">
+                        <br />
+                        <p>You have already checked in for today!</p>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );
