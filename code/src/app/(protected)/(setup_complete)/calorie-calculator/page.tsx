@@ -4,13 +4,14 @@ import { SingleWeekPicker } from "@/components/cards/single_week_picker";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { meal_type, MealType } from "@/lib/enums";
 import { useDailyLogStatus } from "@/lib/hooks/api-hooks/use-daily-log";
 import { useFoods } from "@/lib/hooks/api-hooks/use-food";
 import { useCreateMeal, useDeleteMeal, useMeals } from "@/lib/hooks/api-hooks/use-meals";
 import { useAuth } from "@/lib/hooks/useAuthProvider";
 import { tz } from "@date-fns/tz";
 import { endOfWeek, format, startOfWeek } from "date-fns";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 
 export default function CalorieCalculatorPage() {
     const { user } = useAuth();
@@ -109,6 +110,14 @@ export default function CalorieCalculatorPage() {
         limit: 10,
     });
 
+    const [search, setSearch] = useState(false);
+    const [add, setAdd] = useState(''); // breakfast, lunch, dinner
+
+    function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
+        setSearch(true);
+        setSearchInput(e.target.value)
+    }
+
     return (
         <>
             <div className="gap-5 p-6 grid grid-cols-1">
@@ -122,22 +131,57 @@ export default function CalorieCalculatorPage() {
                     weekStartsOn={0}
                     day_statuses={day_status_array}
                 />
+
                 <Card className="p-4">
                     <h1 className="text-lg font-bold mb-4">Selected Date: {formatted_selected_date}</h1>
-                    <Input className="w-lg mt-2"
-                        placeholder="Add a food or meal to your daily log. Try searching for 'steak' or 'salad'..."
-                        value={search_input}
-                        onChange={e => setSearchInput(e.target.value)}
-                        /> 
-                </Card>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
+                         <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        onClick={() => setAdd('breakfast')}
+                    >
+                        Add Breakfast
+                    </Button>
 
-                {data?.foods?.map((food) => (
-                    <Button key={food._id} variant="outline" className="w-full justify-start" onClick={() => {
-                        create_meal.mutate(
-                            {
+                    <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        onClick={() => setAdd('lunch')}
+                    >
+                        Add Lunch
+                    </Button>
+
+                    <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        onClick={() => setAdd('dinner')}
+                    >
+                        Add Dinner
+                    </Button>
+                    <Button
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        onClick={() => setAdd('snack')}
+                    >
+                        Add Snack
+                    </Button>
+                    </div>
+                    {add != '' && (
+                        <Input className="w-lg mt-2 sm:w-lg mx-auto block"
+                            placeholder={`Add a ${add} item to your daily log. Try searching for 'steak' or 'salad'...`}
+                            value={search_input}
+                            onChange={e => handleSearch(e)}
+                        />
+                    )}
+                </Card>
+                {search && (
+                <>
+                    {data?.foods?.map((food) => (
+                        <Button key={food._id} variant="outline" className="w-full justify-start" onClick={() => {
+                            create_meal.mutate({
                                 date: formatted_selected_date,
                                 meal: {
-                                    meal_type: "dinner",
+                                    meal_type: add as MealType,
                                     food_item: food.food_item,
                                     calories: food.calories,
                                     protein: food.protein,
@@ -152,9 +196,16 @@ export default function CalorieCalculatorPage() {
                                     logged_at: new Date().toISOString(),
                                 }
                             });
-                    }}>{food.food_item} <span className="text-muted-foreground">({food.calories} cal)</span></Button>
-
-                ))}
+                        }}>
+                            {food.food_item}
+                            <span className="text-muted-foreground">({food.calories} cal)</span>
+                            <span className="text-orange-300">{food.protein}g protein</span>
+                            <span className="text-green-300">{food.carbohydrates}g carbs</span>
+                            <span className="text-yellow-300">{food.fat}g fat</span>
+                        </Button>
+                    ))}
+                </>
+            )}
                 
                 <Button onClick={() => {
                     //NOTE: User needs to checkin before they can log meals
