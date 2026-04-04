@@ -1,6 +1,8 @@
 "use client";
 
 import { Flame, Sparkles, ClipboardCheck } from "lucide-react";
+import { energy_rating, EnergyRating, stress_level } from "@/lib/enums";
+import { StressLevel } from "@/lib/enums";
 
 import {
     Card,
@@ -10,6 +12,9 @@ import {
     CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { on } from "events";
+import { useCreateDailyLog } from "@/lib/hooks/api-hooks/use-daily-log";
 
 type QuickActionsCardProps = {
     onCraving?: () => void;
@@ -22,6 +27,55 @@ export function QuickActionsCard({
     onHungry,
     onCheckIn,
 }: QuickActionsCardProps) {
+    const [checking, setChecking] = useState(false)
+    const [step, setStep] = useState(0)
+    const [answers, setAnswers] = useState<string[]>([])
+
+    const prompts = [
+    {
+        question: "How many hours of sleep did you get last night?",
+        responses: ["0","1","2","3","4","5","6","7","8","9"].map(n => ({ key: n, label: n }))
+    },
+    {
+        question: "What is your current energy level?",
+        responses: Object.entries(energy_rating.map).map(([key, label]) => ({ key, label }))
+    },
+    {
+        question: "What is your current stress level?",
+        responses: Object.entries(stress_level.map).map(([key, label]) => ({ key, label }))
+    },
+    {
+        question: "What was your weight this morning?",
+        responses: ["200"].map(n => ({ key: n, label: n }))
+    },
+    ]
+
+    const createDailyLog = useCreateDailyLog()
+
+    function handleCheckIn() {
+        setChecking(true)
+        setStep(0)
+        setAnswers([])
+    }
+
+    function answer(response: string | EnergyRating | StressLevel) {
+        const newAnswers = [...answers, response]
+        setAnswers(newAnswers)
+
+        if (step < prompts.length - 1) {  
+        setStep(step + 1)
+        } else {
+        createDailyLog.mutate({
+            date: new Intl.DateTimeFormat('en-CA').format(new Date()),
+            timezone: "America/New_York",
+            morning_weight: parseFloat(newAnswers[3]), 
+            energy_rating: newAnswers[1] as EnergyRating,
+            sleep_hours: parseInt(newAnswers[0]),
+            stress_level: newAnswers[2] as StressLevel,
+        })
+        setChecking(false)
+        }
+    }
     return (
         <Card className="w-full">
             <CardHeader>
@@ -54,12 +108,29 @@ export function QuickActionsCard({
                     <Button
                         variant="outline"
                         className="flex items-center gap-2"
-                        onClick={onCheckIn}
+                        onClick={handleCheckIn}
                     >
                         <ClipboardCheck />
                         Check In
                     </Button>
+                    
                 </div>
+                {checking && (
+                        <div className="flex flex-col gap-2 sm:items-center sm:justify-center">
+                            <br />
+                            <p>{prompts[step].question}</p>
+                            {prompts[step].responses.map(({ key, label }) => (
+                            <div>
+                            <Button
+                                key={key} 
+                                className="w-lg mt-2"
+                                variant="outline"
+                                onClick={() => answer(key)}>
+                                {label}
+                            </Button>
+                            </div>))}
+                        </div>
+                        )}
             </CardContent>
         </Card>
     );
