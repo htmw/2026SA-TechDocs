@@ -4,9 +4,9 @@ import z from "zod";
 export const DailyLogZodSchema = z.object({
     date: z.coerce.date(),
     timezone: z.string(),
-    morning_weight: z.number().positive("Morning weight must be a positive number"),
+    morning_weight: z.coerce.number().positive("Morning weight must be a positive number"),
     energy_rating: z.enum(energy_rating.values, `Energy rating is required (${energy_rating.values.join(" | ")})`),
-    sleep_hours: z.number().min(0).max(24, "Sleep hours must be between 0 and 24"),
+    sleep_hours: z.coerce.number().min(0).max(24, "Sleep hours must be between 0 and 24"),
     stress_level: z.enum(stress_level.values, `Stress level is required (${stress_level.values.join(" | ")})`),
 });
 
