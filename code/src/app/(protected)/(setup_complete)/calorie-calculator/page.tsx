@@ -2,13 +2,15 @@
 
 import { SingleWeekPicker } from "@/components/cards/single_week_picker";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useDailyLogStatus } from "@/lib/hooks/api-hooks/use-daily-log";
 import { useFoods } from "@/lib/hooks/api-hooks/use-food";
 import { useCreateMeal, useDeleteMeal, useMeals } from "@/lib/hooks/api-hooks/use-meals";
 import { useAuth } from "@/lib/hooks/useAuthProvider";
 import { tz } from "@date-fns/tz";
 import { endOfWeek, format, startOfWeek } from "date-fns";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 export default function CalorieCalculatorPage() {
     const { user } = useAuth();
@@ -70,7 +72,7 @@ export default function CalorieCalculatorPage() {
     // Example usage of useFoods hook with various parameters
     // Uncomment paramters as needed
     // The current example get the lowest calorie steak with at least 30g of protein
-    const { data: foods = [] } = useFoods({
+    const { data: suggestedFoods = [] } = useFoods({
         limit: 5,
         sort_field: "calories",
         sort_dir: "asc",
@@ -82,6 +84,30 @@ export default function CalorieCalculatorPage() {
     });
 
     const formatted_selected_date = format(selected_date, "yyyy-MM-dd", { in: tz(timezone), });
+
+    const [search_input, setSearchInput] = useState("");
+    const [debounced_search, setDebouncedSearch] = useState("");
+
+    const { data: foods = [] } = useFoods({
+        limit: 5,
+        sort_field: "calories",
+        sort_dir: "asc",
+        food_item_contains: "Steak",
+        // category : "Grain", //custom field
+        // calories_lt : 500,
+        // sodium_lt: 100 // doesn't exist in UseFoodsParams, but you can add custom parameters if needed
+        protein_gte: 30
+    });
+
+    useEffect(() => {
+        const timeout = setTimeout(() => setDebouncedSearch(search_input), 300);
+        return () => clearTimeout(timeout);
+    }, [search_input]);
+
+    const { data } = useFoods({
+        food_item_contains: debounced_search,
+        limit: 10,
+    });
 
     return (
         <>
@@ -96,6 +122,40 @@ export default function CalorieCalculatorPage() {
                     weekStartsOn={0}
                     day_statuses={day_status_array}
                 />
+                <Card className="p-4">
+                    <h1 className="text-lg font-bold mb-4">Selected Date: {formatted_selected_date}</h1>
+                    <Input className="w-lg mt-2"
+                        placeholder="Add a food or meal to your daily log. Try searching for 'steak' or 'salad'..."
+                        value={search_input}
+                        onChange={e => setSearchInput(e.target.value)}
+                        /> 
+                </Card>
+
+                {data?.foods?.map((food) => (
+                    <Button key={food._id} variant="outline" className="w-full justify-start" onClick={() => {
+                        create_meal.mutate(
+                            {
+                                date: formatted_selected_date,
+                                meal: {
+                                    meal_type: "dinner",
+                                    food_item: food.food_item,
+                                    calories: food.calories,
+                                    protein: food.protein,
+                                    carbohydrates: food.carbohydrates,
+                                    fat: food.fat,
+                                    fiber: food.fiber,
+                                    sugar: food.sugars,
+                                    sodium: food.sodium,
+                                    cholesterol: food.cholesterol,
+                                    water_intake: food.water_intake,
+                                    servings: 1,
+                                    logged_at: new Date().toISOString(),
+                                }
+                            });
+                    }}>{food.food_item} <span className="text-muted-foreground">({food.calories} cal)</span></Button>
+
+                ))}
+                
                 <Button onClick={() => {
                     //NOTE: User needs to checkin before they can log meals
                     create_meal.mutate(
