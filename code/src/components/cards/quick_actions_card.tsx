@@ -18,6 +18,7 @@ import React from "react";
 import { endOfWeek, format, startOfWeek } from "date-fns";
 import { useAuth } from "@/lib/hooks/useAuthProvider";
 import { tz } from "@date-fns/tz";
+import { Input } from "../ui/input";
 
 type QuickActionsCardProps = {
     onCraving?: () => void;
@@ -33,6 +34,7 @@ export function QuickActionsCard({
     const [checking, setChecking] = useState(false)
     const [step, setStep] = useState(0)
     const [answers, setAnswers] = useState<string[]>([])
+    const [weightInput, setWeightInput] = useState("")
 
     const { user } = useAuth();
     const timezone = user?.profile?.timezone || "UTC";
@@ -40,24 +42,29 @@ export function QuickActionsCard({
     const prompts = [
     {
         question: "How many hours of sleep did you get last night?",
-        responses: ["0","1","2","3","4","5","6","7","8","9"].map(n => ({ key: n, label: n }))
+        responses: ["0","1","2","3","4","5","6","7","8","9"].map(n => ({ key: n, label: n })),
+        isInput: false,
     },
     {
         question: "What is your current energy level?",
-        responses: Object.entries(energy_rating.map).map(([key, label]) => ({ key, label }))
+        responses: Object.entries(energy_rating.map).map(([key, label]) => ({ key, label })),
+        isInput: false,
     },
     {
         question: "What is your current stress level?",
-        responses: Object.entries(stress_level.map).map(([key, label]) => ({ key, label }))
+        responses: Object.entries(stress_level.map).map(([key, label]) => ({ key, label })),
+        isInput: false,
     },
     {
         question: "What was your weight this morning?",
-        responses: ["200"].map(n => ({ key: n, label: n }))
+        responses: ["200"].map(n => ({ key: n, label: n })),
+        isInput: true,
     },
     ]
+
     const [selected_date, setSelectedDate] = React.useState(new Date());
-        const [week_start, setWeekStart] = React.useState(startOfWeek(selected_date, { weekStartsOn: 0 }));
-        const [week_end, setWeekEnd] = React.useState(endOfWeek(selected_date, { weekStartsOn: 0 }));
+    const [week_start, setWeekStart] = React.useState(startOfWeek(selected_date, { weekStartsOn: 0 }));
+    const [week_end, setWeekEnd] = React.useState(endOfWeek(selected_date, { weekStartsOn: 0 }));
     
     const { data: day_status_data = [], isLoading: loading_day_statuses } = useDailyLogStatus({
         startDate: week_start,
@@ -134,7 +141,7 @@ export function QuickActionsCard({
                     </Button>
                     
                 </div>
-                {checking && !alreadyCheckedIn && (
+                {checking && !alreadyCheckedIn && !prompts[step].isInput && (
                         <div className="flex flex-col gap-2 sm:items-center sm:justify-center">
                             <br />
                             <p>{prompts[step].question}</p>
@@ -150,6 +157,25 @@ export function QuickActionsCard({
                             </div>))}
                         </div>
                         )}
+                {checking && !alreadyCheckedIn && prompts[step].isInput && (
+                    <div className="flex flex-col gap-2 sm:items-center sm:justify-center">
+                        <br />
+                        <p>{prompts[step].question}</p>
+                        <Input
+                        className="w-lg mt-2"
+                        placeholder="Enter your response..."
+                        value={weightInput}
+                        onChange={e => setWeightInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && answer(weightInput)}
+                        />
+                        <Button
+                        className="w-lg mt-2"
+                        onClick={() => answer(weightInput)}
+                        >
+                        Next
+                        </Button>
+                    </div>
+                    )}
                 {checking && alreadyCheckedIn && (
                     <div className="flex flex-col gap-2 sm:items-center sm:justify-center">
                         <br />
