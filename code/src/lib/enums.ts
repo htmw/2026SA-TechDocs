@@ -208,3 +208,18 @@ export const craving_triggers = createLabeledEnum({
     other: "Other",
 } as const);
 export type CravingTrigger = keyof typeof craving_triggers.map;
+
+// Diet Restrictions (allergens + preferences)
+export const diet_restrictions = createLabeledEnum({
+    dairy: "Dairy",
+    gluten: "Gluten",
+    nuts: "Nuts",
+    shellfish: "Shellfish",
+    soy: "Soy",
+    eggs: "Eggs",
+    vegetarian: "Vegetarian",
+    vegan: "Vegan",
+    none: "None"
+} as const);
+
+export type DietRestriction = keyof typeof diet_restrictions.map;

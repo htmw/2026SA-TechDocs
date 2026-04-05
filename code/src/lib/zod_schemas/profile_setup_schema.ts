@@ -20,6 +20,7 @@ export const ProfileZodSchema = z.object({
     
     goals: z.array(z.string().transform((s) => s.trim())).optional(),
     hobbies: z.array(z.string().transform((s) => s.trim())).optional(),
+    diet_restrictions: z.array(z.string().transform((s) => s.trim())).optional()
 });
 
 export type ProfileSetupValues = z.infer<typeof ProfileZodSchema>;

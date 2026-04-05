@@ -1,6 +1,6 @@
 "use client"
 
-import { fitness_level, hobby_options, occupation_options } from "@/lib/enums"
+import { fitness_level, hobby_options, occupation_options, diet_restrictions } from "@/lib/enums"
 import { useState, useEffect } from "react"
 
 export default function ProfilePage() {
@@ -17,6 +17,7 @@ export default function ProfilePage() {
         currentEnergyLevel: string
         gender: string
         sleepHours: string
+        dietRestrictions: string[]
     }
 
     const [formData, setFormData] = useState<ProfileForm>({
@@ -31,6 +32,7 @@ export default function ProfilePage() {
         currentEnergyLevel: "",
         gender: "",
         sleepHours: "",
+        dietRestrictions: []
     })
 
     // calculated output state
@@ -74,7 +76,8 @@ export default function ProfilePage() {
                         averageCalories: profile.avg_calories ?? "",
                         currentEnergyLevel: profile.current_energy ?? "",
                         gender: profile.gender ?? "",
-                        sleepHours: profile.avg_sleep ?? ""
+                        sleepHours: profile.avg_sleep ?? "",
+                        dietRestrictions: profile.diet_restrictions ?? []
                     })
 
                     const loadedHeight = Number(profile.height)
@@ -180,7 +183,8 @@ export default function ProfilePage() {
                     current_energy: formData.currentEnergyLevel,
                     gender: formData.gender,
                     avg_sleep: formData.sleepHours,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    diet_restrictions: formData.dietRestrictions
                 }),
             })
 
@@ -338,6 +342,46 @@ export default function ProfilePage() {
                                                                 hobbies: isChecked
                                                                     ? prev.hobbies.filter((h) => h !== value)
                                                                     : [...prev.hobbies, value],
+                                                            }))
+                                                        }}
+                                                    />
+                                                    {label}
+                                                </label>
+                                            )
+                                        })}
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="mb-1 block text-sm font-medium">
+                                Diet Restrictions
+                            </label>
+
+                            <div className="relative">
+                                <details className="w-full">
+                                    <summary className="cursor-pointer rounded-lg border p-2">
+                                        {formData.dietRestrictions.length > 0
+                                            ? `${formData.dietRestrictions.length} selected`
+                                            : "Select restrictions"}
+                                    </summary>
+
+                                    <div className="absolute z-10 mt-2 w-full rounded-lg border bg-background text-foreground p-2 shadow">
+                                        {diet_restrictions.entries.map(([value, label]) => {
+                                            const isChecked = formData.dietRestrictions.includes(value)
+
+                                            return (
+                                                <label key={value} className="flex items-center gap-2 p-1">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => {
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                dietRestrictions: isChecked
+                                                                    ? prev.dietRestrictions.filter((d) => d !== value)
+                                                                    : [...prev.dietRestrictions, value],
                                                             }))
                                                         }}
                                                     />
