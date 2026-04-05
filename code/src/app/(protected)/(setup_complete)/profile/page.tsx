@@ -178,8 +178,8 @@ export default function ProfilePage() {
                 body: JSON.stringify({
                     name: formData.name,
                     dob: dob,
-                    height: Number(formData.height),
-                    weight: Number(formData.weight),
+                    height: formData.height,
+                    weight: formData.weight,
                     occupation: formData.occupation,
                     fitness_level: formData.fitnessLevel,
                     hobbies: formData.hobbies,
