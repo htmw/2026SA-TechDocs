@@ -10,7 +10,7 @@ export default function FeatureButtons() { // THIS makes it a module
     }
 
     const handleCraving = () => {
-        router.push("/craving")
+        router.push("/craving-check")
     }
 
     return (
