@@ -56,16 +56,9 @@ export default function ProfilePage() {
                 if (response.ok && data.data?.user) {
 
                     const profile = data.data.user.profile || {};
-                    const fitnessRaw = profile.fitnessLevel ?? ""
-                    let finalFitness = ""
+                    const fitnessRaw = profile.fitness_level ?? ""
+                    const finalFitness = fitnessRaw
 
-                    if (fitnessRaw) {
-                        const val = String(fitnessRaw).trim().toLowerCase()
-
-                        if (val.includes("sedentary") || val === "0") finalFitness = "Sedentary"
-                        else if (val.includes("moderate") || val === "1") finalFitness = "Moderate"
-                        else if (val.includes("active") || val === "2") finalFitness = "Active"
-                    }
                     console.log("RAW FITNESS FROM DB:", profile.fitnessLevel, profile.fitness_level)
                     console.log("FINAL FITNESS SET:", finalFitness)
                     console.log("FULL PROFILE OBJECT:", profile)
