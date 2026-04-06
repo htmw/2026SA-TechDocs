@@ -223,3 +223,13 @@ export const diet_restrictions = createLabeledEnum({
 } as const);
 
 export type DietRestriction = keyof typeof diet_restrictions.map;
+
+// list of selectable medical history options for checkbox section
+export const medical_history_options = [
+    "Diabetes",
+    "High Blood Pressure",
+    "Heart Disease",
+    "Asthma",
+    "Allergies",
+    "None"
+]

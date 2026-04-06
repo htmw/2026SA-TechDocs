@@ -32,6 +32,7 @@ export interface IUserProfile {
     goals?: string[];
     hobbies?: string[];
     diet_restrictions?: string[];
+    medical_history?: string[];
 }
 
 export type IPublicUser =

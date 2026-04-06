@@ -50,6 +50,14 @@ export const UserProfileSchema = new Schema<IUserProfile>(
             type: String,
             trim: true
         }],
+        diet_restrictions: [{
+            type: String,
+            trim: true
+        }],
+        medical_history: [{
+            type: String,
+            trim: true
+        }],
     },
     { _id: false }
 );
