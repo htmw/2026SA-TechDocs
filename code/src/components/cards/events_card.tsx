@@ -63,14 +63,15 @@ function SuggestedActions({ actions }: { actions: string[] }) {
 
     return (
         <div className="flex flex-wrap gap-2">
-            {actions.map((action, index) => (
-                <Badge
-                    key={`${action}-${index}`}
-                    variant="outline"
-                >
-                    {action}
-                </Badge>
-            ))}
+            <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
+                {actions.map((action, index) => (
+                    <li
+                        key={`${action}-${index}`}
+                    >
+                        {action}
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
