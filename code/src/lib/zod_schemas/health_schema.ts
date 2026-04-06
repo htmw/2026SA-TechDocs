@@ -10,6 +10,10 @@ export const DailyLogZodSchema = z.object({
     stress_level: z.enum(stress_level.values, `Stress level is required (${stress_level.values.join(" | ")})`),
 });
 
+export const CravingPromptSchema = z.object({
+    craving_prompt: z.string().min(1, "Craving prompt cannot be empty").max(1000, "Craving prompt cannot exceed 1000 characters"),
+});
+
 export const CravingEventSchema = z.object({
     occurred_at: z.coerce.date(),
     craving_type: z.enum(craving_type.values, `Craving type is required (${craving_type.values.join(" | ")})`),
@@ -42,6 +46,8 @@ export const MealZodSchema = z.object({
     vitamins: z.array(z.string()).optional(),
     logged_at: z.coerce.date(),
 });
+
+export type CravingPromptValues = z.infer<typeof CravingPromptSchema>;
 
 export type DailyLogValues = z.infer<typeof DailyLogZodSchema>;
 
