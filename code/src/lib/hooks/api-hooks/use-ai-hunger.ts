@@ -1,16 +1,18 @@
 import { useMutation } from "@tanstack/react-query";
 import callApi from "@/lib/api";
-import { CravingPromptValues } from "@/lib/zod_schemas/health_schema";
 import { ClientRecipes } from "@/lib/types/mongo_recipe_types";
+import { HungerEventValues } from "@/lib/zod_schemas/health_schema";
 
-interface AiCravingResponse {
+interface AiHungerResponse {
     recipe: ClientRecipes;
 }
 
-export function useAiCravings() {
-    return useMutation<ClientRecipes, Error, CravingPromptValues, unknown>({
+type AiHungerRequest = Pick<HungerEventValues, "hunger_level">;
+
+export function useAiHunger() {
+    return useMutation<ClientRecipes, Error, AiHungerRequest, unknown>({
         mutationFn: async (payload) => {
-            const response = await callApi<AiCravingResponse>(`/api/ai/craving-event`, {
+            const response = await callApi<AiHungerResponse>(`/api/ai/hunger-event`, {
                 method: "POST",
                 body: JSON.stringify(payload),
             });
