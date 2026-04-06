@@ -1,6 +1,6 @@
 "use client"
 
-import { fitness_level, hobby_options, occupation_options } from "@/lib/enums"
+import { fitness_level, hobby_options, occupation_options, diet_restrictions, medical_history_options } from "@/lib/enums" // NEW: added medical_history_options
 import { useState, useEffect } from "react"
 
 export default function ProfilePage() {
@@ -17,6 +17,8 @@ export default function ProfilePage() {
         currentEnergyLevel: string
         gender: string
         sleepHours: string
+        dietRestrictions: string[]
+        medicalHistory: string[]
     }
 
     const [formData, setFormData] = useState<ProfileForm>({
@@ -31,6 +33,8 @@ export default function ProfilePage() {
         currentEnergyLevel: "",
         gender: "",
         sleepHours: "",
+        dietRestrictions: [],
+        medicalHistory: []
     })
 
     // calculated output state
@@ -51,24 +55,12 @@ export default function ProfilePage() {
                 const response = await fetch("/api/profile")
 
                 const data = await response.json()
-                console.log("PROFILE DATA:", data)
 
                 if (response.ok && data.data?.user) {
 
                     const profile = data.data.user.profile || {};
-                    const fitnessRaw = profile.fitnessLevel ?? ""
-                    let finalFitness = ""
-
-                    if (fitnessRaw) {
-                        const val = String(fitnessRaw).trim().toLowerCase()
-
-                        if (val.includes("sedentary") || val === "0") finalFitness = "Sedentary"
-                        else if (val.includes("moderate") || val === "1") finalFitness = "Moderate"
-                        else if (val.includes("active") || val === "2") finalFitness = "Active"
-                    }
-                    console.log("RAW FITNESS FROM DB:", profile.fitnessLevel, profile.fitness_level)
-                    console.log("FINAL FITNESS SET:", finalFitness)
-                    console.log("FULL PROFILE OBJECT:", profile)
+                    const fitnessRaw = profile.fitness_level ?? ""
+                    const finalFitness = fitnessRaw
 
                     setFormData({
                         name: data.data.user.name ?? "",
@@ -81,7 +73,9 @@ export default function ProfilePage() {
                         averageCalories: profile.avg_calories ?? "",
                         currentEnergyLevel: profile.current_energy ?? "",
                         gender: profile.gender ?? "",
-                        sleepHours: profile.avg_sleep ?? ""
+                        sleepHours: profile.avg_sleep ?? "",
+                        dietRestrictions: profile.diet_restrictions ?? [],
+                        medicalHistory: profile.medical_history ?? []
                     })
 
                     const loadedHeight = Number(profile.height)
@@ -90,7 +84,7 @@ export default function ProfilePage() {
                     if (loadedHeight && loadedWeight) {
                         const bmiValue = (loadedWeight * 703) / (loadedHeight * loadedHeight)
                         setBmi(bmiValue.toFixed(1))
-                    }
+                }
 
                 }
 
@@ -169,7 +163,7 @@ export default function ProfilePage() {
             setSuccessMessage("") // clear old success message
             const currentYear = new Date().getFullYear()
             const birthYear = currentYear - Number(formData.age)
-            const dob = `${birthYear}-01-01` // simple conversion (no month/day yet)
+            const dob = `${birthYear}-01-01` //YYYY-MM-DD
             const response = await fetch("/api/profile", {
                 method: "POST",
                 headers: {
@@ -178,8 +172,8 @@ export default function ProfilePage() {
                 body: JSON.stringify({
                     name: formData.name,
                     dob: dob,
-                    height: Number(formData.height),
-                    weight: Number(formData.weight),
+                    height: formData.height,
+                    weight: formData.weight,
                     occupation: formData.occupation,
                     fitness_level: formData.fitnessLevel,
                     hobbies: formData.hobbies,
@@ -187,21 +181,19 @@ export default function ProfilePage() {
                     current_energy: formData.currentEnergyLevel,
                     gender: formData.gender,
                     avg_sleep: formData.sleepHours,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    diet_restrictions: formData.dietRestrictions,
+                    medical_history: formData.medicalHistory
                 }),
             })
 
             const data = await response.json()
 
             if (!response.ok) {
-
-                console.log("FULL ERROR RESPONSE:", data)
                 throw new Error(JSON.stringify(data) || "Profile save failed.")
-
             }
 
             setSuccessMessage("Profile saved successfully.")
-            console.log("SAVE SUCCESS:", data)
 
         } catch (error) {
             setErrorMessage(error instanceof Error ? error.message : "Failed to save profile.")
@@ -349,6 +341,88 @@ export default function ProfilePage() {
                                                         }}
                                                     />
                                                     {label}
+                                                </label>
+                                            )
+                                        })}
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="mb-1 block text-sm font-medium">
+                                Diet Restrictions
+                            </label>
+
+                            <div className="relative">
+                                <details className="w-full">
+                                    <summary className="cursor-pointer rounded-lg border p-2">
+                                        {formData.dietRestrictions.length > 0
+                                            ? `${formData.dietRestrictions.length} selected`
+                                            : "Select restrictions"}
+                                    </summary>
+
+                                    <div className="absolute z-10 mt-2 w-full rounded-lg border bg-background text-foreground p-2 shadow">
+                                        {diet_restrictions.entries.map(([value, label]) => {
+                                            const isChecked = formData.dietRestrictions.includes(value)
+
+                                            return (
+                                                <label key={value} className="flex items-center gap-2 p-1">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => {
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                dietRestrictions: isChecked
+                                                                    ? prev.dietRestrictions.filter((d) => d !== value)
+                                                                    : [...prev.dietRestrictions, value],
+                                                            }))
+                                                        }}
+                                                    />
+                                                    {label}
+                                                </label>
+                                            )
+                                        })}
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+
+                        {/* Medical History Section */}
+                        <div>
+                            <label className="mb-1 block text-sm font-medium">
+                                Medical History
+                            </label>
+
+                            <div className="relative">
+                                <details className="w-full">
+                                    <summary className="cursor-pointer rounded-lg border p-2">
+                                        {formData.medicalHistory.length > 0
+                                            ? `${formData.medicalHistory.length} selected`
+                                            : "Select medical history"}
+                                    </summary>
+
+                                    <div className="absolute z-10 mt-2 w-full rounded-lg border bg-background text-foreground p-2 shadow">
+                                        {medical_history_options.map((item) => {
+
+                                            const isChecked = formData.medicalHistory.includes(item)
+
+                                            return (
+                                                <label key={item} className="flex items-center gap-2 p-1">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => {
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                medicalHistory: isChecked
+                                                                    ? prev.medicalHistory.filter((m) => m !== item)
+                                                                    : [...prev.medicalHistory, item],
+                                                            }))
+                                                        }}
+                                                    />
+                                                    {item}
                                                 </label>
                                             )
                                         })}

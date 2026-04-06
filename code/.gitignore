@@ -43,3 +43,6 @@ next-env.d.ts
 # docker
 Dockerfile
 docker-compose.yml
+
+# visual studio
+.vs/
