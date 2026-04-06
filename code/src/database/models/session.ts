@@ -74,7 +74,7 @@ const SessionSchema = new Schema<ISession, SessionModel, ISessionMethods>(
                 // extend if within threshold
                 if (now >= exp - EXTEND_THRESHOLD_MS) {
                     const newExpiresAt = new Date(now + NEW_TTL_MS);
-                    await this.findByIdAndUpdate(session_id, { expires_at: newExpiresAt }).exec();
+                    await this.findByIdAndUpdate(sess._id, { expires_at: newExpiresAt }).exec();
 
                     sess.expires_at = newExpiresAt;
                 }
