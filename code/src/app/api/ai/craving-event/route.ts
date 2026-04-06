@@ -1,29 +1,32 @@
 import { DailyLog } from "@/database/models/daily_log";
+import { Recipe } from "@/database/models/recipe";
 import { createDateValidator } from "@/lib/api/middleware";
 import { createApiRoute, createTypedApiRoute } from "@/lib/api/route";
 import { createErrorResponse, createSuccessResponse } from "@/lib/types/shared";
 import { normalizeDocument } from "@/lib/utils/database_utils";
-import { CravingEventSchema } from "@/lib/zod_schemas/health_schema";
+import { CravingEventSchema, CravingPromptSchema } from "@/lib/zod_schemas/health_schema";
 import { NextResponse } from "next/server";
+import { parse } from "path";
 import z from "zod";
 
 export const POST = createApiRoute(
-    async ({ body }) => {
-        const parsed = body as z.infer<typeof CravingEventSchema>;
+    async ({ user, body }) => {
+        const parsed = body as z.infer<typeof CravingPromptSchema>;
+        const prompt = parsed.craving_prompt;
+        const profile = user.profile;
 
         // Call AI Backend
         // 5 second delay for ai
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        const recipe = {
-            title: ["Grilled Chicken", "Fried Rice", "Salad", "Salmon", "Tacos"][Math.floor(Math.random() * 5)],
-            ingredients: [[ "Ingredient 1" ], [ "Ingredient 2" ], [ "Ingredient 3" ], [ "Ingredient 4" ], [ "Ingredient 1" , "Ingredient 2", "Ingredient 3" ], [ "Ingredient 1" , "Ingredient 2" ]][Math.floor(Math.random() * 3)],
-            directions: "1. Step 1\n2. Step 2\n3. Done",
-            nutrition: "Calories: 500, Protein: 30g, Fat: 20g, Carbs: 50g"
-        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        
+        const recipes = await Recipe.search({
+            title_contains: "ham persillade with mustard potato salad and mashed peas",
+            limit: "1"
+        });
 
-        const payload = { recipe: recipe };
+        const payload = { recipe: recipes.recipes[0] };
         const normalizedPayload = normalizeDocument(payload);
         return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 201 });
     },
-    { body_schema: CravingEventSchema }
+    { body_schema: CravingPromptSchema }
 );
