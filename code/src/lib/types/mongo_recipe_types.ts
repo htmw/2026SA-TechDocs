@@ -3,14 +3,15 @@ import { ToPrimitive } from "./mongo_primitive_types";
 
 export interface IRecipes {
     _id: Types.ObjectId;
+    title: string;
+    rating: number;
+    calories: number;
+    protein: number;
+    fat: number;
+    sodium: number;
     categories: String[];
     directions: String[];
     ingredients: String[];
-    calories: number;
-    fat: number;
-    protein: number;
-    sodium: number;
-    name: string;
 }
 
 export type ClientRecipes = ToPrimitive<IRecipes>;

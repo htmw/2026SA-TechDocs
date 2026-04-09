@@ -3,8 +3,8 @@ import { AvgCalories, AvgSleep, CurrentEnergy, FitnessLevel, Gender } from "@/li
 import { Types } from "mongoose";
 
 export interface IDietRestriction {
-    allergies?: string[];//convert to enum later
-    preferences?: string[];//convert to enum later
+    allergies?: string[];
+    preferences?: string[];
 }
 
 export interface IUser {
@@ -31,6 +31,8 @@ export interface IUserProfile {
     avg_sleep?: AvgSleep;
     goals?: string[];
     hobbies?: string[];
+    diet_restrictions?: string[];
+    medical_history?: string[];
 }
 
 export type IPublicUser =

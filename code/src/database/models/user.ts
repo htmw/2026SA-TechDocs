@@ -50,6 +50,14 @@ export const UserProfileSchema = new Schema<IUserProfile>(
             type: String,
             trim: true
         }],
+        diet_restrictions: [{
+            type: String,
+            trim: true
+        }],
+        medical_history: [{
+            type: String,
+            trim: true
+        }],
     },
     { _id: false }
 );
@@ -62,7 +70,7 @@ export interface IUserMethods {
 }
 
 //Model Interface, which includes both the document and the methods
-export interface UserModel extends Model<IUser, {}, IUserMethods> {
+export interface UserModel extends Model<IUser, object, IUserMethods> {
     getAll(): Promise<HydratedUser[]>;
     findByEmail(email: string): Promise<HydratedUser | null>;
     findByUserId(id: Types.ObjectId): Promise<HydratedUser | null>;
