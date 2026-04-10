@@ -10,6 +10,8 @@ import { useDailyLogStatus } from "@/lib/hooks/api-hooks/use-daily-log";
 import { useFoods } from "@/lib/hooks/api-hooks/use-food";
 import { useCreateMeal, useDeleteMeal, useMeals } from "@/lib/hooks/api-hooks/use-meals";
 import { useAuth } from "@/lib/hooks/useAuthProvider";
+import { IFood } from "@/lib/types/mongo_food_types";
+import { ToPrimitive } from "@/lib/types/mongo_primitive_types";
 import { tz } from "@date-fns/tz";
 import { endOfWeek, format, startOfWeek } from "date-fns";
 import React, { use, useEffect, useState } from "react";
@@ -122,6 +124,30 @@ export default function CalorieCalculatorPage() {
         setSearchInput(e.target.value)
     }
 
+    function handleFoodSelect(food: ToPrimitive<IFood>) {
+        create_meal.mutate({
+                                date: formatted_selected_date,
+                                meal: {
+                                    meal_type: add as MealType,
+                                    food_item: food.food_item,
+                                    calories: food.calories,
+                                    protein: food.protein,
+                                    carbohydrates: food.carbohydrates,
+                                    fat: food.fat,
+                                    fiber: food.fiber,
+                                    sugar: food.sugar,
+                                    sodium: food.sodium,
+                                    cholesterol: food.cholesterol,
+                                    water_intake: food.water_intake,
+                                    servings: 1,
+                                    logged_at: new Date().toISOString(),
+                                }
+                            })
+        setSearch(false);
+        setSearchInput("");
+        setAdd('');
+    }
+
     return (
         <>
             <div className="gap-5 p-6 grid grid-cols-1">
@@ -188,24 +214,7 @@ export default function CalorieCalculatorPage() {
                 <>
                     {data?.foods?.map((food) => (
                         <Button key={food._id} variant="outline" className="w-full justify-start" onClick={() => {
-                            create_meal.mutate({
-                                date: formatted_selected_date,
-                                meal: {
-                                    meal_type: add as MealType,
-                                    food_item: food.food_item,
-                                    calories: food.calories,
-                                    protein: food.protein,
-                                    carbohydrates: food.carbohydrates,
-                                    fat: food.fat,
-                                    fiber: food.fiber,
-                                    sugar: food.sugar,
-                                    sodium: food.sodium,
-                                    cholesterol: food.cholesterol,
-                                    water_intake: food.water_intake,
-                                    servings: 1,
-                                    logged_at: new Date().toISOString(),
-                                }
-                            });
+                            handleFoodSelect(food);
                         }}>
                             {food.food_item}
                             <span className="text-muted-foreground">({food.calories} cal)</span>
