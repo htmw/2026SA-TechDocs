@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-export default function CravingPage() {
+export default function CravingPage() { // shows options after a craving is detected
 
     const [showDistractions, setShowDistractions] = useState(false)
     const [success, setSuccess] = useState<string | null>(null)
@@ -18,7 +18,7 @@ export default function CravingPage() {
                 This looks like a craving, not real hunger. You can choose how you want to handle it.
             </p>
 
-            {/* GIVE IN SECTION */}
+            {/* option to give in to the craving */}
             <div className="w-full max-w-md space-y-2">
                 <h2 className="text-lg font-semibold">
                     Give In Option
@@ -35,7 +35,7 @@ export default function CravingPage() {
                 </div>
             </div>
 
-            {/* ALTERNATIVE SECTION */}
+            {/* better food choice */}
             <div className="w-full max-w-md space-y-2">
                 <h2 className="text-xl font-semibold">
                     Better Alternative
@@ -54,7 +54,7 @@ export default function CravingPage() {
                 </div>
             </div>
 
-            {/* MOTIVATION */}
+            {/* reminder to stay focused */}
             <div className="w-full max-w-md space-y-2">
                 <h2 className="text-lg font-semibold">
                     Stay On Track
@@ -67,7 +67,7 @@ export default function CravingPage() {
                 </div>
             </div>
 
-            {/* GOAL */}
+            {/* current goal progress */}
             <div className="w-full max-w-md space-y-2">
                 <h2 className="text-lg font-semibold">
                     Your Goal
@@ -80,7 +80,7 @@ export default function CravingPage() {
                 </div>
             </div>
 
-            {/* DISTRACTIONS */}
+            {/* distraction ideas */}
             <div className="w-full max-w-md space-y-2 text-center">
                 <h2 className="text-lg font-semibold">
                     Try a Distraction
@@ -103,7 +103,7 @@ export default function CravingPage() {
                 )}
             </div>
 
-            {/* SUCCESS TRACKING */}
+            {/* craving result from the user */}
             <div className="w-full max-w-md space-y-2 text-center">
                 <h2 className="text-lg font-semibold">
                     Craving Outcome

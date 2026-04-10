@@ -3,10 +3,10 @@
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 
-export default function CravingCheckPage() {
+export default function CravingCheckPage() { // shows questions to check for a craving
     const router = useRouter()
 
-    // inputs
+    // saved answers from the user
     const [cravingIntensity, setCravingIntensity] = useState(3)
     const [wantSpecificFood, setWantSpecificFood] = useState("")
     const [recentMeal, setRecentMeal] = useState("")
@@ -17,37 +17,37 @@ export default function CravingCheckPage() {
     const [sleep, setSleep] = useState("")
     const [stressLevel, setStressLevel] = useState("")
 
-    // analysis
+    // checks the answers and decides if this is a craving
     const cravingAnalysis = useMemo(() => {
         let score = 0
 
-        // craving intensity
+        // stronger craving adds more points
         if (cravingIntensity >= 4) score += 3
         else if (cravingIntensity === 3) score += 2
         else score += 1
 
-        // specific food = craving
+        // wanting one exact food points to a craving
         if (wantSpecificFood === "yes") score += 2
 
-        // recent eating = craving
+        // eating recently points to a craving
         if (recentMeal === "yes") score += 2
 
-        // emotional trigger
+        // mood or habit can point to a craving
         if (emotionalTrigger === "yes") score += 2
 
-        // feeling full strongly indicates craving
+        // feeling full strongly points to a craving
         if (isFull === "yes") score += 3
 
-        // lack of physical hunger = craving
+        // no physical hunger signs points to a craving
         if (physicalHunger === "no") score += 2
 
-        // low hydration can cause fake cravings
+        // low hydration can cause false cravings
         if (hydration === "no") score += 1
 
-        // poor sleep increases cravings
+        // poor sleep can increase cravings
         if (sleep === "poor") score += 1
 
-        // high stress increases cravings
+        // high stress can increase cravings
         if (stressLevel === "high") score += 1
 
         const isCraving = score >= 6
@@ -71,6 +71,7 @@ export default function CravingCheckPage() {
     ])
 
     const handleContinue = () => {
+        // sends user to the next page based on the result
         const route = cravingAnalysis.isCraving ? "/craving" : "/hungry"
         router.push(route)
     }
@@ -83,7 +84,7 @@ export default function CravingCheckPage() {
                     Craving Check
                 </h1>
 
-                {/* intensity */}
+                {/* craving intensity question */}
                 <div className="space-y-2">
                     <label>How strong is your craving?</label>
 
@@ -96,11 +97,13 @@ export default function CravingCheckPage() {
                         className="w-full"
                     />
 
+                    {/* craving scale */}
                     <div className="flex justify-between text-xs text-gray-500">
                         <span>Very weak</span>
                         <span>Very strong</span>
                     </div>
 
+                    {/* selected craving level */}
                     <p className="text-sm text-gray-600 text-center">
                         {
                             cravingIntensity === 1 ? "Very weak craving" :
@@ -112,7 +115,7 @@ export default function CravingCheckPage() {
                     </p>
                 </div>
 
-                {/* specific food */}
+                {/* specific food question */}
                 <div>
                     <label>Are you craving a specific food?</label>
                     <select value={wantSpecificFood} onChange={(e) => setWantSpecificFood(e.target.value)}>
@@ -122,7 +125,7 @@ export default function CravingCheckPage() {
                     </select>
                 </div>
 
-                {/* recent meal */}
+                {/* recent meal question */}
                 <div>
                     <label>Did you eat recently?</label>
                     <select value={recentMeal} onChange={(e) => setRecentMeal(e.target.value)}>
@@ -132,7 +135,7 @@ export default function CravingCheckPage() {
                     </select>
                 </div>
 
-                {/* full */}
+                {/* full feeling question */}
                 <div>
                     <label>Do you feel full right now?</label>
                     <select value={isFull} onChange={(e) => setIsFull(e.target.value)}>
@@ -142,7 +145,7 @@ export default function CravingCheckPage() {
                     </select>
                 </div>
 
-                {/* physical hunger */}
+                {/* physical hunger question */}
                 <div>
                     <label>Do you feel real hunger signs like stomach growling or low energy?</label>
                     <select value={physicalHunger} onChange={(e) => setPhysicalHunger(e.target.value)}>
@@ -152,7 +155,7 @@ export default function CravingCheckPage() {
                     </select>
                 </div>
 
-                {/* emotional */}
+                {/* mood or habit question */}
                 <div>
                     <label>Is this triggered by mood, boredom, or habit?</label>
                     <select value={emotionalTrigger} onChange={(e) => setEmotionalTrigger(e.target.value)}>
@@ -162,7 +165,7 @@ export default function CravingCheckPage() {
                     </select>
                 </div>
 
-                {/* hydration */}
+                {/* hydration question */}
                 <div>
                     <label>Have you had enough water today?</label>
                     <select value={hydration} onChange={(e) => setHydration(e.target.value)}>
@@ -172,7 +175,7 @@ export default function CravingCheckPage() {
                     </select>
                 </div>
 
-                {/* sleep */}
+                {/* sleep question */}
                 <div>
                     <label>How was your sleep?</label>
                     <select value={sleep} onChange={(e) => setSleep(e.target.value)}>
@@ -182,7 +185,7 @@ export default function CravingCheckPage() {
                     </select>
                 </div>
 
-                {/* stress */}
+                {/* stress question */}
                 <div>
                     <label>What is your stress level right now?</label>
                     <select value={stressLevel} onChange={(e) => setStressLevel(e.target.value)}>
@@ -192,7 +195,7 @@ export default function CravingCheckPage() {
                     </select>
                 </div>
 
-                {/* RESULT SECTION (like hunger check) */}
+                {/* craving result section */}
                 <div className="space-y-2">
                     <h2 className="text-lg font-semibold">
                         Your Craving Result
@@ -202,6 +205,7 @@ export default function CravingCheckPage() {
                         Based on your answers, here is what NutriAI thinks:
                     </p>
 
+                    {/* result box */}
                     <div className="bg-gray-50 p-4 rounded-xl space-y-2">
                         <p className="text-sm text-gray-600">
                             Score: {cravingAnalysis.score}
@@ -213,6 +217,7 @@ export default function CravingCheckPage() {
                     </div>
                 </div>
 
+                {/* continue button */}
                 <button
                     onClick={handleContinue}
                     className="w-full bg-black text-white py-3 rounded-lg"
