@@ -234,7 +234,7 @@ export default function CalorieCalculatorPage() {
             )}
             {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map(type => (
             <div key={type}>
-                <h3 className="capitalize">{type === 'snack' ? 'Snacks' : type}</h3>
+                <h3 className="capitalize 2xl:text-xl font-bold">{type === 'snack' ? 'Snacks' : type}</h3>
                 {mealsByType[type].length === 0
                 ? <p className="text-muted-foreground text-sm">Nothing logged yet.</p>
                 : mealsByType[type].map(meal => (
