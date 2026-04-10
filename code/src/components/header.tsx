@@ -11,7 +11,7 @@ import HeaderClient from "./header_client";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 
 const navLinks = [
-    { href: "/#features", label: "Features" },
+    { href: "features", label: "Features" },
     { href: "/#how-it-works", label: "How it works" },
     { href: "/#contact", label: "Contact" },
 ];

@@ -1,10 +1,10 @@
 "use client"
 
-import { fitness_level, hobby_options, occupation_options } from "@/lib/enums"
+import { fitness_level, hobby_options, occupation_options, diet_restrictions, medical_history_options } from "@/lib/enums"
 import { useState, useEffect } from "react"
 
 export default function ProfilePage() {
-    // profile form state
+    // stores all profile form values
     type ProfileForm = {
         name: string
         age: string
@@ -17,6 +17,8 @@ export default function ProfilePage() {
         currentEnergyLevel: string
         gender: string
         sleepHours: string
+        dietRestrictions: string[]
+        medicalHistory: string[]
     }
 
     const [formData, setFormData] = useState<ProfileForm>({
@@ -31,17 +33,17 @@ export default function ProfilePage() {
         currentEnergyLevel: "",
         gender: "",
         sleepHours: "",
+        dietRestrictions: [],
+        medicalHistory: []
     })
 
-    // calculated output state
+    // stores profile results and messages
     const [bmi, setBmi] = useState("")
     const [energyScore, setEnergyScore] = useState(0)
     const [errorMessage, setErrorMessage] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
 
-    // --------------------------------------------
-    // LOAD SAVED PROFILE WHEN PAGE OPENS
-    // --------------------------------------------
+    // loads saved profile data when the page opens
     useEffect(() => {
 
         async function loadProfile() {
@@ -51,28 +53,16 @@ export default function ProfilePage() {
                 const response = await fetch("/api/profile")
 
                 const data = await response.json()
-                console.log("PROFILE DATA:", data)
 
                 if (response.ok && data.data?.user) {
 
                     const profile = data.data.user.profile || {};
-                    const fitnessRaw = profile.fitnessLevel ?? ""
-                    let finalFitness = ""
-
-                    if (fitnessRaw) {
-                        const val = String(fitnessRaw).trim().toLowerCase()
-
-                        if (val.includes("sedentary") || val === "0") finalFitness = "Sedentary"
-                        else if (val.includes("moderate") || val === "1") finalFitness = "Moderate"
-                        else if (val.includes("active") || val === "2") finalFitness = "Active"
-                    }
-                    console.log("RAW FITNESS FROM DB:", profile.fitnessLevel, profile.fitness_level)
-                    console.log("FINAL FITNESS SET:", finalFitness)
-                    console.log("FULL PROFILE OBJECT:", profile)
+                    const fitnessRaw = profile.fitness_level ?? ""
+                    const finalFitness = fitnessRaw
 
                     setFormData({
                         name: data.data.user.name ?? "",
-                        age: profile.dob ? String(new Date().getFullYear() - new Date(profile.dob).getFullYear()) : "",     // age not stored its calculate from dob
+                        age: profile.dob ? String(new Date().getFullYear() - new Date(profile.dob).getFullYear()) : "", // age is calculated from date of birth
                         height: profile.height ?? "",
                         weight: profile.weight ?? "",
                         occupation: profile.occupation ?? "",
@@ -81,12 +71,15 @@ export default function ProfilePage() {
                         averageCalories: profile.avg_calories ?? "",
                         currentEnergyLevel: profile.current_energy ?? "",
                         gender: profile.gender ?? "",
-                        sleepHours: profile.avg_sleep ?? ""
+                        sleepHours: profile.avg_sleep ?? "",
+                        dietRestrictions: profile.diet_restrictions ?? [],
+                        medicalHistory: profile.medical_history ?? []
                     })
 
                     const loadedHeight = Number(profile.height)
                     const loadedWeight = Number(profile.weight)
 
+                    // sets bmi from saved height and weight
                     if (loadedHeight && loadedWeight) {
                         const bmiValue = (loadedWeight * 703) / (loadedHeight * loadedHeight)
                         setBmi(bmiValue.toFixed(1))
@@ -105,6 +98,8 @@ export default function ProfilePage() {
         loadProfile()
 
     }, [])
+
+    // updates bmi when height or weight changes
     useEffect(() => {
         const height = Number(formData.height)
         const weight = Number(formData.weight)
@@ -118,6 +113,7 @@ export default function ProfilePage() {
         setBmi(bmiValue.toFixed(1))
     }, [formData.height, formData.weight])
 
+    // updates energy score from sleep, energy, and fitness level
     useEffect(() => {
         let score = 0
 
@@ -139,14 +135,15 @@ export default function ProfilePage() {
         formData.fitnessLevel
     ])
 
-    // determine BMI category based on standard medical ranges
+    // returns the bmi category based on the bmi value
     function getBMICategory(bmi: number) {
         if (bmi < 18.5) return "Underweight"
         if (bmi < 25) return "Normal Weight"
         if (bmi < 30) return "Overweight"
         return "Obese"
     }
-    // update form values when user types
+
+    // updates form values when the user types or selects
     function handleChange(
         event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) {
@@ -158,18 +155,21 @@ export default function ProfilePage() {
         }))
     }
 
-
+    // saves profile data to the database
     async function handleSaveProfile() {
         if (!formData.fitnessLevel) {
             setErrorMessage("Select fitness level")
             return
         }
+
         try {
             setErrorMessage("")
-            setSuccessMessage("") // clear old success message
+            setSuccessMessage("") // clears old success message
+
             const currentYear = new Date().getFullYear()
             const birthYear = currentYear - Number(formData.age)
-            const dob = `${birthYear}-01-01` // simple conversion (no month/day yet)
+            const dob = `${birthYear}-01-01` // date format: YYYY-MM-DD
+
             const response = await fetch("/api/profile", {
                 method: "POST",
                 headers: {
@@ -178,8 +178,8 @@ export default function ProfilePage() {
                 body: JSON.stringify({
                     name: formData.name,
                     dob: dob,
-                    height: Number(formData.height),
-                    weight: Number(formData.weight),
+                    height: formData.height,
+                    weight: formData.weight,
                     occupation: formData.occupation,
                     fitness_level: formData.fitnessLevel,
                     hobbies: formData.hobbies,
@@ -187,21 +187,19 @@ export default function ProfilePage() {
                     current_energy: formData.currentEnergyLevel,
                     gender: formData.gender,
                     avg_sleep: formData.sleepHours,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    diet_restrictions: formData.dietRestrictions,
+                    medical_history: formData.medicalHistory
                 }),
             })
 
             const data = await response.json()
 
             if (!response.ok) {
-
-                console.log("FULL ERROR RESPONSE:", data)
                 throw new Error(JSON.stringify(data) || "Profile save failed.")
-
             }
 
             setSuccessMessage("Profile saved successfully.")
-            console.log("SAVE SUCCESS:", data)
 
         } catch (error) {
             setErrorMessage(error instanceof Error ? error.message : "Failed to save profile.")
@@ -210,7 +208,7 @@ export default function ProfilePage() {
 
     return (
         <div className="mx-auto max-w-4xl">
-            {/* screen heading */}
+            {/* page heading */}
             <div className="mb-6">
                 <h1 className="text-3xl font-bold">Build Your Profile</h1>
                 <p className="mt-2 text-sm text-gray-600">
@@ -219,9 +217,9 @@ export default function ProfilePage() {
                 </p>
             </div>
 
-            {/* two-column layout for demo presentation */}
+            {/* main page layout */}
             <div className="grid gap-6 md:grid-cols-2">
-                {/* left card holds profile inputs */}
+                {/* profile form section */}
                 <div className="rounded-2xl border p-6 shadow-sm">
                     <h2 className="mb-4 text-xl font-semibold">Profile Information</h2>
 
@@ -359,6 +357,88 @@ export default function ProfilePage() {
 
                         <div>
                             <label className="mb-1 block text-sm font-medium">
+                                Diet Restrictions
+                            </label>
+
+                            <div className="relative">
+                                <details className="w-full">
+                                    <summary className="cursor-pointer rounded-lg border p-2">
+                                        {formData.dietRestrictions.length > 0
+                                            ? `${formData.dietRestrictions.length} selected`
+                                            : "Select restrictions"}
+                                    </summary>
+
+                                    <div className="absolute z-10 mt-2 w-full rounded-lg border bg-background text-foreground p-2 shadow">
+                                        {diet_restrictions.entries.map(([value, label]) => {
+                                            const isChecked = formData.dietRestrictions.includes(value)
+
+                                            return (
+                                                <label key={value} className="flex items-center gap-2 p-1">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => {
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                dietRestrictions: isChecked
+                                                                    ? prev.dietRestrictions.filter((d) => d !== value)
+                                                                    : [...prev.dietRestrictions, value],
+                                                            }))
+                                                        }}
+                                                    />
+                                                    {label}
+                                                </label>
+                                            )
+                                        })}
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+
+                        {/* medical history section */}
+                        <div>
+                            <label className="mb-1 block text-sm font-medium">
+                                Medical History
+                            </label>
+
+                            <div className="relative">
+                                <details className="w-full">
+                                    <summary className="cursor-pointer rounded-lg border p-2">
+                                        {formData.medicalHistory.length > 0
+                                            ? `${formData.medicalHistory.length} selected`
+                                            : "Select medical history"}
+                                    </summary>
+
+                                    <div className="absolute z-10 mt-2 w-full rounded-lg border bg-background text-foreground p-2 shadow">
+                                        {medical_history_options.map((item) => {
+
+                                            const isChecked = formData.medicalHistory.includes(item)
+
+                                            return (
+                                                <label key={item} className="flex items-center gap-2 p-1">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isChecked}
+                                                        onChange={() => {
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                medicalHistory: isChecked
+                                                                    ? prev.medicalHistory.filter((m) => m !== item)
+                                                                    : [...prev.medicalHistory, item],
+                                                            }))
+                                                        }}
+                                                    />
+                                                    {item}
+                                                </label>
+                                            )
+                                        })}
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="mb-1 block text-sm font-medium">
                                 Average Calorie Intake
                             </label>
                             <select
@@ -443,7 +523,7 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                {/* right card holds calculated preview values */}
+                {/* profile summary section */}
                 <div className="rounded-2xl border p-6 shadow-sm">
                     <h2 className="mb-4 text-xl font-semibold">Profile Summary</h2>
 

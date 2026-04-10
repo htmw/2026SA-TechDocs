@@ -99,7 +99,7 @@ const FoodSchema = new Schema<IFood, FoodModel, IFoodMethods>(
                 const config: QuerySearchConfig = {
                     query_fields: ["food_item", "categories"],
                     string_fields: ["food_item"],
-                    category_field: "categories",
+                    category_fields: ["categories"],
                     number_fields: [
                         "calories",
                         "protein",

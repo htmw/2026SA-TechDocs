@@ -5,7 +5,7 @@ export type SortOrder = 1 | -1;
 export interface QuerySearchConfig {
     query_fields?: string[];//which fields to query
     string_fields?: string[];//which fields are strings
-    category_field?: string;//which fields are arrays
+    category_fields?: string[];//which fields are arrays
     number_fields?: string[];//which fields are numbers
     date_fields?: string[];//which fields are dates
     default_sort_field?: string;//which field to sort by if no sort is provided
@@ -32,7 +32,7 @@ const parsePositiveInt = (value: string | undefined, fallback: number, max: numb
 
 export const parsePaginationParameters = (params: Record<string, string | undefined>): { limit: number; page: number } => {
     return {
-        limit: parsePositiveInt(params.limit, 100, 500),
+        limit: parsePositiveInt(params.limit, 20, 100),
         page: parsePositiveInt(params.page, 1, Number.MAX_SAFE_INTEGER),
     };
 };
@@ -93,8 +93,22 @@ export const buildFilterConditions = (
         }
     }
 
-    if (config.category_field && params.category?.trim()) {
-        filter[config.category_field] = { $in: [params.category.trim()] };
+    if (config.category_fields) {
+        for (const field of config.category_fields) {
+            const inCategory = params[`${field}_in`]?.trim();
+            const notIn = params[`${field}_nin`]?.trim();
+            const contains = params[`${field}_contains`]?.trim();
+
+            if (inCategory) {
+                filter[field] = { $in: inCategory.split(",").map((s) => s.trim()) };
+            } 
+            if (contains) {
+                filter[field] = { $regex: escapeRegex(contains), $options: "i" };
+            }
+            if (notIn) {
+                filter[field] = { $nin: notIn.split(",").map((s) => s.trim()) };
+            }
+        }
     }
 
     if (config.number_fields) {
