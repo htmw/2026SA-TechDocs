@@ -1,10 +1,10 @@
 "use client"
 
-import { fitness_level, hobby_options, occupation_options, diet_restrictions, medical_history_options } from "@/lib/enums" // NEW: added medical_history_options
+import { fitness_level, hobby_options, occupation_options, diet_restrictions, medical_history_options } from "@/lib/enums"
 import { useState, useEffect } from "react"
 
 export default function ProfilePage() {
-    // profile form state
+    // stores all profile form values
     type ProfileForm = {
         name: string
         age: string
@@ -37,15 +37,13 @@ export default function ProfilePage() {
         medicalHistory: []
     })
 
-    // calculated output state
+    // stores profile results and messages
     const [bmi, setBmi] = useState("")
     const [energyScore, setEnergyScore] = useState(0)
     const [errorMessage, setErrorMessage] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
 
-    // --------------------------------------------
-    // LOAD SAVED PROFILE WHEN PAGE OPENS
-    // --------------------------------------------
+    // loads saved profile data when the page opens
     useEffect(() => {
 
         async function loadProfile() {
@@ -64,7 +62,7 @@ export default function ProfilePage() {
 
                     setFormData({
                         name: data.data.user.name ?? "",
-                        age: profile.dob ? String(new Date().getFullYear() - new Date(profile.dob).getFullYear()) : "",     // age not stored its calculate from dob
+                        age: profile.dob ? String(new Date().getFullYear() - new Date(profile.dob).getFullYear()) : "", // age is calculated from date of birth
                         height: profile.height ?? "",
                         weight: profile.weight ?? "",
                         occupation: profile.occupation ?? "",
@@ -81,10 +79,11 @@ export default function ProfilePage() {
                     const loadedHeight = Number(profile.height)
                     const loadedWeight = Number(profile.weight)
 
+                    // sets bmi from saved height and weight
                     if (loadedHeight && loadedWeight) {
                         const bmiValue = (loadedWeight * 703) / (loadedHeight * loadedHeight)
                         setBmi(bmiValue.toFixed(1))
-                }
+                    }
 
                 }
 
@@ -99,6 +98,8 @@ export default function ProfilePage() {
         loadProfile()
 
     }, [])
+
+    // updates bmi when height or weight changes
     useEffect(() => {
         const height = Number(formData.height)
         const weight = Number(formData.weight)
@@ -112,6 +113,7 @@ export default function ProfilePage() {
         setBmi(bmiValue.toFixed(1))
     }, [formData.height, formData.weight])
 
+    // updates energy score from sleep, energy, and fitness level
     useEffect(() => {
         let score = 0
 
@@ -133,14 +135,15 @@ export default function ProfilePage() {
         formData.fitnessLevel
     ])
 
-    // determine BMI category based on standard medical ranges
+    // returns the bmi category based on the bmi value
     function getBMICategory(bmi: number) {
         if (bmi < 18.5) return "Underweight"
         if (bmi < 25) return "Normal Weight"
         if (bmi < 30) return "Overweight"
         return "Obese"
     }
-    // update form values when user types
+
+    // updates form values when the user types or selects
     function handleChange(
         event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
     ) {
@@ -152,18 +155,21 @@ export default function ProfilePage() {
         }))
     }
 
-
+    // saves profile data to the database
     async function handleSaveProfile() {
         if (!formData.fitnessLevel) {
             setErrorMessage("Select fitness level")
             return
         }
+
         try {
             setErrorMessage("")
-            setSuccessMessage("") // clear old success message
+            setSuccessMessage("") // clears old success message
+
             const currentYear = new Date().getFullYear()
             const birthYear = currentYear - Number(formData.age)
-            const dob = `${birthYear}-01-01` //YYYY-MM-DD
+            const dob = `${birthYear}-01-01` // date format: YYYY-MM-DD
+
             const response = await fetch("/api/profile", {
                 method: "POST",
                 headers: {
@@ -202,7 +208,7 @@ export default function ProfilePage() {
 
     return (
         <div className="mx-auto max-w-4xl">
-            {/* screen heading */}
+            {/* page heading */}
             <div className="mb-6">
                 <h1 className="text-3xl font-bold">Build Your Profile</h1>
                 <p className="mt-2 text-sm text-gray-600">
@@ -211,9 +217,9 @@ export default function ProfilePage() {
                 </p>
             </div>
 
-            {/* two-column layout for demo presentation */}
+            {/* main page layout */}
             <div className="grid gap-6 md:grid-cols-2">
-                {/* left card holds profile inputs */}
+                {/* profile form section */}
                 <div className="rounded-2xl border p-6 shadow-sm">
                     <h2 className="mb-4 text-xl font-semibold">Profile Information</h2>
 
@@ -389,7 +395,7 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* Medical History Section */}
+                        {/* medical history section */}
                         <div>
                             <label className="mb-1 block text-sm font-medium">
                                 Medical History
@@ -517,7 +523,7 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
-                {/* right card holds calculated preview values */}
+                {/* profile summary section */}
                 <div className="rounded-2xl border p-6 shadow-sm">
                     <h2 className="mb-4 text-xl font-semibold">Profile Summary</h2>
 

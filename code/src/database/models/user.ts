@@ -2,6 +2,7 @@ import { avg_calories, avg_sleep, current_energy, fitness_level, gender } from "
 import { IPublicUser, IUser, IUserProfile } from "@/lib/types/mongo_user_types";
 import mongoose, { Schema, Model, HydratedDocument, Types } from "mongoose";
 
+// saves the profile fields that belong to each user
 export const UserProfileSchema = new Schema<IUserProfile>(
     {
         dob: {
@@ -62,14 +63,14 @@ export const UserProfileSchema = new Schema<IUserProfile>(
     { _id: false }
 );
 
-//Methods Interface
+// things one saved user can do
 export interface IUserMethods {
     getPublicProfile(): IPublicUser;
     completeFirstTimeSetup(profileData: Partial<IUserProfile>): Promise<HydratedUser | null>;
     updateProfile(profileData: Partial<IUserProfile>): Promise<HydratedUser>;
 }
 
-//Model Interface, which includes both the document and the methods
+// things the full user model can do
 export interface UserModel extends Model<IUser, object, IUserMethods> {
     getAll(): Promise<HydratedUser[]>;
     findByEmail(email: string): Promise<HydratedUser | null>;
@@ -78,8 +79,10 @@ export interface UserModel extends Model<IUser, object, IUserMethods> {
     createUserAccount(name: string, email: string, password: string): Promise<HydratedUser>;
 }
 
+// names the full user type
 export type HydratedUser = HydratedDocument<IUser, IUserMethods>;
 
+// main user fields saved in the database
 const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
     {
         name: {
@@ -109,20 +112,24 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
         },
     },
     {
-        timestamps: true, // adds createdAt and updatedAt fields
+        timestamps: true, // automatically saves createdAt and updatedAt
         statics: {
+            // gets all users
             getAll() {
                 return this.find({});
             },
 
+            // finds one user by email
             findByEmail(email: string) {
                 return this.findOne({ email });
             },
 
+            // finds one user by database id
             async findByUserId(id: Types.ObjectId) {
                 return await this.findById(id);
             },
 
+            // gets the saved password for one user
             async getUserPassword(id: Types.ObjectId) {
                 const user = await this.findById(id, { password: 1 }).exec();
                 if (!user) {
@@ -131,6 +138,7 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
                 return user.password;
             },
 
+            // creates a new user if the email is not already used
             async createUserAccount(
                 name: string,
                 email: string,
@@ -138,7 +146,6 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
             ) {
                 const existingUser = await this.findByEmail(email);
                 if (existingUser) {
-                    //TODO: throw more detailed error
                     return null;
                 }
 
@@ -146,13 +153,14 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
                     name,
                     email,
                     password,
-                    profile: {}, // initialize with empty profile
+                    profile: {}, // starts with an empty profile
                 });
 
                 return user;
             }
         },
         methods: {
+            // returns user data without the password
             getPublicProfile(): IPublicUser {
                 return {
                     _id: this._id,
@@ -165,6 +173,7 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
                 };
             },
 
+            // marks setup as finished the first time profile data is saved
             async completeFirstTimeSetup(profileData: Partial<IUserProfile>) {
                 if (this.setup_complete) {
                     return null;
@@ -173,10 +182,12 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
                 return await this.updateProfile(profileData);
             },
 
+            // updates the saved profile fields for the user
             async updateProfile(profileData: Partial<IUserProfile>) {
                 if (profileData.dob) {
                     profileData.dob.setUTCHours(0, 0, 0, 0);
                 }
+
                 this.profile = {
                     ...this.profile,
                     ...profileData,
@@ -188,6 +199,7 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
     }
 );
 
+// uses the existing user model if it already exists
 export const User =
     (mongoose.models.User as UserModel) ||
     mongoose.model<IUser, UserModel>("User", UserSchema);

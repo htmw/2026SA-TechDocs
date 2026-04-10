@@ -1,14 +1,16 @@
-"use client" // required because we use router
+"use client" 
 
 import { useRouter } from "next/navigation"
 
-export default function FeatureButtons() { // THIS makes it a module
+export default function FeatureButtons() { // shows the hungry and craving buttons
     const router = useRouter()
 
+    // sends user to hunger check page
     const handleHungry = () => {
         router.push("/hunger-check")
     }
 
+    // sends user to craving check page
     const handleCraving = () => {
         router.push("/craving-check")
     }
