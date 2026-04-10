@@ -14,6 +14,8 @@ import { IFood } from "@/lib/types/mongo_food_types";
 import { ToPrimitive } from "@/lib/types/mongo_primitive_types";
 import { tz } from "@date-fns/tz";
 import { endOfWeek, format, startOfWeek } from "date-fns";
+import MealCard from "@/components/cards/meal_card";
+
 import React, { use, useEffect, useState } from "react";
 
 export default function CalorieCalculatorPage() {
@@ -147,7 +149,12 @@ export default function CalorieCalculatorPage() {
         setSearchInput("");
         setAdd('');
     }
-
+    const mealsByType = {
+    breakfast: meals.filter(m => m.meal_type === 'breakfast'),
+    lunch: meals.filter(m => m.meal_type === 'lunch'),
+    dinner: meals.filter(m => m.meal_type === 'dinner'),
+    snack: meals.filter(m => m.meal_type === 'snack'),
+    };
     return (
         <>
             <div className="gap-5 p-6 grid grid-cols-1">
@@ -225,19 +232,21 @@ export default function CalorieCalculatorPage() {
                     ))}
                 </>
             )}
-            {meals.map((meal) => (
-                <Card key={meal._id} className="w-full p-2 flex flex-col sm:flex-row items-center">
-                    <h1>{meal.food_item}</h1>
-                    <span className="text-muted-foreground">({meal.calories} cal)</span>
-                    <span className="text-orange-300">{meal.protein}g protein</span>
-                    <span className="text-green-300">{meal.carbohydrates}g carbs</span>
-                    <span className="text-yellow-300">{meal.fat}g fat</span>
-                    <Button variant="destructive" className="sm:ml-auto" onClick={() => delete_meal.mutate({ date: formatted_selected_date, id: meal._id })}>
-                        Delete
-                    </Button>
-                </Card>
+            {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map(type => (
+            <div key={type}>
+                <h3 className="capitalize">{type === 'snack' ? 'Snacks' : type}</h3>
+                {mealsByType[type].length === 0
+                ? <p className="text-muted-foreground text-sm">Nothing logged yet.</p>
+                : mealsByType[type].map(meal => (
+                    <MealCard
+                        key={meal._id}
+                        meal={meal}
+                        onDelete={() => delete_meal.mutate({ date: formatted_selected_date, id: meal._id })}
+                    />
+                    ))
+                }
+            </div>
             ))}
-                
                 {/*
                 <Button onClick={() => {
                     //NOTE: User needs to checkin before they can log meals
