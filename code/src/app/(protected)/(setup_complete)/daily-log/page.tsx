@@ -1,69 +1,17 @@
 "use client";
 
 import { SingleWeekPicker } from "@/components/cards/single_week_picker";
-import { MealsCard, MealSummary } from "@/components/cards/meals_card";
+import { MealsCard } from "@/components/cards/meals_card";
 import * as React from "react";
-import { DailyCheckInSummaryCard, DailyCheckInSummaryCardProps } from "@/components/cards/check_in_summary_card";
+import { DailyCheckInSummaryCard } from "@/components/cards/check_in_summary_card";
 import { NutritionSummaryCard } from "@/components/cards/macro_card";
 import { CravingEventsCard, HungerEventsCard } from "@/components/cards/events_card";
 import { endOfWeek, startOfWeek } from "date-fns";
-import { useDailyLog, useDailyLogStatus } from "@/lib/hooks/api-hooks/use-daily-log";
+import { useDailyLogStatus } from "@/lib/hooks/api-hooks/use-daily-log";
 import { QuickActionsCard } from "@/components/cards/quick_actions_card";
 import { useCravingEvents, useDeleteCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
 import { useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/api-hooks/use-hunger-events";
-import { energy_rating, stress_level } from "@/lib/enums";
-
-const breakfast: MealSummary[] = [
-    {
-        id: "1",
-        name: "Everything Bagel",
-        calories: 270,
-        protein: 10,
-        sodium: .53,
-        fat: 2.5,
-        vitamins: "Vitamin B6, Iron",
-        serving: "1 bagel",
-        logged_at: "8:15 AM",
-    },
-];
-
-const lunch: MealSummary[] = [
-    {
-        id: "2",
-        name: "Steak",
-        calories: 857,
-        protein: 93,
-        sodium: 1.269,
-        fat: 51,
-        vitamins: "Vitamin B12, Iron, Zinc",
-        serving: "1 steak",
-        logged_at: "1:10 PM",
-    },
-    {
-        id: "3",
-        name: "Mash Potatoes",
-        calories: 300,
-        protein: 20,
-        sodium: 20,
-        fat: 30,
-        vitamins: "Vitamin C, Potassium",
-        serving: "1/2 lb",
-        logged_at: "1:10 PM",
-    },
-];
-
-const snacks: MealSummary[] = [
-    {
-        id: "4",
-        name: "Vanilla Ice Cream",
-        calories: 145,
-        protein: 2.5,
-        sodium: .058,
-        fat: 8,
-        serving: "1/2 cup",
-        logged_at: "4:45 PM",
-    },
-];
+import { useMeals } from "@/lib/hooks/api-hooks/use-meals";
 
 export default function DailyLogPage() {
     const [selected_date, setSelectedDate] = React.useState(new Date());
@@ -82,6 +30,11 @@ export default function DailyLogPage() {
 
     const delete_hunger = useDeleteHungerEvent();
     const delete_craving = useDeleteCravingEvent();
+
+    const { data: meals = [], isLoading: meals_loading } = useMeals(selected_date);
+    const total_calories = meals.reduce((total, meal) => total + meal.calories, 0);
+    const total_protein = meals.reduce((total, meal) => total + meal.protein, 0);
+    const total_fat = meals.reduce((total, meal) => total + meal.fat, 0);
 
     return (
         <>
@@ -111,16 +64,16 @@ export default function DailyLogPage() {
                 </div>
                 <div className="flex flex-col justify-items-center place-items-center gap-5 xl:col-span-3">
                     <NutritionSummaryCard
-                        total_calories={1500}
+                        total_calories={total_calories}
                         calorie_goal={2200}
-                        total_protein={150}
+                        total_protein={total_protein}
                         protein_goal={160}
-                        total_fat={30}
+                        total_fat={total_fat}
                         fat_goal={70}
                     />
                     <MealsCard
                         title="Breakfast"
-                        meals={breakfast}
+                        meals={meals.filter(meal => meal.meal_type === "breakfast")}
                         onAddMeal={() => {
                             console.log("Add meal clicked");
                         }}
@@ -130,7 +83,7 @@ export default function DailyLogPage() {
                     />
                     <MealsCard
                         title="Lunch"
-                        meals={lunch}
+                        meals={meals.filter(meal => meal.meal_type === "lunch")}
                         onAddMeal={() => {
                             console.log("Add meal clicked");
                         }}
@@ -140,7 +93,7 @@ export default function DailyLogPage() {
                     />
                     <MealsCard
                         title="Dinner"
-                        meals={[]}
+                        meals={meals.filter(meal => meal.meal_type === "dinner")}
                         onAddMeal={() => {
                             console.log("Add meal clicked");
                         }}
@@ -150,7 +103,7 @@ export default function DailyLogPage() {
                     />
                     <MealsCard
                         title="Snacks"
-                        meals={snacks}
+                        meals={meals.filter(meal => meal.meal_type === "snack")}
                         onAddMeal={() => {
                             console.log("Add meal clicked");
                         }}
