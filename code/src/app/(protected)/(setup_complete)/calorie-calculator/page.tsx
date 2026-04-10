@@ -1,5 +1,6 @@
 "use client";
 
+import { NutritionSummaryCard } from "@/components/cards/macro_card";
 import { SingleWeekPicker } from "@/components/cards/single_week_picker";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -61,6 +62,9 @@ export default function CalorieCalculatorPage() {
 
     const { data: meals = [], isLoading: meals_loading } = useMeals(selected_date);
 
+    const total_calories = meals.reduce((total, meal) => total + meal.calories, 0);
+    const total_protein = meals.reduce((total, meal) => total + meal.protein, 0);
+    const total_fat = meals.reduce((total, meal) => total + meal.fat, 0);
     /**
      * Usage Example:
      * delete_meal.mutate({ date, meal_id }, { 
@@ -131,9 +135,15 @@ export default function CalorieCalculatorPage() {
                     weekStartsOn={0}
                     day_statuses={day_status_array}
                 />
-
+                    <NutritionSummaryCard
+                                            total_calories={total_calories}
+                                            calorie_goal={2200}
+                                            total_protein={total_protein}
+                                            protein_goal={160}
+                                            total_fat={total_fat}
+                                            fat_goal={70}
+                                        />
                 <Card className="p-4">
-                    <h1 className="text-lg font-bold mb-4">Selected Date: {formatted_selected_date}</h1>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
                          <Button
                         variant="outline"
@@ -206,7 +216,7 @@ export default function CalorieCalculatorPage() {
                     ))}
                 </>
             )}
-                
+                {/*
                 <Button onClick={() => {
                     //NOTE: User needs to checkin before they can log meals
                     create_meal.mutate(
@@ -238,7 +248,7 @@ export default function CalorieCalculatorPage() {
                         id: meals[meals.length - 1]?._id || "", // Replace with actual meal ID to delete
                     });
                 }}>Delete Selected Dates Last Meal</Button>
-
+                */}
                 <h1 className="font-bold">NOTE: User needs to check in before they can log meals</h1>
                 <h1 className="font-bold">
                     Check in status for selected date {formatted_selected_date}: 
