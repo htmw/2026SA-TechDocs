@@ -225,6 +225,19 @@ export default function CalorieCalculatorPage() {
                     ))}
                 </>
             )}
+            {meals.map((meal) => (
+                <Card key={meal._id} className="w-full p-2 flex flex-col sm:flex-row items-center">
+                    <h1>{meal.food_item}</h1>
+                    <span className="text-muted-foreground">({meal.calories} cal)</span>
+                    <span className="text-orange-300">{meal.protein}g protein</span>
+                    <span className="text-green-300">{meal.carbohydrates}g carbs</span>
+                    <span className="text-yellow-300">{meal.fat}g fat</span>
+                    <Button variant="destructive" className="sm:ml-auto" onClick={() => delete_meal.mutate({ date: formatted_selected_date, id: meal._id })}>
+                        Delete
+                    </Button>
+                </Card>
+            ))}
+                
                 {/*
                 <Button onClick={() => {
                     //NOTE: User needs to checkin before they can log meals
@@ -257,7 +270,6 @@ export default function CalorieCalculatorPage() {
                         id: meals[meals.length - 1]?._id || "", // Replace with actual meal ID to delete
                     });
                 }}>Delete Selected Dates Last Meal</Button>
-                */}
                 <h1 className="font-bold">NOTE: User needs to check in before they can log meals</h1>
                 <h1 className="font-bold">
                     Check in status for selected date {formatted_selected_date}: 
@@ -270,7 +282,7 @@ export default function CalorieCalculatorPage() {
                 <pre>{JSON.stringify(meals, null, 2)}</pre>
                 ---
                 <h1 className="font-bold">Foods</h1>
-                <pre>{JSON.stringify(foods, null, 2)}</pre>
+                <pre>{JSON.stringify(foods, null, 2)}</pre>*/}
             </div>
         </>
     );
