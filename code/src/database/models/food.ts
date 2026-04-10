@@ -53,7 +53,7 @@ const FoodSchema = new Schema<IFood, FoodModel, IFoodMethods>(
             required: true,
             min: 0,
         },
-        sugars: {
+        sugar: {
             type: Number,
             required: true,
             min: 0,
