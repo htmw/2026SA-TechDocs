@@ -1,5 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { energy_rating, stress_level } from "@/lib/enums";
+import { useDailyLog } from "@/lib/hooks/api-hooks/use-daily-log";
 
 export type DailyCheckInSummaryCardProps = {
     morning_weight: number;
@@ -23,7 +25,17 @@ function SummaryRow({
     );
 }
 
-export function DailyCheckInSummaryCard({ check_in_opts }: { check_in_opts?: DailyCheckInSummaryCardProps }) {
+export function DailyCheckInSummaryCard({date}: {date: Date}) {
+    const { data: daily_log } = useDailyLog(date);
+
+    const check_in_opts: DailyCheckInSummaryCardProps | undefined = daily_log ? {
+        morning_weight: daily_log.morning_weight,
+        energy_rating: energy_rating.map[daily_log.energy_rating],
+        sleep_hours: daily_log.sleep_hours,
+        stress_level: stress_level.map[daily_log.stress_level]
+    } as DailyCheckInSummaryCardProps : undefined;
+
+
     return (
         <Card className="w-full">
             <CardHeader>

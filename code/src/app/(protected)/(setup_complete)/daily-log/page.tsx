@@ -70,7 +70,6 @@ export default function DailyLogPage() {
     const [week_start, setWeekStart] = React.useState(startOfWeek(selected_date, { weekStartsOn: 0 }));
     const [week_end, setWeekEnd] = React.useState(endOfWeek(selected_date, { weekStartsOn: 0 }));
 
-    const { data: daily_log } = useDailyLog(selected_date);
     const { data: day_status_data = [], isLoading: loading_day_statuses } = useDailyLogStatus({
         startDate: week_start,
         endDate: week_end,
@@ -83,13 +82,6 @@ export default function DailyLogPage() {
 
     const delete_hunger = useDeleteHungerEvent();
     const delete_craving = useDeleteCravingEvent();
-
-    const check_in_opts: DailyCheckInSummaryCardProps | undefined = daily_log ? {
-        morning_weight: daily_log.morning_weight,
-        energy_rating: energy_rating.map[daily_log.energy_rating],
-        sleep_hours: daily_log.sleep_hours,
-        stress_level: stress_level.map[daily_log.stress_level]
-    } as DailyCheckInSummaryCardProps : undefined;
 
     return (
         <>
@@ -106,9 +98,7 @@ export default function DailyLogPage() {
                         weekStartsOn={0}
                         day_statuses={day_status_array}
                     />
-                    <DailyCheckInSummaryCard
-                        check_in_opts={check_in_opts}
-                    />
+                    <DailyCheckInSummaryCard date={selected_date} />
                     <HungerEventsCard
                         onDelete={(date, id) => { delete_hunger.mutate({ date, id }) }}
                         events={hunger_events}
