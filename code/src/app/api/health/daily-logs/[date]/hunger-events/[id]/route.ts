@@ -29,7 +29,8 @@ export const GET = createRoute(
 
         const daily_log = await DailyLog.getDailyLogByDate(user._id, parsed_date);
         if (!daily_log) {
-            return NextResponse.json(createErrorResponse("DAILY_LOG_NOT_FOUND", "No daily log found for the specified date"), { status: 404 });
+            const payload = null;
+            return NextResponse.json(createSuccessResponse(payload), { status: 200 });
         }
 
         const payload = daily_log.getHungerEvent(object_id);

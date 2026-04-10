@@ -144,7 +144,7 @@ export function NutritionSummaryCard({
             </CardHeader>
 
             <CardContent>
-                <div className="grid grid-cols-1 gap-4 2xl:grid-cols-2 3xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 2xl:grid-cols-2 2xl:grid-cols-3">
                     <MacroRadial
                         label="Calories"
                         value={total_calories}

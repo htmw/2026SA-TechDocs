@@ -14,24 +14,14 @@ import {
     ItemGroup,
     ItemTitle,
 } from "@/components/ui/item";
-
-export type MealSummary = {
-    id: string;
-    name: string;
-    calories: number;
-    protein: number;
-    sodium: number;
-    fat: number;
-    vitamins?: string;
-    serving?: string;
-    logged_at?: string;
-};
+import { ClientMealLog } from "@/lib/types/mongo_daily_log_types";
+import { format } from "date-fns";
 
 type MealsCardProps = {
     title: string;
-    meals: MealSummary[];
+    meals: ClientMealLog[];
     onAddMeal?: () => void;
-    onMealClick?: (meal: MealSummary) => void;
+    onMealClick?: (meal: ClientMealLog) => void;
     className?: string;
     empty_message?: string;
 };
@@ -72,7 +62,7 @@ export function MealsCard({
                     <ItemGroup className="gap-2">
                         {meals.map((meal) => (
                             <Item
-                                key={meal.id}
+                                key={meal._id}
                                 variant="outline"
                                 asChild
                                 className="rounded-xl px-4 py-3"
@@ -85,22 +75,19 @@ export function MealsCard({
                                     onClick={() => onMealClick?.(meal)}
                                 >
                                     <ItemContent>
-                                        <ItemTitle className="truncate">{meal.name}</ItemTitle>
+                                        <ItemTitle className="truncate">{meal.food_item}</ItemTitle>
 
                                         <ItemDescription className="mt-2 flex flex-wrap gap-2">
                                             <Badge variant="outline">{meal.calories} cal</Badge>
                                             <Badge variant="outline">{meal.protein}g protein</Badge>
                                             <Badge variant="outline">{meal.fat}g fat</Badge>
-                                            {meal.vitamins && (
-                                                <Badge variant="outline">{meal.vitamins}</Badge>
-                                            )}
                                         </ItemDescription>
                                     </ItemContent>
 
                                     <ItemActions className="flex items-center">
                                         {meal.logged_at && (
                                             <span className="text-xs text-muted-foreground">
-                                                {meal.logged_at}
+                                                {format(meal.logged_at, "MMM dd, yyyy")}
                                             </span>
                                         )}
 

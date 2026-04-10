@@ -9,9 +9,9 @@ export interface IRecipes {
     protein: number;
     fat: number;
     sodium: number;
-    categories: String[];
-    directions: String[];
-    ingredients: String[];
+    categories: string[];
+    directions: string[];
+    ingredients: string[];
 }
 
 export type ClientRecipes = ToPrimitive<IRecipes>;

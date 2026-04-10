@@ -35,7 +35,6 @@ export const POST = createRoute(
         if (!daily_log) {
             return NextResponse.json(createErrorResponse("DAILY_LOG_NOT_FOUND", "No daily log found for the specified date"), { status: 404 });
         }
-        console.log(daily_log);
 
         if (await daily_log.getMealByTime(parsed.logged_at)) {
             return NextResponse.json(createErrorResponse("MEAL_EXISTS", "A meal with that timestamp already exists"), { status: 409 });
@@ -63,7 +62,8 @@ export const GET = createRoute(
         }
 
         if (!daily_log) {
-            return NextResponse.json(createErrorResponse("DAILY_LOG_NOT_FOUND", "No daily log found for the specified date"), { status: 404 });
+            const payload = { meals: [] };
+            return NextResponse.json(createSuccessResponse(payload), { status: 200 });
         }
 
         const payload = { meals: daily_log.meals || [] };
