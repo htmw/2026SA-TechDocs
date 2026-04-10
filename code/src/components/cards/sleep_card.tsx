@@ -16,48 +16,53 @@ import {
     type ChartConfig,
 } from "@/components/ui/chart"
 
-export type WeightData = {
+export type SleepData = {
     date: string;
-    weight: number;
+    sleep: number;
 }
 
 const chartConfig = {
-    weight: {
-        label: "Weight",
-        color: "var(--chart-2)",
+    sleep: {
+        label: "Sleep Hours",
+        color: "#7c3aed",
     },
 } satisfies ChartConfig
 
-export function WeightCard({
-    weight_data
+export function SleepCard({
+    sleep_data
 }: {
-    weight_data?: WeightData[];
+    sleep_data?: SleepData[];
 }) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Weight</CardTitle>
+                <CardTitle>Sleep</CardTitle>
                 <CardDescription>
-                    Showing weight trends for the last 7 days
+                    Showing sleep trends for the last 7 days
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                {weight_data == null || weight_data.length === 0 ? (
+                {sleep_data == null || sleep_data.length === 0 ? (
                     <Card className="border border-dashed shadow-none">
                         <CardContent className="flex min-h-[120px] items-center justify-center p-6">
-                            <p className="text-sm text-muted-foreground">No weight data logged</p>
+                            <p className="text-sm text-muted-foreground">No sleep data logged</p>
                         </CardContent>
                     </Card>
                 ) : (
                     <ChartContainer config={chartConfig}>
                         <LineChart
                             accessibilityLayer
-                            data={weight_data}
+                            data={sleep_data}
                             margin={{
                                 left: 0,
                                 right: 20,
                             }}
                         >
+                            <YAxis
+                                domain={['dataMin - 2', 'dataMax + 2']}
+                                tickFormatter={(v) => `${v} hours`}
+                                tickMargin={12}
+                            />
                             <CartesianGrid vertical={false} />
                             <XAxis
                                 dataKey="date"
@@ -65,19 +70,14 @@ export function WeightCard({
                                 axisLine={false}
                                 interval={0}
                             />
-                            <YAxis
-                                domain={['dataMin - 5', 'dataMax + 5']}
-                                tickFormatter={(v) => `${v} lbs`}
-                                tickMargin={12}
-                            />
                             <ChartTooltip
                                 cursor={false}
                                 content={<ChartTooltipContent indicator="dot" hideLabel />}
                             />
                             <Line
-                                dataKey="weight"
+                                dataKey="sleep"
                                 type="linear"
-                                stroke="var(--color-weight)"
+                                stroke="var(--color-sleep)"
                                 strokeWidth={3}
                             />
                         </LineChart>

@@ -1,12 +1,13 @@
 "use client"
 
+// hunger check page route: /hunger-check
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 
-export default function HungerCheckPage() {
+export default function HungerCheckPage() { // shows questions to decide hunger or craving
     const router = useRouter()
 
-    // User input states
+    // saved answers from the user
     const [hungerLevel, setHungerLevel] = useState(3)
     const [lastMealHours, setLastMealHours] = useState(2)
     const [energyLevel, setEnergyLevel] = useState("medium")
@@ -14,28 +15,27 @@ export default function HungerCheckPage() {
     const [stomachFeeling, setStomachFeeling] = useState("no")
     const [resultMessage, setResultMessage] = useState("")
 
-    // Hunger analysis function
-    // This scores the user's answers to decide if this is true hunger or more likely a craving
+    // checks the answers and decides if this is hunger or a craving
     const hungerAnalysis = useMemo(() => {
         let score = 0
 
-        // More physical hunger usually means the user is actually hungry
+        // higher hunger level adds more hunger points
         if (hungerLevel >= 4) score += 3
         else if (hungerLevel === 3) score += 2
         else if (hungerLevel === 2) score += 1
 
-        // More time since last meal supports true hunger
+        // more time since last meal adds more hunger points
         if (lastMealHours >= 5) score += 3
         else if (lastMealHours >= 3) score += 2
         else if (lastMealHours >= 2) score += 1
 
-        // Low energy can support hunger
+        // low energy can be a sign of hunger
         if (energyLevel === "low") score += 1
 
-        // Physical stomach feelings support hunger
+        // physical stomach feelings support real hunger
         if (stomachFeeling === "yes") score += 2
 
-        // Wanting one exact food points more toward craving
+        // wanting one exact food points more to a craving
         if (wantSpecificFood === "yes") score -= 2
 
         const isHungry = score >= 5
@@ -55,7 +55,7 @@ export default function HungerCheckPage() {
     }, [hungerLevel, lastMealHours, energyLevel, wantSpecificFood, stomachFeeling])
 
     const handleContinue = () => {
-        // Show final message before routing
+        // show and save the result message before moving pages
         setResultMessage(hungerAnalysis.summary)
 
         if (hungerAnalysis.isHungry) {
@@ -79,7 +79,7 @@ export default function HungerCheckPage() {
                     </p>
                 </div>
 
-                {/* Hunger level */}
+                {/* hunger level question */}
                 <div className="space-y-2">
                     <label className="block font-medium">
                         How hungry do you feel right now?
@@ -94,13 +94,13 @@ export default function HungerCheckPage() {
                         className="w-full"
                     />
 
-                    {/* Scale labels */}
+                    {/* hunger scale */}
                     <div className="flex justify-between text-xs text-gray-500">
                         <span>Not hungry</span>
                         <span>Extremely hungry</span>
                     </div>
 
-                    {/* Live label */}
+                    {/* selected hunger level */}
                     <p className="text-sm text-gray-600 text-center">
                         {
                             hungerLevel === 1 ? "Not hungry" :
@@ -112,7 +112,7 @@ export default function HungerCheckPage() {
                     </p>
                 </div>
 
-                {/* Time since last meal */}
+                {/* Time since last meal question */}
                 <div className="space-y-2">
                     <label className="block font-medium">
                         How many hours since your last meal?
@@ -127,7 +127,7 @@ export default function HungerCheckPage() {
                     />
                 </div>
 
-                {/* Energy level */}
+                {/* energy level question */}
                 <div className="space-y-2">
                     <label className="block font-medium">
                         What is your energy level right now?
@@ -144,7 +144,7 @@ export default function HungerCheckPage() {
                     </select>
                 </div>
 
-                {/* Physical hunger signal */}
+                {/* stomach signs question */}
                 <div className="space-y-2">
                     <label className="block font-medium">
                         Do you feel physical signs of hunger like an empty stomach, stomach growling, or feeling weak?
@@ -160,7 +160,7 @@ export default function HungerCheckPage() {
                     </select>
                 </div>
 
-                {/* Craving signal */}
+                {/* specific food question */}
                 <div className="space-y-2">
                     <label className="block font-medium">
                         Are you thinking about one very specific food?
@@ -176,8 +176,7 @@ export default function HungerCheckPage() {
                     </select>
                 </div>
 
-                {/* Hunger analysis panel */}
-                {/* Hunger result label */}
+                {/* hunger result section */}
                 <div className="space-y-2">
                     <h2 className="text-lg font-semibold">
                         Your Hunger Result
@@ -187,7 +186,7 @@ export default function HungerCheckPage() {
                         Based on your answers, here is what NutriAI thinks:
                     </p>
 
-                    {/* White result box */}
+                    {/* result box */}
                     <div className="rounded-xl bg-gray-50 p-4 space-y-2">
                         <p className="text-sm text-gray-600">
                             Score: {hungerAnalysis.score}
@@ -199,7 +198,7 @@ export default function HungerCheckPage() {
                     </div>
                 </div>
 
-                {/* Continue button */}
+                {/* continue button */}
                 <button
                     onClick={handleContinue}
                     className="w-full rounded-lg bg-black px-6 py-3 text-white"
@@ -207,7 +206,7 @@ export default function HungerCheckPage() {
                     Continue
                 </button>
 
-                {/* Result message */}
+                {/* saved result message */}
                 {resultMessage ? (
                     <p className="text-center text-sm text-gray-500">
                         {resultMessage}

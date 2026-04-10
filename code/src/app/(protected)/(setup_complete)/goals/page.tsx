@@ -8,20 +8,22 @@ export default function GoalsPage() {
     const [targetWeight, setTargetWeight] = useState("")
     const [timeline, setTimeline] = useState("")
     const [saved, setSaved] = useState(false)
+
+    // stores height and weight from the saved profile
     type Profile = {height: number, weight: number}
     const [profile, setProfile] = useState<Profile | null>(null)
 
-    // Fetch profile data
+    // loads saved profile data to show the user's current stats
     useEffect(() => {
         const fetchProfile = async () => {
             try {
                 const res = await fetch("/api/profile")
                 const data = await res.json()
 
-                // data path
+                // gets the saved profile data(object) from the API response
                 const profileData = data.data?.user?.profile
 
-                console.log("GOALS PROFILE:", profileData) // debug
+                console.log("GOALS PROFILE:", profileData)
 
                 setProfile(profileData)
 
@@ -33,7 +35,7 @@ export default function GoalsPage() {
         fetchProfile()
     }, [])
 
-    // BMI calculation
+    // calculates bmi from saved height and weight
     const calculateBMI = () => {
         if (!profile?.height || !profile?.weight) return null
 
@@ -43,7 +45,7 @@ export default function GoalsPage() {
         return ((w * 703) / (h * h)).toFixed(1)
     }
 
-    // Weight difference
+    // shows how far the target weight is from current weight
     const weightDifference = () => {
         if (!targetWeight || !profile?.weight) return null
 
@@ -56,6 +58,7 @@ export default function GoalsPage() {
             : `You need to lose ${Math.abs(diff)} lbs`
     }
 
+    // saves the selected goal on the page
     const handleSave = () => {
         if (!goal) return
         setSaved(true)
@@ -75,7 +78,7 @@ export default function GoalsPage() {
                 Your goal guides every recommendation NutriAI makes.
             </p>
 
-            {/* Goal Selection */}
+            {/* goal options */}
             <div className="w-full max-w-md space-y-3">
                 <h2 className="text-lg font-semibold">
                     Choose your goal
@@ -100,7 +103,7 @@ export default function GoalsPage() {
                 </div>
             </div>
 
-            {/* Current Stats */}
+            {/* current stats section */}
             <div className="w-full max-w-md space-y-2">
                 <h2 className="text-lg font-semibold">
                     Your Current Stats
@@ -120,7 +123,7 @@ export default function GoalsPage() {
                 )}
             </div>
 
-            {/* Target Weight */}
+            {/* target weight section */}
             <div className="w-full max-w-md space-y-2">
                 <h2 className="text-lg font-semibold">
                     Target Weight
@@ -141,7 +144,7 @@ export default function GoalsPage() {
                 )}
             </div>
 
-            {/* Timeline */}
+            {/* timeline section */}
             <div className="w-full max-w-md space-y-2">
                 <h2 className="text-lg font-semibold">
                     Timeline
@@ -159,7 +162,7 @@ export default function GoalsPage() {
                 </select>
             </div>
 
-            {/* Goal Summary */}
+            {/* goal summary section */}
             {goal && (
                 <div className="w-full max-w-md space-y-2">
 
@@ -197,7 +200,7 @@ export default function GoalsPage() {
                 </div>
             )}
 
-            {/* Save */}
+            {/* save button */}
             <button
                 onClick={handleSave}
                 className="w-full max-w-md bg-black text-white py-3 rounded-lg"
