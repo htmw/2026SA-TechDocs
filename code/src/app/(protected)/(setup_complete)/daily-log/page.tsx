@@ -1,7 +1,7 @@
 "use client";
 
 import { SingleWeekPicker } from "@/components/cards/single_week_picker";
-import { MealsCard, MealSummary } from "@/components/cards/meals_card";
+import { MealsCard } from "@/components/cards/meals_card";
 import * as React from "react";
 import { DailyCheckInSummaryCard, DailyCheckInSummaryCardProps } from "@/components/cards/check_in_summary_card";
 import { NutritionSummaryCard } from "@/components/cards/macro_card";
@@ -82,6 +82,7 @@ export default function DailyLogPage() {
 
     const delete_hunger = useDeleteHungerEvent();
     const delete_craving = useDeleteCravingEvent();
+    const { data: meals = [], isLoading: meals_loading } = useMeals(selected_date);
 
     return (
         <>
@@ -120,7 +121,7 @@ export default function DailyLogPage() {
                     />
                     <MealsCard
                         title="Breakfast"
-                        meals={breakfast}
+                        meals={meals.filter(meal => meal.meal_type === "breakfast")}
                         onAddMeal={() => {
                             console.log("Add meal clicked");
                         }}
@@ -130,7 +131,7 @@ export default function DailyLogPage() {
                     />
                     <MealsCard
                         title="Lunch"
-                        meals={lunch}
+                        meals={meals.filter(meal => meal.meal_type === "lunch")}
                         onAddMeal={() => {
                             console.log("Add meal clicked");
                         }}
@@ -140,7 +141,7 @@ export default function DailyLogPage() {
                     />
                     <MealsCard
                         title="Dinner"
-                        meals={[]}
+                        meals={meals.filter(meal => meal.meal_type === "dinner")}
                         onAddMeal={() => {
                             console.log("Add meal clicked");
                         }}
@@ -150,7 +151,7 @@ export default function DailyLogPage() {
                     />
                     <MealsCard
                         title="Snacks"
-                        meals={snacks}
+                        meals={meals.filter(meal => meal.meal_type === "snack")}
                         onAddMeal={() => {
                             console.log("Add meal clicked");
                         }}
