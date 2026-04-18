@@ -10,7 +10,7 @@ export interface IFood {
     carbohydrates: number; //g
     fat: number; //g
     fiber: number; //g
-    sugars: number; //g
+    sugar: number; //g
     sodium: number; //mg
     cholesterol: number; //mg
     water_intake: number; //ml

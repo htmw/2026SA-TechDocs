@@ -63,14 +63,15 @@ function SuggestedActions({ actions }: { actions: string[] }) {
 
     return (
         <div className="flex flex-wrap gap-2">
-            {actions.map((action, index) => (
-                <Badge
-                    key={`${action}-${index}`}
-                    variant="outline"
-                >
-                    {action}
-                </Badge>
-            ))}
+            <ul className="list-disc space-y-1 pl-5 text-sm text-foreground">
+                {actions.map((action, index) => (
+                    <li
+                        key={`${action}-${index}`}
+                    >
+                        {action}
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
@@ -199,19 +200,21 @@ function EventsCard<T>({
                 </CardAction>
             </CardHeader>
 
-            <CardContent className="pr-2">
-                {events.length === 0 ? (
+            {events.length === 0 ? (
+                <CardContent className="pr-6">
                     <EmptyState label={empty_label} />
-                ) : (
+                </CardContent>
+            ) : (
+                <CardContent className="pr-2">
                     <ScrollArea className={"pr-4"}>
                         <Accordion type="single" collapsible className="space-y-3 max-h-[500px]">
-                            {events.map((event) => 
+                            {events.map((event) =>
                                 renderAccordionItem(event, onDelete)
                             )}
                         </Accordion>
                     </ScrollArea>
-                )}
-            </CardContent>
+                </CardContent>
+            )}
         </Card>
     );
 }

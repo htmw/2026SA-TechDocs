@@ -89,9 +89,10 @@ export function useCreateDailyLog() {
                 body: JSON.stringify(input),
             }).then((res) => res.daily_log),
         onSuccess: (_data: ClientDailyLog, variables) => {
+            qc.invalidateQueries({ queryKey: ["dailyLogStatus"] });
             qc.invalidateQueries({ queryKey: ["dailyLogs"] });
             qc.invalidateQueries({ queryKey: ["dailyLog", variables.date] });
-        },
+        }
     });
 }
 
