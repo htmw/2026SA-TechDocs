@@ -18,7 +18,26 @@ const MealLogSchema = new Schema(
             type: Number,
             required: true,
         },
+        protein: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
+        carbs: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
+        fat: {
+            type: Number,
+            required: true,
+            default: 0,
+        },
         vitamins: {
+            type: String,
+            required: false,
+        },
+        minerals: {
             type: String,
             required: false,
         },

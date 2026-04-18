@@ -20,9 +20,11 @@ export type MealSummary = {
     name: string;
     calories: number;
     protein: number;
+    carbs?: number;
     sodium: number;
     fat: number;
     vitamins?: string;
+    minerals?: string;
     serving?: string;
     logged_at?: string;
 };
@@ -89,10 +91,14 @@ export function MealsCard({
 
                                         <ItemDescription className="mt-2 flex flex-wrap gap-2">
                                             <Badge variant="outline">{meal.calories} cal</Badge>
-                                            <Badge variant="outline">{meal.protein}g protein</Badge>
+                                            <Badge variant="outline">{meal.protein}g pro</Badge>
+                                            {meal.carbs && <Badge variant="outline">{meal.carbs}g carb</Badge>}
                                             <Badge variant="outline">{meal.fat}g fat</Badge>
                                             {meal.vitamins && (
                                                 <Badge variant="outline">{meal.vitamins}</Badge>
+                                            )}
+                                            {meal.minerals && (
+                                                <Badge variant="outline">{meal.minerals}</Badge>
                                             )}
                                         </ItemDescription>
                                     </ItemContent>

@@ -11,6 +11,9 @@ import { useCravingEvents, useCreateCravingEvent, useCreateDailyLog, useCreateHu
 import { craving_intensity_enum, craving_triggers_enum, craving_type_enum, energy_rating_label_map, hunger_level_enum, stress_level_label_map } from "@/lib/zod_schemas/health_schema";
 import { QuickActionsCard } from "@/components/cards/quick_actions_card";
 import { tz } from "@date-fns/tz";
+import { useAuth } from "@/lib/hooks/useAuthProvider";
+import { analyzeNutrientGaps, calculateDietaryGuidelines } from "@/lib/utils/nutrition_utils";
+import { NutrientGapCard } from "@/components/cards/nutrient_gap_card";
 
 const breakfast: MealSummary[] = [
     {
@@ -18,9 +21,11 @@ const breakfast: MealSummary[] = [
         name: "Everything Bagel",
         calories: 270,
         protein: 10,
+        carbs: 55,
         sodium: .53,
         fat: 2.5,
         vitamins: "Vitamin B6, Iron",
+        minerals: "Calcium",
         serving: "1 bagel",
         logged_at: "8:15 AM",
     },
@@ -32,9 +37,11 @@ const lunch: MealSummary[] = [
         name: "Steak",
         calories: 857,
         protein: 93,
+        carbs: 0,
         sodium: 1.269,
         fat: 51,
         vitamins: "Vitamin B12, Iron, Zinc",
+        minerals: "Selenium",
         serving: "1 steak",
         logged_at: "1:10 PM",
     },
@@ -43,9 +50,11 @@ const lunch: MealSummary[] = [
         name: "Mash Potatoes",
         calories: 300,
         protein: 20,
+        carbs: 65,
         sodium: 20,
         fat: 30,
         vitamins: "Vitamin C, Potassium",
+        minerals: "Magnesium",
         serving: "1/2 lb",
         logged_at: "1:10 PM",
     },
@@ -57,8 +66,10 @@ const snacks: MealSummary[] = [
         name: "Vanilla Ice Cream",
         calories: 145,
         protein: 2.5,
+        carbs: 20,
         sodium: .058,
         fat: 8,
+        minerals: "Calcium",
         serving: "1/2 cup",
         logged_at: "4:45 PM",
     },
@@ -138,6 +149,7 @@ async function generateRandomDailyLog() {
 }
 
 export default function DailyLogPage() {
+    const { user } = useAuth();
     const createCraving = useCreateCravingEvent();
     const createHunger = useCreateHungerEvent();
     const createDailyLog = useCreateDailyLog();
@@ -163,6 +175,14 @@ export default function DailyLogPage() {
         sleep_hours: daily_log.sleep_hours,
         stress_level: stress_level_label_map[daily_log.stress_level]
     } as DailyCheckInSummaryCardProps : undefined;
+
+    const combinedMeals: MealSummary[] = [...breakfast, ...lunch, ...snacks];
+    const guidelines = calculateDietaryGuidelines(user?.profile, user?.goals);
+    const gaps = analyzeNutrientGaps(combinedMeals, guidelines);
+
+    const totalCalculatedCals = combinedMeals.reduce((acc, m) => acc + (m.calories || 0), 0);
+    const totalCalculatedPro = combinedMeals.reduce((acc, m) => acc + (m.protein || 0), 0);
+    const totalCalculatedFat = combinedMeals.reduce((acc, m) => acc + (m.fat || 0), 0);
 
     return (
         <>
@@ -204,13 +224,14 @@ export default function DailyLogPage() {
                 </div>
                 <div className="flex flex-col justify-items-center place-items-center gap-5 xl:col-span-3">
                     <NutritionSummaryCard
-                        total_calories={1500}
-                        calorie_goal={2200}
-                        total_protein={150}
-                        protein_goal={160}
-                        total_fat={30}
-                        fat_goal={70}
+                        total_calories={totalCalculatedCals}
+                        calorie_goal={guidelines.calories}
+                        total_protein={totalCalculatedPro}
+                        protein_goal={guidelines.protein}
+                        total_fat={totalCalculatedFat}
+                        fat_goal={guidelines.fat}
                     />
+                    <NutrientGapCard gaps={gaps} />
                     <MealsCard
                         title="Breakfast"
                         meals={breakfast}
