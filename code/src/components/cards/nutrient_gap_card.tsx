@@ -15,10 +15,19 @@ export function NutrientGapCard({ gaps, className }: NutrientGapCardProps) {
     const score = calculateNutritionScore(gaps);
 
     // Sort gaps: deficient first, then borderline, surplus, optimal
-    const sortedGaps = [...gaps].sort((a, b) => {
-        const priority = { deficient: 1, borderline: 2, surplus: 3, optimal: 4 };
-        return priority[a.status] - priority[b.status];
-    });
+    const sortedGaps = [...gaps]
+        .filter(gap => {
+            const optionalNutrients = ["Carbs", "Iron", "Vitamin C"];
+            // Hides these specific nutrients if current intake is 0
+            if (optionalNutrients.includes(gap.nutrient) && gap.current <= 0) {
+                return false;
+            }
+            return true;
+        })
+        .sort((a, b) => {
+            const priority = { deficient: 1, borderline: 2, surplus: 3, optimal: 4 };
+            return priority[a.status] - priority[b.status];
+        });
 
     return (
         <Card className={cn("w-full", className)}>

@@ -24,17 +24,23 @@ export const POST = createApiRoute(
             );
         }
 
-        //Check if daily log already exists for this date
-        const dailyLogExists = await DailyLog.hasDailyLog(user._id, parsed_date);
-        if (dailyLogExists) {
-            return NextResponse.json(createErrorResponse("DAILY_LOG_EXISTS", "A daily log for this date already exists"), { status: 409 });
-        }
-
-        //Create daily log
+        let createdLog = await DailyLog.getDailyLogByDate(user._id, parsed_date);
+        
         try {
-            const createdLog = await DailyLog.createDailyLog(user._id, parsed);
-            if (!createdLog) {
-                return NextResponse.json(createErrorResponse("DAILY_LOG_CREATION_FAILED", "Failed to create daily log"), { status: 500 });
+            if (createdLog) {
+                // Update existing log (useful if it was auto-created as a skeleton or if user is re-submitting)
+                createdLog.morning_weight = parsed.morning_weight;
+                createdLog.energy_rating = parsed.energy_rating;
+                createdLog.sleep_hours = parsed.sleep_hours;
+                createdLog.stress_level = parsed.stress_level;
+                createdLog.timezone = parsed.timezone;
+                await createdLog.save();
+            } else {
+                // Create new daily log
+                createdLog = await DailyLog.createDailyLog(user._id, parsed);
+                if (!createdLog) {
+                    return NextResponse.json(createErrorResponse("DAILY_LOG_CREATION_FAILED", "Failed to create daily log"), { status: 500 });
+                }
             }
 
         const payload = {

@@ -9,8 +9,7 @@ interface HungerEventResponse {
     hunger_events: ClientHungerEvent[];
 }
 
-export function useHungerEvents(date: Date) {
-    const formatted_date = format(date, "yyyy-MM-dd");
+export function useHungerEvents(formatted_date: string) {
     return useQuery<ClientHungerEvent[], Error>({
         queryKey: ["hungerEvents", formatted_date],
         queryFn: async () => {

@@ -51,10 +51,23 @@ export const POST = createRoute(
     async ({ user, locals, body }) => {
         const parsed = body as z.infer<typeof CravingEventSchema>;
         const parsed_date = locals.parsed_date!;
-
-        const daily_log = await DailyLog.getDailyLogByDate(user._id, parsed_date);
-        if (!daily_log) {
-            return NextResponse.json(createErrorResponse("DAILY_LOG_NOT_FOUND", "No daily log found for the specified date"), { status: 404 });
+        let daily_log;
+        try {
+            daily_log = await DailyLog.getDailyLogByDate(user!._id, parsed_date);
+            
+            if (!daily_log) {
+                daily_log = await DailyLog.createDailyLog(user!._id, {
+                    date: parsed_date,
+                    timezone: user?.profile?.timezone || "UTC",
+                    morning_weight: user?.profile?.weight || 150,
+                    sleep_hours: 8,
+                    energy_rating: "energetic",
+                    stress_level: "relaxed",
+                });
+            }
+        } catch (err) {
+            console.error("Error fetching or creating daily log:", err);
+            return NextResponse.json(createErrorResponse("DAILY_LOG_ERROR", "An error occurred while fetching or creating the daily log"), { status: 500 });
         }
 
         if (daily_log.getCravingEventByTime(parsed.occurred_at)) {

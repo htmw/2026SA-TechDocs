@@ -31,18 +31,20 @@ import { ClientCravingEvent, ClientHungerEvent } from "@/lib/types/mongo_daily_l
 import { format } from "date-fns";
 import { craving_intensity, craving_triggers, craving_type, hunger_level } from "@/lib/enums";
 
-type EventsCardProps<T> = {
+interface EventsCardProps<T> {
     events: T[];
     title: string;
     description: string;
     icon: React.ReactNode;
     empty_label: string;
-    renderAccordionItem: (
+    renderAccordionItem(
         event: T,
-        onDelete?: (date: string, id: string) => void
-    ) => React.ReactNode;
+        onDelete?: (date: string, id: string) => void,
+        onAcceptAction?: (action: string) => void
+    ): React.ReactNode;
     onDelete?: (date: string, id: string) => void;
-};
+    onAcceptAction?: (action: string) => void;
+}
 
 function EmptyState({ label }: { label: string }) {
     return (
@@ -54,7 +56,7 @@ function EmptyState({ label }: { label: string }) {
     );
 }
 
-function SuggestedActions({ actions }: { actions: string[] }) {
+function SuggestedActions({ actions, onAccept }: { actions: string[]; onAccept?: (action: string) => void }) {
     if (!actions.length) {
         return (
             <p className="text-sm text-muted-foreground">No suggested actions available.</p>
@@ -67,8 +69,14 @@ function SuggestedActions({ actions }: { actions: string[] }) {
                 {actions.map((action, index) => (
                     <li
                         key={`${action}-${index}`}
+                        className="flex items-center justify-between group"
                     >
-                        {action}
+                        <span>{action}</span>
+                        {onAccept && (
+                            <Button variant="ghost" size="sm" onClick={() => onAccept(action)} className="h-6 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                Log Food
+                            </Button>
+                        )}
                     </li>
                 ))}
             </ul>
@@ -100,6 +108,7 @@ type EventAccordionItemProps = {
     detail_items: Array<{ label: string; value: React.ReactNode }>;
     suggested_actions: string[];
     onDelete?: (date: string, id: string) => void;
+    onAcceptAction?: (action: string) => void;
 };
 
 function EventAccordionItem({
@@ -111,6 +120,7 @@ function EventAccordionItem({
     detail_items,
     suggested_actions,
     onDelete,
+    onAcceptAction,
 }: EventAccordionItemProps) {
     return (
         <AccordionItem
@@ -154,8 +164,8 @@ function EventAccordionItem({
 
                         <div className="space-y-3">
                             <p className="text-sm font-medium">Suggested Actions</p>
-                            <div className="flex flex-row justify-between items-center">
-                                <SuggestedActions actions={suggested_actions} />
+                            <div className="flex flex-row justify-between items-center bg-muted/40 p-3 rounded-lg">
+                                <SuggestedActions actions={suggested_actions} onAccept={onAcceptAction} />
                                 {onDelete && (
                                     <div className="flex justify-end">
                                         <Button
@@ -183,6 +193,7 @@ function EventsCard<T>({
     empty_label,
     renderAccordionItem,
     onDelete,
+    onAcceptAction,
 }: EventsCardProps<T>) {
     return (
         <Card className="w-full">
@@ -209,7 +220,7 @@ function EventsCard<T>({
                     <ScrollArea className={"pr-4"}>
                         <Accordion type="single" collapsible className="space-y-3 max-h-[500px]">
                             {events.map((event) =>
-                                renderAccordionItem(event, onDelete)
+                                renderAccordionItem(event, onDelete, onAcceptAction)
                             )}
                         </Accordion>
                     </ScrollArea>
@@ -222,9 +233,11 @@ function EventsCard<T>({
 export function HungerEventsCard({
     events,
     onDelete,
+    onAcceptAction,
 }: {
     events: ClientHungerEvent[];
     onDelete?: (date: string, id: string) => void;
+    onAcceptAction?: (action: string) => void;
 }) {
     return (
         <EventsCard
@@ -233,7 +246,7 @@ export function HungerEventsCard({
             description="Logged hunger moments and recommended next steps."
             icon={<Zap className="size-5 text-muted-foreground" />}
             empty_label="No hunger events logged yet."
-            renderAccordionItem={(event, onDelete) => (
+            renderAccordionItem={(event, onDelete, onAccept) => (
                 <EventAccordionItem
                     key={event._id}
                     id={event._id}
@@ -247,6 +260,7 @@ export function HungerEventsCard({
                     ]}
                     suggested_actions={event.suggested_actions}
                     onDelete={onDelete}
+                    onAcceptAction={onAccept}
                 />
             )}
             onDelete={onDelete}
@@ -257,9 +271,11 @@ export function HungerEventsCard({
 export function CravingEventsCard({
     events,
     onDelete,
+    onAcceptAction,
 }: {
     events: ClientCravingEvent[];
     onDelete?: (date: string, id: string) => void;
+    onAcceptAction?: (action: string) => void;
 }) {
     return (
         <EventsCard
@@ -268,7 +284,7 @@ export function CravingEventsCard({
             description="Logged craving moments and recommended next steps."
             icon={<Zap className="size-5 text-muted-foreground" />}
             empty_label="No craving events logged yet."
-            renderAccordionItem={(event, onDelete) => (
+            renderAccordionItem={(event, onDelete, onAccept) => (
                 <EventAccordionItem
                     key={event._id}
                     id={event._id}
@@ -284,6 +300,7 @@ export function CravingEventsCard({
                     ]}
                     suggested_actions={event.suggested_actions}
                     onDelete={onDelete}
+                    onAcceptAction={onAccept}
                 />
             )}
             onDelete={onDelete}

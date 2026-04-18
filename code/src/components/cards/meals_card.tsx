@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, Plus, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils/utils";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,7 @@ type MealsCardProps = {
     title: string;
     meals: ClientMealLog[];
     onAddMeal?: () => void;
+    onDeleteMeal?: (meal: ClientMealLog) => void;
     onMealClick?: (meal: ClientMealLog) => void;
     className?: string;
     empty_message?: string;
@@ -44,6 +45,7 @@ export function MealsCard({
     title,
     meals,
     onAddMeal,
+    onDeleteMeal,
     onMealClick,
     className,
     empty_message = "No meals logged yet.",
@@ -107,12 +109,28 @@ export function MealsCard({
 
                                     <ItemActions className="flex items-center">
                                         {meal.logged_at && (
-                                            <span className="text-xs text-muted-foreground">
+                                            <span className="text-xs text-muted-foreground mr-2">
                                                 {format(meal.logged_at, "MMM dd, yyyy")}
                                             </span>
                                         )}
 
                                         <ChevronRight className="size-4 text-muted-foreground" />
+                                        
+                                        {onDeleteMeal && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8 ml-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    onDeleteMeal(meal);
+                                                }}
+                                                aria-label="Delete meal"
+                                            >
+                                                <Trash2 className="size-4" />
+                                            </Button>
+                                        )}
                                     </ItemActions>
                                 </Button>
                             </Item>

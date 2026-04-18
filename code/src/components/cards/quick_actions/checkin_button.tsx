@@ -36,12 +36,7 @@ export default function CheckInButton({ date }: { date: Date }) {
             variant="outline"
             className="flex items-center gap-2"
             onClick={() => {
-                if (!daily_log) {
-                    setCheckInOpen(true)
-                }
-                else {
-                    toast.error("You've already checked in for today!")
-                }
+                setCheckInOpen(true)
             }}
         >
             <ClipboardCheck />

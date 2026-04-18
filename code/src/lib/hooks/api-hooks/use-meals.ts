@@ -13,8 +13,7 @@ interface MealResponse {
     meal: ClientMealLog;
 }
 
-export function useMeals(date: Date) {
-    const formatted_date = format(date, "yyyy-MM-dd");
+export function useMeals(formatted_date: string) {
     return useQuery<ClientMealLog[], Error>({
         queryKey: ["meals", formatted_date],
         queryFn: async () => {

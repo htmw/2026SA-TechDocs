@@ -11,12 +11,22 @@ import { useAuth } from "@/lib/hooks/useAuthProvider";
 import { tz } from "@date-fns/tz";
 import { format } from "date-fns";
 
-export default function SearchFoodCard({ date }: { date: Date }) {
+export default function SearchFoodCard({
+    date,
+    defaultMealType,
+    defaultSearchTerm,
+    onSuccess,
+}: {
+    date: Date;
+    defaultMealType?: string;
+    defaultSearchTerm?: string;
+    onSuccess?: () => void;
+}) {
     const { user } = useAuth();
     const timezone = user?.profile?.timezone || "UTC";
     
-    const [search_input, setSearchInput] = useState("");
-    const [debounced_search, setDebouncedSearch] = useState("");
+    const [search_input, setSearchInput] = useState(defaultSearchTerm || "");
+    const [debounced_search, setDebouncedSearch] = useState(defaultSearchTerm || "");
 
     const formatted_selected_date = format(date, "yyyy-MM-dd", { in: tz(timezone), });
 
@@ -31,8 +41,8 @@ export default function SearchFoodCard({ date }: { date: Date }) {
         food_item_contains: debounced_search,
         limit: 10,
     });
-    const [search, setSearch] = useState(false);
-    const [add, setAdd] = useState(''); // breakfast, lunch, dinner
+    const [search, setSearch] = useState(!!defaultSearchTerm);
+    const [add, setAdd] = useState(defaultMealType || ''); // breakfast, lunch, dinner
 
     function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
         setSearch(true);
@@ -48,6 +58,7 @@ export default function SearchFoodCard({ date }: { date: Date }) {
                 food_item: food.food_item,
                 calories: food.calories,
                 protein: food.protein,
+                carbs: food.carbohydrates,
                 carbohydrates: food.carbohydrates,
                 fat: food.fat,
                 fiber: food.fiber,
@@ -61,43 +72,48 @@ export default function SearchFoodCard({ date }: { date: Date }) {
         })
         setSearch(false);
         setSearchInput("");
-        setAdd('');
+        setAdd(defaultMealType || '');
+        if (onSuccess) {
+            onSuccess();
+        }
     }
     return (
         <>
             <Card className="p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
-                    <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={() => setAdd('breakfast')}
-                    >
-                        Add Breakfast
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={() => setAdd('lunch')}
-                    >
-                        Add Lunch
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={() => setAdd('dinner')}
-                    >
-                        Add Dinner
-                    </Button>
-                    <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={() => setAdd('snack')}
-                    >
-                        Add Snack
-                    </Button>
-                </div>
+                {!defaultMealType && (
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
+                        <Button
+                            variant="outline"
+                            className="flex items-center gap-2"
+                            onClick={() => setAdd('breakfast')}
+                        >
+                            Add Breakfast
+                        </Button>
+    
+                        <Button
+                            variant="outline"
+                            className="flex items-center gap-2"
+                            onClick={() => setAdd('lunch')}
+                        >
+                            Add Lunch
+                        </Button>
+    
+                        <Button
+                            variant="outline"
+                            className="flex items-center gap-2"
+                            onClick={() => setAdd('dinner')}
+                        >
+                            Add Dinner
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="flex items-center gap-2"
+                            onClick={() => setAdd('snack')}
+                        >
+                            Add Snack
+                        </Button>
+                    </div>
+                )}
                 {add != '' && (
                     <Input className="w-lg mt-2 sm:w-lg mx-auto block"
                         placeholder={`Add a ${add} item to your daily log. Try searching for 'steak' or 'salad'...`}

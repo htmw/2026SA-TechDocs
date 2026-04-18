@@ -9,8 +9,7 @@ interface CravingEventResponse {
     craving_events: ClientCravingEvent[];
 }
 
-export function useCravingEvents(date: Date) {
-    const formatted_date = format(date, "yyyy-MM-dd");
+export function useCravingEvents(formatted_date: string) {
     return useQuery<ClientCravingEvent[], Error>({
         queryKey: ["cravingEvents", formatted_date],
         queryFn: async () => {
