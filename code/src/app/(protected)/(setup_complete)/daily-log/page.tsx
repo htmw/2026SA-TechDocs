@@ -36,6 +36,14 @@ export default function DailyLogPage() {
     const total_protein = meals.reduce((total, meal) => total + meal.protein, 0);
     const total_fat = meals.reduce((total, meal) => total + meal.fat, 0);
 
+    const combinedMeals: MealSummary[] = [...breakfast, ...lunch, ...snacks];
+    const guidelines = calculateDietaryGuidelines(user?.profile, user?.goals);
+    const gaps = analyzeNutrientGaps(combinedMeals, guidelines);
+
+    const totalCalculatedCals = combinedMeals.reduce((acc, m) => acc + (m.calories || 0), 0);
+    const totalCalculatedPro = combinedMeals.reduce((acc, m) => acc + (m.protein || 0), 0);
+    const totalCalculatedFat = combinedMeals.reduce((acc, m) => acc + (m.fat || 0), 0);
+
     return (
         <>
             <div className="gap-5 p-6 grid grid-cols-1 xl:grid-cols-5">
@@ -64,6 +72,12 @@ export default function DailyLogPage() {
                 </div>
                 <div className="flex flex-col justify-items-center place-items-center gap-5 xl:col-span-3">
                     <NutritionSummaryCard
+                        total_calories={totalCalculatedCals}
+                        calorie_goal={guidelines.calories}
+                        total_protein={totalCalculatedPro}
+                        protein_goal={guidelines.protein}
+                        total_fat={totalCalculatedFat}
+                        fat_goal={guidelines.fat}
                         total_calories={total_calories}
                         calorie_goal={2200}
                         total_protein={total_protein}
@@ -71,6 +85,7 @@ export default function DailyLogPage() {
                         total_fat={total_fat}
                         fat_goal={70}
                     />
+                    <NutrientGapCard gaps={gaps} />
                     <MealsCard
                         title="Breakfast"
                         meals={meals.filter(meal => meal.meal_type === "breakfast")}
