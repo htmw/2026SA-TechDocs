@@ -1,7 +1,5 @@
 "use client";
 
-import { Flame, Sparkles, ClipboardCheck } from "lucide-react";
-
 import {
     Card,
     CardHeader,
@@ -9,18 +7,16 @@ import {
     CardDescription,
     CardContent,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import CravingButton from "@/components/cards/quick_actions/craving_button";
+import HungryButton from "@/components/cards/quick_actions/hungry_button";
+import CheckInButton from "@/components/cards/quick_actions/checkin_button";
 
 type QuickActionsCardProps = {
-    onCraving?: () => void;
-    onHungry?: () => void;
-    onCheckIn?: () => void;
+    date: Date;
 };
 
 export function QuickActionsCard({
-    onCraving,
-    onHungry,
-    onCheckIn,
+    date,
 }: QuickActionsCardProps) {
     return (
         <Card className="w-full">
@@ -33,32 +29,9 @@ export function QuickActionsCard({
 
             <CardContent>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
-                    <Button
-                        variant="default"
-                        className="flex items-center gap-2"
-                        onClick={onCraving}
-                    >
-                        <Sparkles />
-                        I'm Craving
-                    </Button>
-
-                    <Button
-                        variant="secondary"
-                        className="flex items-center gap-2"
-                        onClick={onHungry}
-                    >
-                        <Flame />
-                        I'm Hungry
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={onCheckIn}
-                    >
-                        <ClipboardCheck />
-                        Check In
-                    </Button>
+                    <CravingButton date={date} />
+                    <HungryButton date={date} />
+                    <CheckInButton date={date} />
                 </div>
             </CardContent>
         </Card>

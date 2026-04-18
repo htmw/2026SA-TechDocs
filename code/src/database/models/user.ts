@@ -1,9 +1,8 @@
+import { avg_calories, avg_sleep, current_energy, fitness_level, gender } from "@/lib/enums";
 import { IPublicUser, IUser, IUserProfile } from "@/lib/types/mongo_user_types";
-import { avg_calories_enum, avg_sleep_enum, current_energy_enum, gender_enum } from "@/lib/zod_schemas/profile_setup_schema";
 import mongoose, { Schema, Model, HydratedDocument, Types } from "mongoose";
 
-// export const DietRestrictions = new Schema
-
+// saves the profile fields that belong to each user
 export const UserProfileSchema = new Schema<IUserProfile>(
     {
         dob: {
@@ -17,56 +16,73 @@ export const UserProfileSchema = new Schema<IUserProfile>(
             type: Number,
             min: 0,
         },
-        timezone: {
-            type: String,
-        },
         occupation: {
             type: String,
             trim: true,
         },
+        timezone: {
+            type: String,
+        },
         fitness_level: {
-            type: Number,
+            type: String,
+            enum: fitness_level.values,
+        },
+        avg_calories: {
+            type: String,
+            enum: avg_calories.values,
+        },
+        current_energy: {
+            type: String,
+            enum: current_energy.values,
+        },
+        gender: {
+            type: String,
+            enum: gender.values,
+        },
+        avg_sleep: {
+            type: String,
+            enum: avg_sleep.values,
+        },
+        goals: {
+            type: [String],
+            enum: avg_sleep.values,
         },
         hobbies: [{
             type: String,
             trim: true
         }],
-        avg_calories: {
+        diet_restrictions: [{
             type: String,
-            enum: avg_calories_enum,
-        },
-        current_energy: {
+            trim: true
+        }],
+        medical_history: [{
             type: String,
-            enum: current_energy_enum,
-        },
-        gender: {
-            type: String,
-            enum: gender_enum,
-        },
-        avg_sleep: {
-            type: String,
-            enum: avg_sleep_enum,
-        },
+            trim: true
+        }],
     },
     { _id: false }
 );
 
-//Methods Interface
+// things one saved user can do
 export interface IUserMethods {
     getPublicProfile(): IPublicUser;
-    completeFirstTimeSetup(profileData: Partial<IUserProfile>): Promise<HydratedDocument<IUser, IUserMethods> | null>;
-    updateProfile(profileData: Partial<IUserProfile>): Promise<HydratedDocument<IUser, IUserMethods>>;
+    completeFirstTimeSetup(profileData: Partial<IUserProfile>): Promise<HydratedUser | null>;
+    updateProfile(profileData: Partial<IUserProfile>): Promise<HydratedUser>;
 }
 
-//Model Interface, which includes both the document and the methods
-export interface UserModel extends Model<IUser, {}, IUserMethods> {
-    findByEmail(email: string): Promise<HydratedDocument<IUser, IUserMethods> | null>;
-    findByUserId(id: Types.ObjectId): Promise<HydratedDocument<IUser, IUserMethods> | null>;
+// things the full user model can do
+export interface UserModel extends Model<IUser, object, IUserMethods> {
+    getAll(): Promise<HydratedUser[]>;
+    findByEmail(email: string): Promise<HydratedUser | null>;
+    findByUserId(id: Types.ObjectId): Promise<HydratedUser | null>;
     getUserPassword(id: Types.ObjectId): Promise<string | null>;
-    createUserAccount(name: string, email: string, password: string): Promise<HydratedDocument<IUser, IUserMethods>>;
-    getAll(): Promise<HydratedDocument<IUser, IUserMethods>[]>;
+    createUserAccount(name: string, email: string, password: string): Promise<HydratedUser>;
 }
 
+// names the full user type
+export type HydratedUser = HydratedDocument<IUser, IUserMethods>;
+
+// main user fields saved in the database
 const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
     {
         name: {
@@ -89,9 +105,6 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
             type: UserProfileSchema,
             required: true,
         },
-        goals: {
-            type: [String],
-        },
         setup_complete: {
             type: Boolean,
             required: true,
@@ -99,86 +112,94 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
         },
     },
     {
-        timestamps: true, // adds createdAt and updatedAt fields
+        timestamps: true, // automatically saves createdAt and updatedAt
+        statics: {
+            // gets all users
+            getAll() {
+                return this.find({});
+            },
+
+            // finds one user by email
+            findByEmail(email: string) {
+                return this.findOne({ email });
+            },
+
+            // finds one user by database id
+            async findByUserId(id: Types.ObjectId) {
+                return await this.findById(id);
+            },
+
+            // gets the saved password for one user
+            async getUserPassword(id: Types.ObjectId) {
+                const user = await this.findById(id, { password: 1 }).exec();
+                if (!user) {
+                    return null;
+                }
+                return user.password;
+            },
+
+            // creates a new user if the email is not already used
+            async createUserAccount(
+                name: string,
+                email: string,
+                password: string,
+            ) {
+                const existingUser = await this.findByEmail(email);
+                if (existingUser) {
+                    return null;
+                }
+
+                const user = this.create({
+                    name,
+                    email,
+                    password,
+                    profile: {}, // starts with an empty profile
+                });
+
+                return user;
+            }
+        },
+        methods: {
+            // returns user data without the password
+            getPublicProfile(): IPublicUser {
+                return {
+                    _id: this._id,
+                    name: this.name,
+                    email: this.email,
+                    profile: this.profile,
+                    setup_complete: this.setup_complete,
+                    createdAt: this.createdAt,
+                    updatedAt: this.updatedAt,
+                };
+            },
+
+            // marks setup as finished the first time profile data is saved
+            async completeFirstTimeSetup(profileData: Partial<IUserProfile>) {
+                if (this.setup_complete) {
+                    return null;
+                }
+                this.setup_complete = true;
+                return await this.updateProfile(profileData);
+            },
+
+            // updates the saved profile fields for the user
+            async updateProfile(profileData: Partial<IUserProfile>) {
+                if (profileData.dob) {
+                    profileData.dob.setUTCHours(0, 0, 0, 0);
+                }
+
+                this.profile = {
+                    ...this.profile,
+                    ...profileData,
+                };
+
+                return await this.save();
+            }
+        }
     }
 );
 
-//Static Methods
-UserSchema.statics.getAll = function () {
-    return this.find({});
-}
-
-UserSchema.statics.findByUserId = async function (id: Types.ObjectId) {
-    return await this.findById(id);
-};
-
-UserSchema.statics.findByEmail = function (email: string) {
-    return this.findOne({ email });
-};
-
-UserSchema.statics.getUserPassword = async function (id: Types.ObjectId) {
-    const user = await this.findById(id, { password: 1 }).exec();
-    if (!user) {
-        return null;
-    }
-    return user.password;
-};
-
-UserSchema.statics.createUserAccount = async function (
-    name: string,
-    email: string,
-    password: string,
-) {
-    const existingUser = await this.findByEmail(email);
-    if (existingUser) {
-        //TODO: throw more detailed error
-        return null;
-    }
-
-    const user = this.create({
-        name,
-        email,
-        password,
-        profile: {}, // initialize with empty profile
-    });
-
-    return user;
-}
-
-//Document Methods
-UserSchema.methods.getPublicProfile = function (): IPublicUser {
-    return {
-        _id: this._id,
-        name: this.name,
-        email: this.email,
-        profile: this.profile,
-        goals: this.goals,
-        setup_complete: this.setup_complete,
-        createdAt: this.createdAt,
-        updatedAt: this.updatedAt,
-    };
-};
-
-UserSchema.methods.completeFirstTimeSetup = async function (profileData: Partial<IUserProfile>) {
-    if (this.setup_complete) {
-        return null;
-    }
-    this.setup_complete = true;
-    return await this.updateProfile(profileData);
-}
-
-UserSchema.methods.updateProfile = async function (profileData: Partial<IUserProfile>) {
-    if (profileData.dob) {
-        profileData.dob.setUTCHours(0, 0, 0, 0);
-    }
-    this.profile = {
-        ...this.profile,
-        ...profileData,
-    };
-
-    return await this.save();
-}
-
+// uses the existing user model if it already exists
 export const User =
     (mongoose.models.User as UserModel) ||
     mongoose.model<IUser, UserModel>("User", UserSchema);

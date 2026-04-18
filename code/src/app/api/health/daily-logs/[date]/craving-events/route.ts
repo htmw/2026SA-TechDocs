@@ -18,6 +18,35 @@ const createRoute = createTypedApiRoute<LocalRouteParams, unknown, RouteLocals>(
     validateDate
 );
 
+/**
+ * POST `/api/health/daily-logs/:date/craving-events`
+ *
+ * `[date]` is in format YYYY-MM-DD
+ *
+ * ---
+ *
+ * Creates a new craving event for the given date.
+ *
+ * Body:
+ * - CravingEventSchema
+ *
+ * ---
+ *
+ * Response:
+ * - `201`: created event
+ * ```
+ * { success: true, data: { craving_event: { ... } } }
+ * ```
+ * - `404`: DAILY_LOG_NOT_FOUND
+ * ```
+ * { success: false, error_code: "DAILY_LOG_NOT_FOUND", message: "No daily log found for the specified date" }
+ * ```
+ * - `409`: CRAVING_EVENT_EXISTS
+ * ```
+ * { success: false, error_code: "CRAVING_EVENT_EXISTS", message: "An event with that timestamp already exists" }
+ * ```
+ */
+
 export const POST = createRoute(
     async ({ user, locals, body }) => {
         const parsed = body as z.infer<typeof CravingEventSchema>;
@@ -42,13 +71,33 @@ export const POST = createRoute(
     { body_schema: CravingEventSchema }
 );
 
+/**
+ * GET `/api/health/daily-logs/:date/craving-events`
+ *
+ * `[date]` is in format YYYY-MM-DD
+ *
+ * ---
+ *
+ * returns all craving events for the date
+ *
+ * Response:
+ * - `200`: success
+ * ```
+ * { success: true, data: { craving_events: [ ... ] } }
+ * ```
+ * - `404`: DAILY_LOG_NOT_FOUND
+ * ```
+ * { success: false, error_code: "DAILY_LOG_NOT_FOUND", message: "No daily log found for the specified date" }
+ * ```
+ */
 export const GET = createRoute(
     async ({ user, locals }) => {
         const parsed_date = locals.parsed_date!;
 
         const daily_log = await DailyLog.getDailyLogByDate(user._id, parsed_date);
         if (!daily_log) {
-            return NextResponse.json(createErrorResponse("DAILY_LOG_NOT_FOUND", "No daily log found for the specified date"), { status: 404 });
+            const payload = { craving_events: [] };
+            return NextResponse.json(createSuccessResponse(payload), { status: 200 });
         }
 
         const payload = { craving_events: daily_log.craving_events || [] };

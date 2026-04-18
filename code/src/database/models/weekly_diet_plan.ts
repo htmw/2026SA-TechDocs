@@ -1,3 +1,4 @@
+import { day_of_week } from '@/lib/enums';
 import { IWeeklyDietPlan } from '@/lib/types/mongo_weekly_diet_plan';
 import { Model, Schema, model } from 'mongoose';
 
@@ -27,7 +28,7 @@ export const WeeklyDietPlanSchema = new Schema<IWeeklyDietPlan, WeeklyDietPlanMo
                 day: {
                     type: String,
                     required: true,
-                    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                    enum: day_of_week.values,
                 },
                 breakfast: {
                     recipe: { type: String, required: true },

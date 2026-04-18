@@ -1,18 +1,17 @@
 import SetupCard from "@/components/setup/setup_card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
-import { OptionList } from "@/lib/utils/options";
 
-type OptionStepProps<T extends string | number> = {
+type OptionStepProps<T extends string> = {
     title: string;
     description?: string;
-    options: OptionList<T>;
+    options: [T, string][];
     value?: T;
     onSelect: (value: T) => void;
     onBack: () => void;
 };
 
-export default function OptionStep<T extends string | number>({
+export default function OptionStep<T extends string>({
     title,
     description,
     options,
@@ -35,15 +34,15 @@ export default function OptionStep<T extends string | number>({
             }
         >
             <div className="space-y-3">
-                {options.map((option) => (
+                {options.map(([key, label]) => (
                     <Button
-                        key={String(option.value)}
+                        key={String(key)}
                         type="button"
-                        variant={value === option.value ? "default" : "outline"}
+                        variant={value === key ? "default" : "outline"}
                         className="w-full min-h-14 h-auto py-4 text-base"
-                        onClick={() => onSelect(option.value)}
+                        onClick={() => onSelect(key)}
                     >
-                        {option.label}
+                        {label}
                     </Button>
                 ))}
             </div>

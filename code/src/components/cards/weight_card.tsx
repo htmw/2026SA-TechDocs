@@ -1,6 +1,6 @@
 "use client"
 
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts"
 
 import {
     Card,
@@ -50,11 +50,11 @@ export function WeightCard({
                     </Card>
                 ) : (
                     <ChartContainer config={chartConfig}>
-                        <AreaChart
+                        <LineChart
                             accessibilityLayer
                             data={weight_data}
                             margin={{
-                                left: 20,
+                                left: 0,
                                 right: 20,
                             }}
                         >
@@ -65,18 +65,22 @@ export function WeightCard({
                                 axisLine={false}
                                 interval={0}
                             />
+                            <YAxis
+                                domain={['dataMin - 5', 'dataMax + 5']}
+                                tickFormatter={(v) => `${v} lbs`}
+                                tickMargin={12}
+                            />
                             <ChartTooltip
                                 cursor={false}
                                 content={<ChartTooltipContent indicator="dot" hideLabel />}
                             />
-                            <Area
+                            <Line
                                 dataKey="weight"
                                 type="linear"
-                                fill="var(--color-weight)"
-                                fillOpacity={0.4}
                                 stroke="var(--color-weight)"
+                                strokeWidth={3}
                             />
-                        </AreaChart>
+                        </LineChart>
                     </ChartContainer>
                 )}
             </CardContent>
