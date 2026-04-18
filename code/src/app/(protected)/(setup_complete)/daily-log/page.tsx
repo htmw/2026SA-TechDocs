@@ -10,6 +10,13 @@ import { endOfWeek, format, startOfWeek } from "date-fns";
 import { useCravingEvents, useCreateCravingEvent, useCreateDailyLog, useCreateHungerEvent, useDailyLog, useDailyLogs, useDeleteCravingEvent, useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/useDailyLog";
 import { craving_intensity_enum, craving_triggers_enum, craving_type_enum, energy_rating_label_map, hunger_level_enum, stress_level_label_map } from "@/lib/zod_schemas/health_schema";
 import { QuickActionsCard } from "@/components/cards/quick_actions_card";
+import { useCravingEvents, useDeleteCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
+import { useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/api-hooks/use-hunger-events";
+import { useMeals } from "@/lib/hooks/api-hooks/use-meals";
+import { NutrientGapCard } from "@/components/cards/nutrient_gap_card";
+import { analyzeNutrientGaps, calculateDietaryGuidelines } from "@/lib/utils/nutrition_utils";
+import { MealSummary } from "@/components/cards/meals_card";
+import { useAuth } from "@/lib/hooks/useAuthProvider";
 import { tz } from "@date-fns/tz";
 import { useAuth } from "@/lib/hooks/useAuthProvider";
 import { analyzeNutrientGaps, calculateDietaryGuidelines } from "@/lib/utils/nutrition_utils";
@@ -162,6 +169,11 @@ export default function DailyLogPage() {
     const delete_hunger = useDeleteHungerEvent();
     const delete_craving = useDeleteCravingEvent();
 
+    const { user } = useAuth();
+    const { data: meals = [], isLoading: meals_loading } = useMeals(selected_date);
+    const total_calories = meals.reduce((total, meal) => total + meal.calories, 0);
+    const total_protein = meals.reduce((total, meal) => total + meal.protein, 0);
+    const total_fat = meals.reduce((total, meal) => total + meal.fat, 0);
     const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs(week_start, week_end);
     const { data: daily_log } = useDailyLog(selected_date);
 
@@ -176,13 +188,23 @@ export default function DailyLogPage() {
         stress_level: stress_level_label_map[daily_log.stress_level]
     } as DailyCheckInSummaryCardProps : undefined;
 
-    const combinedMeals: MealSummary[] = [...breakfast, ...lunch, ...snacks];
+    const combinedMeals: MealSummary[] = meals.map(m => ({
+        id: m._id?.toString() || "",
+        name: m.food_item,
+        calories: m.calories,
+        protein: m.protein,
+        carbs: m.carbs,
+        sodium: m.sodium,
+        fat: m.fat,
+        vitamins: m.vitamins?.join(", ") || "",
+        minerals: m.minerals || "",
+    }));
     const guidelines = calculateDietaryGuidelines(user?.profile, user?.goals);
     const gaps = analyzeNutrientGaps(combinedMeals, guidelines);
 
-    const totalCalculatedCals = combinedMeals.reduce((acc, m) => acc + (m.calories || 0), 0);
-    const totalCalculatedPro = combinedMeals.reduce((acc, m) => acc + (m.protein || 0), 0);
-    const totalCalculatedFat = combinedMeals.reduce((acc, m) => acc + (m.fat || 0), 0);
+    const totalCalculatedCals = total_calories;
+    const totalCalculatedPro = total_protein;
+    const totalCalculatedFat = total_fat;
 
     return (
         <>
