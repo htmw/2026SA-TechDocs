@@ -12,6 +12,10 @@ import { QuickActionsCard } from "@/components/cards/quick_actions_card";
 import { useCravingEvents, useDeleteCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
 import { useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/api-hooks/use-hunger-events";
 import { useMeals } from "@/lib/hooks/api-hooks/use-meals";
+import { NutrientGapCard } from "@/components/cards/nutrient_gap_card";
+import { analyzeNutrientGaps, calculateDietaryGuidelines } from "@/lib/utils/nutrition_utils";
+import { MealSummary } from "@/components/cards/meals_card";
+import { useAuth } from "@/lib/hooks/useAuthProvider";
 
 export default function DailyLogPage() {
     const [selected_date, setSelectedDate] = React.useState(new Date());
@@ -31,18 +35,29 @@ export default function DailyLogPage() {
     const delete_hunger = useDeleteHungerEvent();
     const delete_craving = useDeleteCravingEvent();
 
+    const { user } = useAuth();
     const { data: meals = [], isLoading: meals_loading } = useMeals(selected_date);
     const total_calories = meals.reduce((total, meal) => total + meal.calories, 0);
     const total_protein = meals.reduce((total, meal) => total + meal.protein, 0);
     const total_fat = meals.reduce((total, meal) => total + meal.fat, 0);
 
-    const combinedMeals: MealSummary[] = [...breakfast, ...lunch, ...snacks];
+    const combinedMeals: MealSummary[] = meals.map(m => ({
+        id: m._id?.toString() || "",
+        name: m.food_item,
+        calories: m.calories,
+        protein: m.protein,
+        carbs: m.carbs,
+        sodium: m.sodium,
+        fat: m.fat,
+        vitamins: m.vitamins?.join(", ") || "",
+        minerals: m.minerals || "",
+    }));
     const guidelines = calculateDietaryGuidelines(user?.profile, user?.goals);
     const gaps = analyzeNutrientGaps(combinedMeals, guidelines);
 
-    const totalCalculatedCals = combinedMeals.reduce((acc, m) => acc + (m.calories || 0), 0);
-    const totalCalculatedPro = combinedMeals.reduce((acc, m) => acc + (m.protein || 0), 0);
-    const totalCalculatedFat = combinedMeals.reduce((acc, m) => acc + (m.fat || 0), 0);
+    const totalCalculatedCals = total_calories;
+    const totalCalculatedPro = total_protein;
+    const totalCalculatedFat = total_fat;
 
     return (
         <>
@@ -78,12 +93,6 @@ export default function DailyLogPage() {
                         protein_goal={guidelines.protein}
                         total_fat={totalCalculatedFat}
                         fat_goal={guidelines.fat}
-                        total_calories={total_calories}
-                        calorie_goal={2200}
-                        total_protein={total_protein}
-                        protein_goal={160}
-                        total_fat={total_fat}
-                        fat_goal={70}
                     />
                     <NutrientGapCard gaps={gaps} />
                     <MealsCard

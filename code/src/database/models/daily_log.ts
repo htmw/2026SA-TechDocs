@@ -72,8 +72,6 @@ const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
             type: String,
             required: false,
         },
-    },
-    { _id: false }
         logged_at: {
             type: Date,
             required: true,
