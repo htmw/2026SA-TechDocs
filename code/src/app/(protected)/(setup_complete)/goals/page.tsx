@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { calculateGoals } from "@/services/goal-calculation-service"
+import { useAuth } from "@/lib/hooks/useAuthProvider"
 
 export default function GoalsPage() {
 
@@ -58,8 +60,11 @@ export default function GoalsPage() {
             : `You need to lose ${Math.abs(diff)} lbs`
     }
 
+    const { user } = useAuth()
     // saves the selected goal on the page
     const handleSave = () => {
+        const calc = calculateGoals(user?.profile, goal)
+        console.log("CALCULATED GOALS:", calc)
         if (!goal) return
         setSaved(true)
     }
