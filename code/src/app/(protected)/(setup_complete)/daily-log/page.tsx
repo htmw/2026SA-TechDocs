@@ -7,20 +7,16 @@ import { DailyCheckInSummaryCard, DailyCheckInSummaryCardProps } from "@/compone
 import { NutritionSummaryCard } from "@/components/cards/macro_card";
 import { CravingEventsCard, HungerEventsCard } from "@/components/cards/events_card";
 import { endOfWeek, format, startOfWeek } from "date-fns";
-import { useCravingEvents, useCreateCravingEvent, useCreateDailyLog, useCreateHungerEvent, useDailyLog, useDailyLogs, useDeleteCravingEvent, useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/useDailyLog";
-import { craving_intensity_enum, craving_triggers_enum, craving_type_enum, energy_rating_label_map, hunger_level_enum, stress_level_label_map } from "@/lib/zod_schemas/health_schema";
+import { useCreateDailyLog, useDailyLog, useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log";
 import { QuickActionsCard } from "@/components/cards/quick_actions_card";
-import { useCravingEvents, useDeleteCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
-import { useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/api-hooks/use-hunger-events";
+import { useCravingEvents, useCreateCravingEvent, useDeleteCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
+import { useCreateHungerEvent, useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/api-hooks/use-hunger-events";
 import { useMeals } from "@/lib/hooks/api-hooks/use-meals";
 import { NutrientGapCard } from "@/components/cards/nutrient_gap_card";
 import { analyzeNutrientGaps, calculateDietaryGuidelines } from "@/lib/utils/nutrition_utils";
-import { MealSummary } from "@/components/cards/meals_card";
 import { useAuth } from "@/lib/hooks/useAuthProvider";
 import { tz } from "@date-fns/tz";
-import { useAuth } from "@/lib/hooks/useAuthProvider";
-import { analyzeNutrientGaps, calculateDietaryGuidelines } from "@/lib/utils/nutrition_utils";
-import { NutrientGapCard } from "@/components/cards/nutrient_gap_card";
+import { energy_rating } from "@/lib/enums";
 
 const breakfast: MealSummary[] = [
     {
@@ -82,87 +78,13 @@ const snacks: MealSummary[] = [
     },
 ];
 
-async function generateRandomCheckin(date: Date) {
-    const formatted_date = format(date, "yyyy-MM-dd")
-    const randomFrom = (arr: readonly any[]) => arr[Math.floor(Math.random() * arr.length)];
-    return {
-        date: formatted_date,
-        event: {
-            occurred_at: formatted_date,
-            craving_type: randomFrom(craving_type_enum),
-            intensity: randomFrom(craving_intensity_enum),
-            trigger: randomFrom(craving_triggers_enum),
-            suggested_actions: [
-                "Drink a glass of water",
-                "Take a 5-minute walk",
-                "Try a healthy snack",
-            ],
-            reasoning: "Random auto-generated craving event for testing",
-        },
-    };
-}
-
-async function generateRandomCravingEvent(date: Date) {
-    const formatted_date = format(date, "yyyy-MM-dd", { in: tz('America/New_York'), })
-    const randomFrom = (arr: readonly any[]) => arr[Math.floor(Math.random() * arr.length)];
-    return {
-        date: formatted_date,
-        event: {
-            occurred_at: new Date().toISOString(),
-            craving_type: randomFrom(craving_type_enum),
-            intensity: randomFrom(craving_intensity_enum),
-            trigger: randomFrom(craving_triggers_enum),
-            suggested_actions: [
-                "Some snack 1",
-                "Some action 2",
-                "Some action 3",
-            ],
-            reasoning: "Some type of reasoning",
-        },
-    };
-}
-
-async function generateRandomHungerEvent(date: Date) {
-    const formatted_date = format(date, "yyyy-MM-dd", { in: tz('America/New_York'), })
-    const randomFrom = (arr: readonly any[]) => arr[Math.floor(Math.random() * arr.length)];
-
-    return {
-        date: formatted_date,
-        event: {
-            occurred_at: new Date().toISOString(),
-            hunger_level: randomFrom(hunger_level_enum),
-            suggested_actions: [
-                "Some recipe 1",
-                "Some action 2",
-                "Some action 3",
-            ],
-            reasoning: "Some type of reasoning",
-        },
-    };
-}
-
-async function generateRandomDailyLog() {
-    const formatted_date = format(new Date(), "yyyy-MM-dd", { in: tz('America/New_York'), })
-    console.log(formatted_date);
-    const randomFrom = (arr: readonly any[]) => arr[Math.floor(Math.random() * arr.length)];
-    return {
-        date: new Date().toISOString(),
-        morning_weight: Math.floor(Math.random() * 40 + 200),
-        energy_rating: randomFrom(Object.keys(energy_rating_label_map)),
-        sleep_hours: Math.floor(Math.random() * 4 + 6),
-        stress_level: randomFrom(Object.keys(stress_level_label_map)),
-        timezone: "America/New_York",
-    };
-}
-
 export default function DailyLogPage() {
-    const { user } = useAuth();
     const createCraving = useCreateCravingEvent();
     const createHunger = useCreateHungerEvent();
     const createDailyLog = useCreateDailyLog();
 
     const [selected_date, setSelectedDate] = React.useState(new Date());
-    const [week_start, setWeekStart] = React.useState(startOfWeek(selected_date, { weekStartsOn: 0 }));
+    const [week_start, setWeekStart] = React.useState(startOfWeek(selected_date as Date, { weekStartsOn: 0 }));
     const [week_end, setWeekEnd] = React.useState(endOfWeek(selected_date, { weekStartsOn: 0 }));
     const { data: hunger_events = [], isLoading: loading_hunger } = useHungerEvents(selected_date);
     const { data: craving_events = [], isLoading: loading_craving } = useCravingEvents(selected_date);
@@ -174,7 +96,7 @@ export default function DailyLogPage() {
     const total_calories = meals.reduce((total, meal) => total + meal.calories, 0);
     const total_protein = meals.reduce((total, meal) => total + meal.protein, 0);
     const total_fat = meals.reduce((total, meal) => total + meal.fat, 0);
-    const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs(week_start, week_end);
+    const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs({ startDate: week_start });
     const { data: daily_log } = useDailyLog(selected_date);
 
     const day_statuses = daily_logs.map(log => {
@@ -183,9 +105,9 @@ export default function DailyLogPage() {
 
     const check_in_opts: DailyCheckInSummaryCardProps | undefined = daily_log ? {
         morning_weight: daily_log.morning_weight,
-        energy_rating: energy_rating_label_map[daily_log.energy_rating],
+        energy_rating: daily_log.energy_rating,
         sleep_hours: daily_log.sleep_hours,
-        stress_level: stress_level_label_map[daily_log.stress_level]
+        stress_level: daily_log.stress_level
     } as DailyCheckInSummaryCardProps : undefined;
 
     const combinedMeals: MealSummary[] = meals.map(m => ({
@@ -199,7 +121,8 @@ export default function DailyLogPage() {
         vitamins: m.vitamins?.join(", ") || "",
         minerals: m.minerals || "",
     }));
-    const guidelines = calculateDietaryGuidelines(user?.profile, user?.goals);
+
+    const guidelines = calculateDietaryGuidelines(user?.profile, user?.profile.goals);
     const gaps = analyzeNutrientGaps(combinedMeals, guidelines);
 
     const totalCalculatedCals = total_calories;
@@ -210,17 +133,7 @@ export default function DailyLogPage() {
         <>
             <div className="gap-5 p-6 grid grid-cols-1 xl:grid-cols-5">
                 <div className="flex flex-col justify-items-center place-items-center gap-5 xl:col-span-2">
-                    <QuickActionsCard
-                        onCraving={async () => {
-                            createCraving.mutate(await generateRandomCravingEvent(selected_date))
-                        }}
-                        onHungry={async () => {
-                            createHunger.mutate(await generateRandomHungerEvent(selected_date))
-                        }}
-                        onCheckIn={async () => {
-                            createDailyLog.mutate(await generateRandomDailyLog());
-                        }}
-                    />
+                    <QuickActionsCard date={selected_date} />
                     <SingleWeekPicker
                         value={selected_date}
                         onChange={(date, start_week, end_week) => {
@@ -232,7 +145,7 @@ export default function DailyLogPage() {
                         day_statuses={day_statuses}
                     />
                     <DailyCheckInSummaryCard
-                        check_in_opts={check_in_opts}
+                        date={selected_date}
                     />
                     <HungerEventsCard
                         onDelete={(date, id) => { delete_hunger.mutate({ date, id }) }}
@@ -254,9 +167,9 @@ export default function DailyLogPage() {
                         fat_goal={guidelines.fat}
                     />
                     <NutrientGapCard gaps={gaps} />
-                    <MealsCard
+                   <MealsCard
                         title="Breakfast"
-                        meals={breakfast}
+                        meals={meals.filter(meal => meal.meal_type === "breakfast")}
                         onAddMeal={() => {
                             console.log("Add meal clicked");
                         }}
@@ -266,7 +179,7 @@ export default function DailyLogPage() {
                     />
                     <MealsCard
                         title="Lunch"
-                        meals={lunch}
+                        meals={meals.filter(meal => meal.meal_type === "lunch")}
                         onAddMeal={() => {
                             console.log("Add meal clicked");
                         }}
@@ -276,7 +189,7 @@ export default function DailyLogPage() {
                     />
                     <MealsCard
                         title="Dinner"
-                        meals={[]}
+                        meals={meals.filter(meal => meal.meal_type === "dinner")}
                         onAddMeal={() => {
                             console.log("Add meal clicked");
                         }}
@@ -286,7 +199,7 @@ export default function DailyLogPage() {
                     />
                     <MealsCard
                         title="Snacks"
-                        meals={snacks}
+                        meals={meals.filter(meal => meal.meal_type === "snack")}
                         onAddMeal={() => {
                             console.log("Add meal clicked");
                         }}
