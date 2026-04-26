@@ -1,4 +1,5 @@
 import { HydratedUser, IUserMethods, User } from "@/database/models/user";
+import { getMongoose } from "@/lib/mongoose_connector";
 import { ISession } from "@/lib/types/mongo_session_types";
 import { IUser } from "@/lib/types/mongo_user_types";
 import { sha256 } from "@oslojs/crypto/sha2";
@@ -8,13 +9,12 @@ import mongoose, { HydratedDocument, Model, Schema, Types } from "mongoose";
 const EXTEND_THRESHOLD_MS = 1000 * 60 * 60 * 24 * 15; // 15 days
 const NEW_TTL_MS = 1000 * 60 * 60 * 24 * 30;  // 30 days
 
-//Methods Interface
-export interface ISessionMethods {
-
-}
+// Defines session document methods.
+// No custom session methods are needed right now.
+export type ISessionMethods = Record<string, never>;
 
 //Model Interface, which includes both the document and the methods
-export interface SessionModel extends Model<ISession, {}, ISessionMethods> {
+export interface SessionModel extends Model<ISession, Record<string, never>, ISessionMethods> {
     createSession(token: string, user_id: Types.ObjectId): Promise<HydratedDocument<ISession, ISessionMethods>>;
     validateSessionToken(token: string): Promise<{ session: HydratedDocument<ISession, ISessionMethods>, user: HydratedDocument<IUser, IUserMethods> } | null>;
     invalidateSession(id: Types.ObjectId | string): Promise<boolean>;
@@ -45,6 +45,11 @@ const SessionSchema = new Schema<ISession, SessionModel, ISessionMethods>(
         timestamps: true, // adds createdAt and updatedAt fields
         statics: {
             async validateSessionToken(token: string): Promise<{ session: HydratedSession, user: HydratedUser } | null> {
+
+                // Connects to Mongo before session lookup.
+                // This replaces the startup connection that was removed from instrumentation.ts.
+                await getMongoose();
+
                 const session_id = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
                 // get session
@@ -65,7 +70,7 @@ const SessionSchema = new Schema<ISession, SessionModel, ISessionMethods>(
                 // fetch user
                 const user_doc = await User.findByUserId(sess.user_id);
 
-                //user not found, invalidate dangling session and return null
+                // user not found, invalidate dangling session and return null
                 if (!user_doc) {
                     await this.invalidateSession(sess._id);
                     return null;
@@ -83,13 +88,22 @@ const SessionSchema = new Schema<ISession, SessionModel, ISessionMethods>(
             },
 
             async invalidateSession(id: Types.ObjectId | string): Promise<boolean> {
+
+                // Connects to Mongo before deleting a session.
+                await getMongoose();
+
                 if (!mongoose.Types.ObjectId.isValid(id)) {
                     return true;
                 }
-                return await this.findByIdAndDelete(id).exec().then(() => true as const)
+
+                return await this.findByIdAndDelete(id).exec().then(() => true as const);
             },
 
             async createSession(token: string, user_id: Types.ObjectId): Promise<HydratedSession> {
+
+                // Connects to Mongo before creating a session.
+                await getMongoose();
+
                 const session_id = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
                 const expires_at = new Date(Date.now() + NEW_TTL_MS);
