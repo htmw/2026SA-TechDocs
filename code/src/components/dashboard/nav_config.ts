@@ -46,11 +46,11 @@ export const navFooterItems: NavItem[] = [
         url: "/profile",
         icon: CircleUser,
     },
-    {
-        title: "Settings",
-        url: "/settings",
-        icon: Settings,
-    },
+    //{
+    //    title: "Settings",
+    //    url: "/settings",
+    //    icon: Settings,
+    //},
 ];
 
 export const pageTitleMap: Record<string, string> = [...navMainItems, ...navFooterItems].reduce(
