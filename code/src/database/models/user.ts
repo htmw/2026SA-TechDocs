@@ -43,10 +43,10 @@ export const UserProfileSchema = new Schema<IUserProfile>(
             type: String,
             enum: avg_sleep.values,
         },
-        goals: {
-            type: [String],
-            enum: avg_sleep.values,
-        },
+        goals: [{
+            type: String,
+            trim: true,
+        }],
         hobbies: [{
             type: String,
             trim: true

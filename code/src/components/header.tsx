@@ -10,10 +10,15 @@ import { getCurrentSession } from "@/app/actions";
 import HeaderClient from "./header_client";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 
-const navLinks = [
-    { href: "features", label: "Features" },
-    { href: "/#how-it-works", label: "How it works" },
-    { href: "/#contact", label: "Contact" },
+type HeaderNavLink = {
+    href: string;
+    label: string;
+};
+
+const navLinks: HeaderNavLink[] = [
+    // { href: "features", label: "Features" },
+    // { href: "/#how-it-works", label: "How it works" },
+    // { href: "/#contact", label: "Contact" },
 ];
 
 export default async function Header() {
@@ -46,10 +51,12 @@ export default async function Header() {
 function DesktopNav({
     navLinks,
 }: {
-    navLinks: {
-        href: string;
-        label: string;
-    }[];
+    // navLinks: {
+    //     href: string;
+    //     label: string;
+    // }[];
+
+    navLinks: HeaderNavLink[];
 }) {
     return (
         <NavigationMenu className="hidden md:flex">
