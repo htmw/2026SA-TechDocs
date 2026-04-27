@@ -615,15 +615,6 @@ export default function ProfilePage() {
                         </div>
 
                         <GoalSummary goal={goal} bmi={bmi} />
-
-                        <div className="rounded-xl border p-4">
-                            <p className="text-sm text-gray-600">Demo Notes</p>
-                            <p className="mt-2 text-sm text-gray-700">
-                                This is a starter skeleton for the presentation. It shows the
-                                profile inputs, calculated BMI, and a simple energy meter that
-                                can later be replaced with full AI logic.
-                            </p>
-                        </div>
                     </div>
                 </div>
             </div>
