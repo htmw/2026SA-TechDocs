@@ -24,6 +24,7 @@ export interface IMealLog {
     food_item: string;
     calories: number;
     protein: number;
+    carbs: number;
     carbohydrates: number;
     fat: number;
     fiber: number;
@@ -33,6 +34,7 @@ export interface IMealLog {
     water_intake: number;
     servings?: number;
     vitamins?: string[];
+    minerals?: string;
     logged_at: Date;
 }
 

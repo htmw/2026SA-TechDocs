@@ -2,40 +2,49 @@
 
 import { useEffect, useState } from "react"
 
-export default function GoalsPage() {
+type Profile = {
+    height: number
+    weight: number
+    goals?: string[]
+}
 
-    const [goal, setGoal] = useState("")
+type GoalValue = "lose" | "maintain" | "gain" | "energy" | ""
+
+export default function GoalsPage() {
+    const [goal, setGoal] = useState<GoalValue>("")
     const [targetWeight, setTargetWeight] = useState("")
     const [timeline, setTimeline] = useState("")
     const [saved, setSaved] = useState(false)
+    const [errorMessage, setErrorMessage] = useState("")
 
-    // stores height and weight from the saved profile
-    type Profile = {height: number, weight: number}
+    // Stores saved profile data.
     const [profile, setProfile] = useState<Profile | null>(null)
 
-    // loads saved profile data to show the user's current stats
+    // Loads saved profile data.
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const res = await fetch("/api/profile")
-                const data = await res.json()
+                const response = await fetch("/api/profile")
+                const data = await response.json()
 
-                // gets the saved profile data(object) from the API response
+                if (!response.ok) {
+                    throw new Error("Failed to load profile.")
+                }
+
                 const profileData = data.data?.user?.profile
 
-                console.log("GOALS PROFILE:", profileData)
-
                 setProfile(profileData)
-
-            } catch (err) {
-                console.error("Failed to load profile", err)
+                setGoal(profileData?.goals?.[0] ?? "")
+            } catch (error) {
+                console.error("Failed to load profile", error)
+                setErrorMessage("Failed to load profile.")
             }
         }
 
         fetchProfile()
     }, [])
 
-    // calculates bmi from saved height and weight
+    // Calculates BMI from profile.
     const calculateBMI = () => {
         if (!profile?.height || !profile?.weight) return null
 
@@ -45,7 +54,7 @@ export default function GoalsPage() {
         return ((w * 703) / (h * h)).toFixed(1)
     }
 
-    // shows how far the target weight is from current weight
+    // Compares current and target weight.
     const weightDifference = () => {
         if (!targetWeight || !profile?.weight) return null
 
@@ -58,10 +67,61 @@ export default function GoalsPage() {
             : `You need to lose ${Math.abs(diff)} lbs`
     }
 
-    // saves the selected goal on the page
-    const handleSave = () => {
+    // Shows saved goal name.
+    const getGoalLabel = () => {
+        if (goal === "lose") return "Lose Weight"
+        if (goal === "maintain") return "Maintain Weight"
+        if (goal === "gain") return "Build Muscle"
+        if (goal === "energy") return "Improve Energy"
+
+        return ""
+    }
+
+    // Shows saved goal focus.
+    const getGoalFocus = () => {
+        if (goal === "lose") return "Calorie deficit"
+        if (goal === "gain") return "Calorie surplus"
+
+        return "Balanced intake"
+    }
+
+    // Saves selected goal to profile.
+    const handleSave = async () => {
         if (!goal) return
-        setSaved(true)
+
+        try {
+            setSaved(false)
+            setErrorMessage("")
+
+            const response = await fetch("/api/profile", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    goals: [goal],
+                }),
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(JSON.stringify(data) || "Failed to save goal.")
+            }
+
+            setProfile((previousProfile) => previousProfile
+                ? {
+                    ...previousProfile,
+                    goals: [goal],
+                }
+                : previousProfile
+            )
+
+            setSaved(true)
+        } catch (error) {
+            console.error("Failed to save goal", error)
+            setErrorMessage(error instanceof Error ? error.message : "Failed to save goal.")
+        }
     }
 
     const bmi = calculateBMI()
@@ -173,16 +233,11 @@ export default function GoalsPage() {
                     <div className="bg-gray-50 p-4 rounded-xl space-y-2 text-center">
 
                         <p className="text-sm text-gray-600">
-                            Goal: {goal === "lose" ? "Lose Weight" :
-                                goal === "maintain" ? "Maintain Weight" :
-                                    goal === "gain" ? "Build Muscle" :
-                                        "Improve Energy"}
+                            Goal: {getGoalLabel()}
                         </p>
 
                         <p className="text-sm text-gray-600">
-                            Focus: {goal === "lose" ? "Calorie deficit" :
-                                goal === "gain" ? "Calorie surplus" :
-                                    "Balanced intake"}
+                            Focus: {getGoalFocus()}
                         </p>
 
                         {bmi && (
@@ -211,6 +266,12 @@ export default function GoalsPage() {
             {saved && (
                 <p className="text-sm text-gray-500">
                     Goal saved successfully.
+                </p>
+            )}
+
+            {errorMessage && (
+                <p className="text-sm text-red-600">
+                    {errorMessage}
                 </p>
             )}
 

@@ -24,6 +24,12 @@ const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
         protein: {
             type: Number,
             required: true,
+            default: 0,
+        },
+        carbs: {
+            type: Number,
+            required: true,
+            default: 0,
         },
         carbohydrates: {
             type: Number,
@@ -32,6 +38,7 @@ const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
         fat: {
             type: Number,
             required: true,
+            default: 0,
         },
         fiber: {
             type: Number,
@@ -59,6 +66,10 @@ const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
         },
         vitamins: {
             type: [String],
+            required: false,
+        },
+        minerals: {
+            type: String,
             required: false,
         },
         logged_at: {
