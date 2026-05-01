@@ -3,6 +3,9 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
+import ast
+import re
+
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 
@@ -65,17 +68,91 @@ MEAL_KEYWORDS = [
     "chicken","beef","pork","turkey","rice"
 ]
 
-#Function for cleaning input text
+# Function for cleaning input text
 def clean_text(text):
     text = str(text).lower()
     text = re.sub(r"[\[\]'\",]", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
     return text
 
+# Function to parse ingredients for frontend output
+def parse_ingredients(ingredients_str):
+    text = str(ingredients_str).strip()
+    text = text.replace("[", "").replace("]", "").replace("'", "").replace('"', "")
+
+    parts = re.split(
+        r"\s+(?=(?:\d+/\d+|\d+\s+\d+/\d+|\d+)\s+[A-Za-z])",
+        text
+    )
+
+    cleaned = []
+
+    for item in parts:
+        item = item.strip(" ,")
+        if not item:
+            continue
+
+        # Merge open parentheses like "(5 to 6 tablespoons)"
+        if cleaned and cleaned[-1].count("(") > cleaned[-1].count(")"):
+            cleaned[-1] += " " + item
+            continue
+
+        # Merge ranges like "4 to 5 cups"
+        if cleaned and cleaned[-1].strip().endswith("to"):
+            cleaned[-1] += " " + item
+            continue
+
+        # Merge mixed numbers like "1" + "1/2 cups"
+        if cleaned and re.fullmatch(r"\d+", cleaned[-1]) and re.match(r"^\d+/\d+\s+", item):
+            cleaned[-1] += " " + item
+            continue
+
+        cleaned.append(item)
+
+    return cleaned
+
+# Function to parse directions for frontend output
+def parse_directions(directions_str):
+    try:
+        parsed = ast.literal_eval(directions_str)
+
+        if isinstance(parsed, list):
+            cleaned = []
+
+            for step in parsed:
+                step = str(step).strip()
+
+                # Remove numbering like "1. " or "2) "
+                step = re.sub(r"^\d+[\.\)]\s*", "", step)
+
+                if step:
+                    cleaned.append(step)
+
+            return cleaned
+
+    except:
+        pass
+
+    text = str(directions_str).strip()
+    text = text.replace("[", "").replace("]", "").replace("'", "").replace('"', "")
+
+    parts = re.split(r"(?<=[.!?])\s+", text)
+
+    cleaned = []
+
+    for step in parts:
+        step = step.strip()
+        step = re.sub(r"^\d+[\.\)]\s*", "", step)
+
+        if step:
+            cleaned.append(step)
+
+    return cleaned
+
 #Function to prepare recipe dataset
 def prepare_recipe_data(merged_df):
     df = merged_df[
-        ["title","categories","ingredients","calories","protein","fat","sodium"]
+        ["title","categories","ingredients","directions","calories","protein","fat","sodium"]
     ].copy()
 
     for col in ["title","categories","ingredients"]:
@@ -191,8 +268,11 @@ def recommend_food(user_input, df, tfidf, top_n=5):
     top_indices = similarity_scores.argsort()[::-1][:top_n]
 
     results = filtered_df.iloc[top_indices][
-        ["title","calories","protein","fat","categories"]
+        ["title","calories","protein","fat","categories", "ingredients", "directions"]
     ].copy()
+
+    results["ingredients"] = results["ingredients"].apply(parse_ingredients)
+    results["directions"] = results["directions"].apply(parse_directions)
 
     results["score"] = similarity_scores[top_indices]
 
