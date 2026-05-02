@@ -13,6 +13,10 @@ class RecommendationRequest(BaseModel):
     mealType: Optional[str] = ""
     topN: Optional[int] = 3
 
+class HungerRequest(BaseModel):
+    hungerLevel: str
+    topN: int = 5
+
 @app.get("/")
 def home():
     return {"message": "NutriAI FastAPI recommender is running"}
@@ -52,4 +56,33 @@ def recommend(data: RecommendationRequest):
         "input": data.model_dump(),
         "query_used": user_query,
         "recommendations": recommendations
+    }
+
+@app.post("/recommend-hunger")
+def recommend_hunger(data: HungerRequest):
+    recipe_df, tfidf = load_recommender_data()
+
+    hunger = data.hungerLevel.lower().strip()
+
+    if hunger == "little":
+        user_query = "light"
+    elif hunger == "hungry":
+        user_query = "meal"
+    elif hunger == "starving":
+        user_query = "high protein"
+    else:
+        user_query = "meal"
+
+    results_df = recommend_food(
+        user_input=user_query,
+        df=recipe_df,
+        tfidf=tfidf,
+        top_n=data.topN
+    )
+
+    return {
+        "success": True,
+        "hungerLevel": data.hungerLevel,
+        "query_used": user_query,
+        "recommendations": results_df.to_dict(orient="records")
     }

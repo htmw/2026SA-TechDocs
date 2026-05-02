@@ -226,7 +226,11 @@ def filter_recipes(df, query, top_n=5):
 
     # NEW: filter by intent
     if "hungry" in query or "meal" in query:
-        filtered_df = filtered_df[filtered_df["recipe_type"] == "meal"]
+        filtered_df = filtered_df[
+            (filtered_df["recipe_type"] == "meal") &
+            (filtered_df["calories"] > 400) &
+            (filtered_df["calories"] <= 600)
+            ]
 
     if "snack" in query:
         filtered_df = filtered_df[filtered_df["recipe_type"] == "snack"]
@@ -241,14 +245,17 @@ def filter_recipes(df, query, top_n=5):
 
     if "light" in query:
         filtered_df = filtered_df[
-            (filtered_df["calories"] <= 500) &
+            (filtered_df["calories"] <= 400) &
             (filtered_df["calories"] >= 200) &
             (filtered_df["recipe_type"] == "meal")
         ]
 
     if "high protein" in query or "protein" in query:
-        filtered_df = filtered_df[filtered_df["protein"] >= 20]
-
+        filtered_df = filtered_df[
+            (filtered_df["protein"] >= 20) &
+            (filtered_df["calories"] > 500)
+        ]
+        
     # fallback
     if filtered_df.shape[0] < top_n:
         filtered_df = df.copy()
@@ -268,7 +275,7 @@ def recommend_food(user_input, df, tfidf, top_n=5):
     top_indices = similarity_scores.argsort()[::-1][:top_n]
 
     results = filtered_df.iloc[top_indices][
-        ["title","calories","protein","fat","categories", "ingredients", "directions"]
+        ["title","calories","protein","fat","sodium","categories", "ingredients", "directions"]
     ].copy()
 
     results["ingredients"] = results["ingredients"].apply(parse_ingredients)

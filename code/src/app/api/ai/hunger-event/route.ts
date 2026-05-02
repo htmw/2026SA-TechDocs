@@ -15,15 +15,38 @@ export const POST = createApiRoute(
         // Call AI Backend
         // 5 second delay for ai
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        
-        const recipes = await Recipe.search({
-            title_contains: "ham persillade with mustard potato salad and mashed peas",
-            limit: "1"
+
+        const aiResponse = await fetch("http://127.0.0.1:8000/recommend-hunger", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                hungerLevel: parsed.hunger_level,
+                topN: 5,
+            }),
         });
 
-        const payload = { recipe: recipes.recipes[0] };
+        if (!aiResponse.ok) {
+            return NextResponse.json(
+                createErrorResponse("AI_BACKEND_ERROR", "AI backend failed"),
+                { status: 500 }
+            );
+        }
+
+        const aiData = await aiResponse.json();
+
+        const recipes = aiData.recommendations ?? [];
+
+        const payload = {
+            recipes,
+            recipe: recipes[0],
+        };
         const normalizedPayload = normalizeDocument(payload);
-        return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 201 });
+        return NextResponse.json(createSuccessResponse(normalizedPayload), {
+            status: 201,
+        });
+    
     },
     { body_schema: HungerEventZodSchema.pick({ hunger_level: true }) }
 );

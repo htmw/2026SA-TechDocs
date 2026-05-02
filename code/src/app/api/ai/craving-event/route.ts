@@ -28,7 +28,7 @@ export const POST = createApiRoute(
                 hungerLevel: 3,
                 craving: prompt,
                 mealType: "any",
-                topN: 1,
+                topN: 5,
             }),
         });
 
@@ -41,22 +41,15 @@ export const POST = createApiRoute(
 
            const aiData = await aiResponse.json();
 
-            const recipe = aiData.recommendations?.[0];
+            const recipes = aiData.recommendations ?? [];
 
-            const payload = { recipe };
+            const payload = { 
+                recipes,
+                recipe: recipes[0]
+             };
             const normalizedPayload = normalizeDocument(payload);
 
             return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 201 });
-        //const recipes = await Recipe.search({
-         //   title_contains: "ham persillade with mustard potato salad and mashed peas",
-          //  limit: "1"
-        //});
-
-        //const payload = { recipe: recipes.recipes[0] };
-        //const normalizedPayload = normalizeDocument(payload);
-        //return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 201 });
-
-        
     },
     { body_schema: CravingPromptSchema }
 );

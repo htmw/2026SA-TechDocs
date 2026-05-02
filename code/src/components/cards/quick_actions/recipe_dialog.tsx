@@ -24,7 +24,8 @@ export type RecipeDialogProps<TValues extends Record<string, unknown>> = {
     submitLabel: string;
     promptFields: PromptFieldConfig<TValues>[];
     formDefaultValues: TValues;
-    requestRecipe: (values: TValues) => Promise<ClientRecipes>;
+    //requestRecipe: (values: TValues) => Promise<ClientRecipes>;
+    requestRecipe: (values: TValues) => Promise<ClientRecipes | ClientRecipes[]>;
     isLoadingRecipe: boolean;
 };
 
@@ -41,17 +42,32 @@ export function RecipeDialog<TValues extends Record<string, unknown>>({
     isLoadingRecipe,
 }: RecipeDialogProps<TValues>) {
     const [step, setStep] = React.useState<0 | 1>(0);
-    const [recipe, setRecipe] = React.useState<ClientRecipes | null>(null);
+    //const [recipe, setRecipe] = React.useState<ClientRecipes | null>(null);
+    const [recipes, setRecipes] = React.useState<ClientRecipes[]>([]);
+    const [recipeIndex, setRecipeIndex] = React.useState(0);
     const [recipeError, setRecipeError] = React.useState<string | null>(null);
+    const recipe = recipes[recipeIndex] ?? null;
 
     const requestRecipeInternal = async (values: TValues) => {
         setRecipeError(null);
-        setRecipe(null);
+        //setRecipe(null);
+        setRecipes([]);
+        setRecipeIndex(0);
         setStep(1);
 
         try {
-            const recipeSuggestion = await requestRecipe(values);
-            setRecipe(recipeSuggestion);
+            //const recipeSuggestion = await requestRecipe(values);
+            //setRecipe(recipeSuggestion);
+            const recipeSuggestions = await requestRecipe(values);
+
+            //Store multiple
+            if (Array.isArray(recipeSuggestions)) {
+                setRecipes(recipeSuggestions);
+            } else {
+            setRecipes([recipeSuggestions]);
+            }
+
+setRecipeIndex(0);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             const fallback = "Unable to generate recipe. Please try again.";
@@ -80,7 +96,9 @@ export function RecipeDialog<TValues extends Record<string, unknown>>({
     React.useEffect(() => {
         if (!open) {
             setStep(0);
-            setRecipe(null);
+            //setRecipe(null);
+            setRecipes([]);
+            setRecipeIndex(0);
             setRecipeError(null);
             form.reset();
         }
@@ -221,8 +239,18 @@ export function RecipeDialog<TValues extends Record<string, unknown>>({
                                     )}
 
                                     <DialogFooter>
-                                        <Button variant="outline" disabled={isLoadingRecipe} onClick={generateRecipe}>
+                                        {/*<Button variant="outline" disabled={isLoadingRecipe} onClick={generateRecipe}>
                                             {isLoadingRecipe ? "Requesting new recipe…" : "Request new recipe"}
+                                        </Button> */}
+                                        <Button variant="outline" disabled={isLoadingRecipe} onClick={() => {
+                                            if (recipeIndex < recipes.length - 1) {
+                                                setRecipeIndex((prev) => prev + 1);
+                                            } else {
+                                                generateRecipe();
+                                            }
+                                            }}
+                                        >
+                                        {isLoadingRecipe ? "Requesting new recipe…" : "Request new recipe"}
                                         </Button>
                                         <Button onClick={handleConfirm} disabled={!recipe || isLoadingRecipe}>
                                             Accept Recipe
