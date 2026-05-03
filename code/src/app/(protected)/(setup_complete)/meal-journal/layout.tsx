@@ -1,5 +1,5 @@
 export const metadata = {
-    title: 'Carlorie Calculator',
+    title: 'Meal Journal',
 };
 
 export default async function Layout({ children }: { children: any }) {
