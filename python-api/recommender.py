@@ -112,37 +112,34 @@ def parse_ingredients(ingredients_str):
     return cleaned
 
 # Function to parse directions for frontend output
-def parse_directions(directions_str):
-    try:
-        parsed = ast.literal_eval(directions_str)
 
-        if isinstance(parsed, list):
-            cleaned = []
+def parse_directions(directions):
+    if not directions:
+        return []
 
-            for step in parsed:
-                step = str(step).strip()
+    text = str(directions)
 
-                # Remove numbering like "1. " or "2) "
-                step = re.sub(r"^\d+[\.\)]\s*", "", step)
+    text = text.replace("[", "").replace("]", "")
+    text = text.replace("'", "").replace('"', "")
 
-                if step:
-                    cleaned.append(step)
+    # protect parentheses content
+    def protect_parentheses(match):
+        return match.group(0).replace(".", "<DOT>")
 
-            return cleaned
+    text = re.sub(r"\(.*?\)", protect_parentheses, text, flags=re.DOTALL)
 
-    except:
-        pass
-
-    text = str(directions_str).strip()
-    text = text.replace("[", "").replace("]", "").replace("'", "").replace('"', "")
-
-    parts = re.split(r"(?<=[.!?])\s+", text)
+    # split on period
+    steps = text.split(".")
 
     cleaned = []
-
-    for step in parts:
+    for step in steps:
         step = step.strip()
-        step = re.sub(r"^\d+[\.\)]\s*", "", step)
+
+        # restore dots
+        step = step.replace("<DOT>", ".")
+
+        # remove leading comma only
+        step = re.sub(r"^,\s*", "", step)
 
         if step:
             cleaned.append(step)
