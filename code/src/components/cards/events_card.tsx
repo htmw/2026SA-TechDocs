@@ -30,6 +30,8 @@ import { Button } from "@/components/ui/button";
 import { ClientCravingEvent, ClientHungerEvent } from "@/lib/types/mongo_daily_log_types";
 import { format } from "date-fns";
 import { craving_intensity, craving_triggers, craving_type, hunger_level } from "@/lib/enums";
+import { useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/api-hooks/use-hunger-events";
+import { useCravingEvents, useDeleteCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
 
 type EventsCardProps<T> = {
     events: T[];
@@ -220,15 +222,16 @@ function EventsCard<T>({
 }
 
 export function HungerEventsCard({
-    events,
-    onDelete,
+    date
 }: {
-    events: ClientHungerEvent[];
-    onDelete?: (date: string, id: string) => void;
+    date: Date
 }) {
+    const { data: hunger_events = [], isLoading: loading_hunger } = useHungerEvents(date);
+    const delete_hunger = useDeleteHungerEvent();
+
     return (
         <EventsCard
-            events={events}
+            events={hunger_events}
             title="Hunger Events"
             description="Logged hunger moments and recommended next steps."
             icon={<Zap className="size-5 text-muted-foreground" />}
@@ -249,21 +252,22 @@ export function HungerEventsCard({
                     onDelete={onDelete}
                 />
             )}
-            onDelete={onDelete}
+            onDelete={(date, id) => { delete_hunger.mutate({ date, id }) }}
         />
     );
 }
 
 export function CravingEventsCard({
-    events,
-    onDelete,
+    date
 }: {
-    events: ClientCravingEvent[];
-    onDelete?: (date: string, id: string) => void;
+    date: Date
 }) {
+    const { data: craving_events = [], isLoading: loading_craving } = useCravingEvents(date);
+    const delete_craving = useDeleteCravingEvent();
+
     return (
         <EventsCard
-            events={events}
+            events={craving_events}
             title="Craving Events"
             description="Logged craving moments and recommended next steps."
             icon={<Zap className="size-5 text-muted-foreground" />}
@@ -286,7 +290,7 @@ export function CravingEventsCard({
                     onDelete={onDelete}
                 />
             )}
-            onDelete={onDelete}
+            onDelete={(date, id) => { delete_craving.mutate({ date, id }) }}
         />
     );
 }

@@ -67,10 +67,6 @@ export default function CalorieCalculatorPage() {
 
     const { data: meals = [], isLoading: meals_loading } = useMeals(selected_date);
 
-    const total_calories = meals.reduce((total, meal) => total + meal.calories, 0);
-    const total_protein = meals.reduce((total, meal) => total + meal.protein, 0);
-    const total_fat = meals.reduce((total, meal) => total + meal.fat, 0);
-
     /**
      * Usage Example:
      * delete_meal.mutate({ date, meal_id }, { 
@@ -102,14 +98,7 @@ export default function CalorieCalculatorPage() {
                     weekStartsOn={0}
                     day_statuses={day_status_array}
                 />
-                <NutritionSummaryCard
-                    total_calories={total_calories}
-                    calorie_goal={2200}
-                    total_protein={total_protein}
-                    protein_goal={160}
-                    total_fat={total_fat}
-                    fat_goal={70}
-                />
+                <NutritionSummaryCard date={selected_date} />
                 <SearchFoodCard date={selected_date} />
                 {meal_type.entries.map(([label, value]) => (
                     <div key={label}>
