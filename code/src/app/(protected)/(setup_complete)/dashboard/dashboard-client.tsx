@@ -1,11 +1,11 @@
 "use client"
 
 import { getCurrentSession } from "@/app/actions";
-import { EnergyCard } from "@/components/cards/energy_card";
+import { EnergyCard } from "@/components/cards/chart_cards/energy_card";
 import { GreetingsCard } from "@/components/cards/greetings_card";
-import { SleepCard } from "@/components/cards/sleep_card";
-import { StressCard } from "@/components/cards/stress_card";
-import { WeightCard } from "@/components/cards/weight_card";
+import { SleepCard } from "@/components/cards/chart_cards/sleep_card";
+import { StressCard } from "@/components/cards/chart_cards/stress_card";
+import { WeightCard } from "@/components/cards/chart_cards/weight_card";
 import { useAuth } from "@/lib/hooks/useAuthProvider"
 import { useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log";
 import { format } from "date-fns";
