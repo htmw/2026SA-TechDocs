@@ -4,7 +4,8 @@ export interface Env {
     MONGODB_URL: string;
 
     APP_NAME: string;
-    BASE_URL: string;
+
+    OPENAI_API_KEY: string;
 }
 
 let cachedEnv: Env | null = null;
@@ -29,7 +30,7 @@ export function getEnv(): Env {
         MONGODB_URL: requireKey("MONGODB_URL"),
 
         APP_NAME: requireKey("APP_NAME"),
-        BASE_URL: requireKey("BASE_URL"),
+        OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
     };
 
     if (missing.length > 0) {
