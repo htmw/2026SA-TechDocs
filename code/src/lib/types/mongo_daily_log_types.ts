@@ -33,8 +33,6 @@ export interface IMealLog {
     cholesterol: number;
     water_intake: number;
     servings?: number;
-    vitamins?: string[];
-    minerals?: string;
     logged_at: Date;
 }
 

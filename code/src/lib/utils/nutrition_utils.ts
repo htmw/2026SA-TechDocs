@@ -1,12 +1,10 @@
-import { MealSummary } from "@/components/cards/meals_card";
+import { NutritionItem } from "../zod_schemas/nutrition_schema";
 
 export type NutrientGuidelines = {
     calories: number;
     protein: number;
     fat: number;
     carbs: number;
-    iron: number; // in mg
-    vitaminc: number; // in mg
 };
 
 export type NutrientGapStatus = "deficient" | "borderline" | "optimal" | "surplus";
@@ -35,31 +33,20 @@ export function calculateDietaryGuidelines(profile?: any, goals?: string[]): Nut
         protein: Math.round((calories * 0.3) / 4), // 30% from protein
         fat: Math.round((calories * 0.25) / 9), // 25% from fat
         carbs: Math.round((calories * 0.45) / 4), // 45% from carbs
-        iron: profile?.gender === "female" ? 18 : 8,
-        vitaminc: 90,
     };
 }
 
-export function analyzeNutrientGaps(meals: MealSummary[], guidelines: NutrientGuidelines): NutrientGap[] {
+export function analyzeNutrientGaps(meals: NutritionItem[], guidelines: NutrientGuidelines): NutrientGap[] {
     let totalCals = 0;
     let totalProtein = 0;
     let totalFat = 0;
     let totalCarbs = 0;
-    let totalIron = 0;
-    let totalVitC = 0;
 
     for (const m of meals) {
         totalCals += (m.calories || 0);
         totalProtein += (m.protein || 0);
         totalFat += (m.fat || 0);
-        totalCarbs += (m.carbs || 0);
-        
-        const vits = (m.vitamins || "").toLowerCase();
-        if (vits.includes("iron")) totalIron += 3; // roughly adding 3mg per mention
-        if (vits.includes("vitamin c")) totalVitC += 20; 
-
-        const mins = (m.minerals || "").toLowerCase();
-        if (mins.includes("iron")) totalIron += 3;
+        totalCarbs += (m.carbohydrates || 0);
     }
 
     const gaps: NutrientGap[] = [];
@@ -93,8 +80,6 @@ export function analyzeNutrientGaps(meals: MealSummary[], guidelines: NutrientGu
     evaluate("Protein", totalProtein, guidelines.protein, "g", "lean meats, beans, or tofu");
     evaluate("Fat", totalFat, guidelines.fat, "g", "nuts, avocados, or olive oil");
     evaluate("Carbs", totalCarbs, guidelines.carbs, "g", "whole grains, fruits, or potatoes");
-    evaluate("Iron", totalIron, guidelines.iron, "mg", "spinach, lentils, or red meat");
-    evaluate("Vitamin C", totalVitC, guidelines.vitaminc, "mg", "citrus fruits, bell peppers, or strawberries");
 
     return gaps;
 }

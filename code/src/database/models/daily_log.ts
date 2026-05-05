@@ -64,14 +64,6 @@ const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
             type: Number,
             required: false,
         },
-        vitamins: {
-            type: [String],
-            required: false,
-        },
-        minerals: {
-            type: String,
-            required: false,
-        },
         logged_at: {
             type: Date,
             required: true,

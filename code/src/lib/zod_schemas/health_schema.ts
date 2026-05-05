@@ -43,7 +43,6 @@ export const MealZodSchema = z.object({
     cholesterol: z.number().min(0, "Cholesterol cannot be negative"),
     water_intake: z.number().min(0, "Water intake cannot be negative"),
     servings: z.number().positive("Servings must be a positive number").optional(),
-    vitamins: z.array(z.string()).optional(),
     logged_at: z.coerce.date(),
 });
 

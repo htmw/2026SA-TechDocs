@@ -14,20 +14,6 @@ import {
     ItemGroup,
     ItemTitle,
 } from "@/components/ui/item";
-
-export type MealSummary = {
-    id: string;
-    name: string;
-    calories: number;
-    protein: number;
-    carbs?: number;
-    sodium: number;
-    fat: number;
-    vitamins?: string;
-    minerals?: string;
-    serving?: string;
-    logged_at?: string;
-};
 import { ClientMealLog } from "@/lib/types/mongo_daily_log_types";
 import { format } from "date-fns";
 
@@ -96,12 +82,6 @@ export function MealsCard({
                                             <Badge variant="outline">{meal.protein}g pro</Badge>
                                             {meal.carbs && <Badge variant="outline">{meal.carbs}g carb</Badge>}
                                             <Badge variant="outline">{meal.fat}g fat</Badge>
-                                            {meal.vitamins && (
-                                                <Badge variant="outline">{meal.vitamins}</Badge>
-                                            )}
-                                            {meal.minerals && (
-                                                <Badge variant="outline">{meal.minerals}</Badge>
-                                            )}
                                         </ItemDescription>
                                     </ItemContent>
 
