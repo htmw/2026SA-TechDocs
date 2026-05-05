@@ -142,6 +142,7 @@ export function createApiRoute<
         }
 
         let body: Body | undefined;
+
         if (options.body_schema) {
             try {
                 body = (await req.json()) as Body;
@@ -157,6 +158,12 @@ export function createApiRoute<
                     return createValidationErrorResponse(parsed.error);
                 }
                 body = parsed.data as Body;
+            }
+        } else {
+            try {
+                body = (await req.json()) as Body;
+            } catch {
+                body = undefined;
             }
         }
 
