@@ -15,6 +15,8 @@ import {
     ChartTooltipContent,
     type ChartConfig,
 } from "@/components/ui/chart"
+import { useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log"
+import { format } from "date-fns"
 
 export type EnergyData = {
     date: string;
@@ -47,13 +49,19 @@ function toFrequencyData(energy_data: EnergyData[]) {
 }
 
 
-export function EnergyCard({
-    energy_data
-}: {
-    energy_data?: EnergyData[];
-}) {
-    const chartData = toFrequencyData(energy_data ?? []);
-    console.log("Energy chart data:", energy_data);
+export function EnergyCard() {
+    const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs({
+        limit: 7,
+        sortDir: "desc",
+    });
+
+    const data = daily_logs.map(log => ({
+        date: format(new Date(log.date), "MM/dd"),
+        energy: log.energy_rating,
+    }))
+
+    const chartData = toFrequencyData(data ?? []);
+    console.log("Energy chart data:", data);
     return (
         <Card>
             <CardHeader>
@@ -63,7 +71,7 @@ export function EnergyCard({
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                {energy_data == null || energy_data.length === 0 ? (
+                {data == null || data.length === 0 ? (
                     <Card className="border border-dashed shadow-none">
                         <CardContent className="flex min-h-[120px] items-center justify-center p-6">
                             <p className="text-sm text-muted-foreground">No energy data logged</p>

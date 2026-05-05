@@ -15,6 +15,8 @@ import {
     ChartTooltipContent,
     type ChartConfig,
 } from "@/components/ui/chart"
+import { format } from "date-fns"
+import { useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log"
 
 export type WeightData = {
     date: string;
@@ -28,11 +30,17 @@ const chartConfig = {
     },
 } satisfies ChartConfig
 
-export function WeightCard({
-    weight_data
-}: {
-    weight_data?: WeightData[];
-}) {
+export function WeightCard() {
+    const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs({
+        limit: 7,
+        sortDir: "desc",
+    });
+
+    const data = daily_logs.map(log => ({
+        date: format(new Date(log.date), "MM/dd"),
+        weight: log.morning_weight,
+    }))
+
     return (
         <Card>
             <CardHeader>
@@ -42,7 +50,7 @@ export function WeightCard({
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                {weight_data == null || weight_data.length === 0 ? (
+                {data == null || data.length === 0 ? (
                     <Card className="border border-dashed shadow-none">
                         <CardContent className="flex min-h-[120px] items-center justify-center p-6">
                             <p className="text-sm text-muted-foreground">No weight data logged</p>
@@ -52,7 +60,7 @@ export function WeightCard({
                     <ChartContainer config={chartConfig}>
                         <LineChart
                             accessibilityLayer
-                            data={weight_data}
+                            data={data}
                             margin={{
                                 left: 0,
                                 right: 20,
