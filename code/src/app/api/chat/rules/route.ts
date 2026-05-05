@@ -2,7 +2,6 @@
 
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getMongoose } from "@/lib/mongoose_connector";
 import { Session } from "@/database/models/session";
 import { ChatRule } from "@/database/models/chat_rule";
 
@@ -31,8 +30,6 @@ async function getCurrentUser() {
 
 export async function GET() {
     try {
-        await getMongoose();
-
         const user = await getCurrentUser();
 
         if (!user) {
@@ -67,8 +64,6 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
-        await getMongoose();
-
         const user = await getCurrentUser();
 
         if (!user) {
@@ -130,8 +125,6 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
     try {
-        await getMongoose();
-
         const user = await getCurrentUser();
 
         if (!user) {

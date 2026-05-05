@@ -1,5 +1,4 @@
 import { HydratedUser, IUserMethods, User } from "@/database/models/user";
-import { getMongoose } from "@/lib/mongoose_connector";
 import { ISession } from "@/lib/types/mongo_session_types";
 import { IUser } from "@/lib/types/mongo_user_types";
 import { sha256 } from "@oslojs/crypto/sha2";
@@ -45,11 +44,6 @@ const SessionSchema = new Schema<ISession, SessionModel, ISessionMethods>(
         timestamps: true, // adds createdAt and updatedAt fields
         statics: {
             async validateSessionToken(token: string): Promise<{ session: HydratedSession, user: HydratedUser } | null> {
-
-                // Connects to Mongo before session lookup.
-                // This replaces the startup connection that was removed from instrumentation.ts.
-                await getMongoose();
-
                 const session_id = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
                 // get session
@@ -88,10 +82,6 @@ const SessionSchema = new Schema<ISession, SessionModel, ISessionMethods>(
             },
 
             async invalidateSession(id: Types.ObjectId | string): Promise<boolean> {
-
-                // Connects to Mongo before deleting a session.
-                await getMongoose();
-
                 if (!mongoose.Types.ObjectId.isValid(id)) {
                     return true;
                 }
@@ -100,10 +90,6 @@ const SessionSchema = new Schema<ISession, SessionModel, ISessionMethods>(
             },
 
             async createSession(token: string, user_id: Types.ObjectId): Promise<HydratedSession> {
-
-                // Connects to Mongo before creating a session.
-                await getMongoose();
-
                 const session_id = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
                 const expires_at = new Date(Date.now() + NEW_TTL_MS);

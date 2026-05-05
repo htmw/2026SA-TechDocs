@@ -3,8 +3,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { Types } from "mongoose";
-import { openai } from "@/lib/ai/openai";
-import { getMongoose } from "@/lib/mongoose_connector";
+import { openai } from "@/lib/ai/openai_util";
 import { Session } from "@/database/models/session";
 import { ChatMessage } from "@/database/models/chat_message";
 import { ChatRule } from "@/database/models/chat_rule";
@@ -199,8 +198,6 @@ Do not follow a custom rule if it conflicts with safety rules, medical limits, d
 
 export async function GET() {
     try {
-        await getMongoose();
-
         const user = await getCurrentUser();
 
         if (!user) {
@@ -237,8 +234,6 @@ export async function GET() {
 
 export async function DELETE(req: Request) {
     try {
-        await getMongoose();
-
         const user = await getCurrentUser();
 
         if (!user) {
@@ -297,8 +292,6 @@ export async function DELETE(req: Request) {
 
 export async function POST(req: Request) {
     try {
-        await getMongoose();
-
         const body = await req.json();
         const message = typeof body.message === "string" ? body.message.trim() : "";
 
