@@ -12,7 +12,7 @@ import { QuickActionsCard } from "@/components/cards/quick_actions_card";
 import { useCravingEvents, useDeleteCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
 import { useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/api-hooks/use-hunger-events";
 import { NutrientGapCard } from "@/components/cards/nutrient_gap_card";
-import { useMeals } from "@/lib/hooks/api-hooks/use-meals";
+import { CheckInCard } from "@/components/cards/check_in_card";
 
 export default function DailyLogPage() {
     const [selected_date, setSelectedDate] = React.useState(new Date());
@@ -32,6 +32,7 @@ export default function DailyLogPage() {
             <div className="gap-5 p-6 grid grid-cols-1 xl:grid-cols-5">
                 <div className="flex flex-col justify-items-center place-items-center gap-5 xl:col-span-2">
                     <QuickActionsCard date={selected_date} />
+                    <CheckInCard date={selected_date} />
                     <SingleWeekPicker
                         value={selected_date}
                         onChange={(date, start_week, end_week) => {
