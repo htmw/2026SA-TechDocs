@@ -16,9 +16,7 @@ export const CravingPromptSchema = z.object({
 
 export const CravingEventSchema = z.object({
     occurred_at: z.coerce.date(),
-    craving_type: z.enum(craving_type.values, `Craving type is required (${craving_type.values.join(" | ")})`),
-    intensity: z.enum(craving_intensity.values, `Intensity is required (${craving_intensity.values.join(" | ")})`),
-    trigger: z.enum(craving_triggers.values, `Trigger is required (${craving_triggers.values.join(" | ")})`),
+    craving_prompt: z.string().min(1, "Craving prompt cannot be empty").max(1000, "Craving prompt cannot exceed 1000 characters"),
     suggested_actions: z.array(z.string()).optional(),
     reasoning: z.string().optional(),
 });

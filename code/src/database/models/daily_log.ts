@@ -92,19 +92,8 @@ const CravingEventSchema = new Schema<ICravingEvent, DailyLogModel>(
             type: Date,
             required: true,
         },
-        craving_type: {
+        craving_prompt: {
             type: String,
-            enum: craving_type.values,
-            required: true,
-        },
-        intensity: {
-            type: String,
-            enum: craving_intensity.values,
-            required: true,
-        },
-        trigger: {
-            type: String,
-            enum: craving_triggers.values,
             required: true,
         },
         suggested_actions: {
