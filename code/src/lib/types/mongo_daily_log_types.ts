@@ -24,7 +24,6 @@ export interface IMealLog {
     food_item: string;
     calories: number;
     protein: number;
-    carbs: number;
     carbohydrates: number;
     fat: number;
     fiber: number;

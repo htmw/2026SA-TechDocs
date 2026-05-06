@@ -26,11 +26,6 @@ const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
             required: true,
             default: 0,
         },
-        carbs: {
-            type: Number,
-            required: true,
-            default: 0,
-        },
         carbohydrates: {
             type: Number,
             required: true,

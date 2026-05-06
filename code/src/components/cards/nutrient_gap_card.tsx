@@ -23,7 +23,7 @@ export function NutrientGapCard({
         name: m.food_item,
         calories: m.calories,
         protein: m.protein,
-        carbohydrates: m.carbs,
+        carbohydrates: m.carbohydrates,
         sodium: m.sodium,
         fat: m.fat,
     }));
