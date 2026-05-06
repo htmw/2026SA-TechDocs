@@ -39,7 +39,11 @@ export const POST = createApiRoute(
 
            const aiData = await aiResponse.json();
 
-            const recipes = aiData.recommendations ?? [];
+            let recipes = aiData.recommendations ?? [];
+            recipes = recipes.map((recipe: any) => {
+                recipe.categories = recipe.categories.split(" ");
+                return recipe;
+            });
 
             const payload = { 
                 recipes,

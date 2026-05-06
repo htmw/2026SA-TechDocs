@@ -34,7 +34,11 @@ export const POST = createApiRoute(
 
         const aiData = await aiResponse.json();
 
-        const recipes = aiData.recommendations ?? [];
+        let recipes = aiData.recommendations ?? [];
+        recipes = recipes.map((recipe: any) => {
+            recipe.categories = recipe.categories.split(" ");
+            return recipe;
+        });
 
         const payload = {
             recipes,
@@ -44,7 +48,7 @@ export const POST = createApiRoute(
         return NextResponse.json(createSuccessResponse(normalizedPayload), {
             status: 201,
         });
-    
+
     },
     { body_schema: HungerEventZodSchema.pick({ hunger_level: true }) }
 );
