@@ -1,7 +1,6 @@
 "use client";
 
 import { SingleWeekPicker } from "@/components/cards/single_week_picker";
-import { MealsCard } from "@/components/cards/meals_card";
 import * as React from "react";
 import { DailyCheckInSummaryCard } from "@/components/cards/check_in_summary_card";
 import { NutritionSummaryCard } from "@/components/cards/macro_card";
@@ -9,9 +8,8 @@ import { CravingEventsCard, HungerEventsCard } from "@/components/cards/events_c
 import { endOfWeek, format, startOfWeek } from "date-fns";
 import { useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log";
 import { QuickActionsCard } from "@/components/cards/quick_actions_card";
-import { useCravingEvents, useDeleteCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
-import { useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/api-hooks/use-hunger-events";
 import { NutrientGapCard } from "@/components/cards/nutrient_gap_card";
+import { MealsCard } from "@/components/cards/meal_cards/meals_cards";
 import { CheckInCard } from "@/components/cards/check_in_card";
 
 export default function DailyLogPage() {
@@ -20,8 +18,6 @@ export default function DailyLogPage() {
     const [week_end, setWeekEnd] = React.useState(endOfWeek(selected_date, { weekStartsOn: 0 }));
 
     const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs({ startDate: week_start });
-    
-    const { data: meals = [], isLoading: meals_loading } = useMeals(selected_date);
 
     const day_statuses = daily_logs.map(log => {
         return format(log.date, "yyyy-MM-dd")
@@ -43,52 +39,28 @@ export default function DailyLogPage() {
                         weekStartsOn={0}
                         day_statuses={day_statuses}
                     />
-                    <DailyCheckInSummaryCard date={selected_date}/>
-                    <HungerEventsCard date={selected_date}/>
-                    <CravingEventsCard date={selected_date}/>
+                    <DailyCheckInSummaryCard date={selected_date} />
+                    <HungerEventsCard date={selected_date} />
+                    <CravingEventsCard date={selected_date} />
                 </div>
                 <div className="flex flex-col justify-items-center place-items-center gap-5 xl:col-span-3">
                     <NutritionSummaryCard date={selected_date} />
                     <NutrientGapCard date={selected_date} />
                     <MealsCard
-                        title="Breakfast"
-                        meals={meals.filter(meal => meal.meal_type === "breakfast")}
-                        onAddMeal={() => {
-                            console.log("Add meal clicked");
-                        }}
-                        onMealClick={(meal) => {
-                            console.log("Open meal details:", meal);
-                        }}
+                        meal_type_name="breakfast"
+                        date={selected_date}
                     />
                     <MealsCard
-                        title="Lunch"
-                        meals={meals.filter(meal => meal.meal_type === "lunch")}
-                        onAddMeal={() => {
-                            console.log("Add meal clicked");
-                        }}
-                        onMealClick={(meal) => {
-                            console.log("Open meal details:", meal);
-                        }}
+                        meal_type_name="lunch"
+                        date={selected_date}
                     />
                     <MealsCard
-                        title="Dinner"
-                        meals={meals.filter(meal => meal.meal_type === "dinner")}
-                        onAddMeal={() => {
-                            console.log("Add meal clicked");
-                        }}
-                        onMealClick={(meal) => {
-                            console.log("Open meal details:", meal);
-                        }}
+                        meal_type_name="dinner"
+                        date={selected_date}
                     />
                     <MealsCard
-                        title="Snacks"
-                        meals={meals.filter(meal => meal.meal_type === "snack")}
-                        onAddMeal={() => {
-                            console.log("Add meal clicked");
-                        }}
-                        onMealClick={(meal) => {
-                            console.log("Open meal details:", meal);
-                        }}
+                        meal_type_name="snack"
+                        date={selected_date}
                     />
                 </div>
             </div>

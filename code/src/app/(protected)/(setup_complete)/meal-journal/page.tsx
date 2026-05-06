@@ -17,7 +17,6 @@ import { endOfWeek, format, startOfWeek } from "date-fns";
 import MealCard from "@/components/cards/meal_card";
 
 import React, { use, useEffect, useState } from "react";
-import { MealsCard } from "@/components/cards/meals_card";
 import SearchFoodCard from "@/components/cards/search_food_card";
 
 export default function CalorieCalculatorPage() {
