@@ -1,4 +1,4 @@
-import { ClipboardList, Calendar, LayoutDashboard, LucideIcon, CircleUser, MessageCircle, Flag, Utensils, Candy } from "lucide-react";
+import { ClipboardList, Calendar, LayoutDashboard, LucideIcon, CircleUser, MessageCircle, Flag, Utensils, Candy, Settings } from "lucide-react";
 
 export type NavItem = { title: string; url: string; icon: LucideIcon };
 
@@ -41,6 +41,11 @@ export const navMainItems: NavItem[] = [
 ];
 
 export const navFooterItems: NavItem[] = [
+    {
+        title: "Settings",
+        url: "/settings",
+        icon: Settings,
+    },
     {
         title: "Profile",
         url: "/profile",
