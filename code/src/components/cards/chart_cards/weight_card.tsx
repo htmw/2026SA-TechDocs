@@ -15,54 +15,57 @@ import {
     ChartTooltipContent,
     type ChartConfig,
 } from "@/components/ui/chart"
+import { format } from "date-fns"
+import { useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log"
 
-export type SleepData = {
+export type WeightData = {
     date: string;
-    sleep: number;
+    weight: number;
 }
 
 const chartConfig = {
-    sleep: {
-        label: "Sleep Hours",
-        color: "#7c3aed",
+    weight: {
+        label: "Weight",
+        color: "var(--chart-2)",
     },
 } satisfies ChartConfig
 
-export function SleepCard({
-    sleep_data
-}: {
-    sleep_data?: SleepData[];
-}) {
+export function WeightCard() {
+    const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs({
+        limit: 7,
+        sortDir: "desc",
+    });
+
+    const data = daily_logs.map(log => ({
+        date: format(new Date(log.date), "MM/dd"),
+        weight: log.morning_weight,
+    }))
+
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Sleep</CardTitle>
+                <CardTitle>Weight</CardTitle>
                 <CardDescription>
-                    Showing sleep trends for the last 7 days
+                    Showing weight trends for the last 7 days
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                {sleep_data == null || sleep_data.length === 0 ? (
+                {data == null || data.length === 0 ? (
                     <Card className="border border-dashed shadow-none">
                         <CardContent className="flex min-h-[120px] items-center justify-center p-6">
-                            <p className="text-sm text-muted-foreground">No sleep data logged</p>
+                            <p className="text-sm text-muted-foreground">No weight data logged</p>
                         </CardContent>
                     </Card>
                 ) : (
                     <ChartContainer config={chartConfig}>
                         <LineChart
                             accessibilityLayer
-                            data={sleep_data}
+                            data={data}
                             margin={{
                                 left: 0,
                                 right: 20,
                             }}
                         >
-                            <YAxis
-                                domain={['dataMin - 2', 'dataMax + 2']}
-                                tickFormatter={(v) => `${v} hours`}
-                                tickMargin={12}
-                            />
                             <CartesianGrid vertical={false} />
                             <XAxis
                                 dataKey="date"
@@ -70,14 +73,19 @@ export function SleepCard({
                                 axisLine={false}
                                 interval={0}
                             />
+                            <YAxis
+                                domain={['dataMin - 5', 'dataMax + 5']}
+                                tickFormatter={(v) => `${v} lbs`}
+                                tickMargin={12}
+                            />
                             <ChartTooltip
                                 cursor={false}
                                 content={<ChartTooltipContent indicator="dot" hideLabel />}
                             />
                             <Line
-                                dataKey="sleep"
+                                dataKey="weight"
                                 type="linear"
-                                stroke="var(--color-sleep)"
+                                stroke="var(--color-weight)"
                                 strokeWidth={3}
                             />
                         </LineChart>

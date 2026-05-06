@@ -4,7 +4,6 @@ import { Types } from "mongoose";
 
 export interface IRecipe {
     recipe: string;
-    vitamins?: string;
 }
 
 export interface IMealPlan {

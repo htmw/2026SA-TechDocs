@@ -31,7 +31,8 @@ export const POST = createRoute(
             console.error("Error fetching daily log:", err);
             return NextResponse.json(createErrorResponse("DAILY_LOG_FETCH_ERROR", "An error occurred while fetching the daily log"), { status: 500 });
         }
-        
+
+        // Creates or loads the daily log for the selected date.
         if (!daily_log) {
             return NextResponse.json(createErrorResponse("DAILY_LOG_NOT_FOUND", "No daily log found for the specified date"), { status: 404 });
         }

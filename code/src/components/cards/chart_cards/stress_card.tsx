@@ -16,6 +16,8 @@ import {
     type ChartConfig,
 } from "@/components/ui/chart"
 import { EnergyData } from "./energy_card"
+import { format } from "date-fns"
+import { useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log"
 
 export type StressData = {
     date: string;
@@ -49,13 +51,19 @@ function toFrequencyData(stress_data: StressData[]) {
 }
 
 
-export function StressCard({
-    stress_data
-}: {
-    stress_data?: StressData[];
-}) {
-    const chartData = toFrequencyData(stress_data ?? []);
-    console.log("Stress chart data:", stress_data);
+export function StressCard() {
+    const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs({
+        limit: 7,
+        sortDir: "desc",
+    });
+
+    const data = daily_logs.map(log => ({
+        date: format(new Date(log.date), "MM/dd"),
+        stress: log.stress_level,
+    }))
+    
+    const chartData = toFrequencyData(data ?? []);
+    console.log("Stress chart data:", data);
     return (
         <Card>
             <CardHeader>
@@ -65,7 +73,7 @@ export function StressCard({
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                {stress_data == null || stress_data.length === 0 ? (
+                {data == null || data.length === 0 ? (
                     <Card className="border border-dashed shadow-none">
                         <CardContent className="flex min-h-[120px] items-center justify-center p-6">
                             <p className="text-sm text-muted-foreground">No stress data logged</p>
