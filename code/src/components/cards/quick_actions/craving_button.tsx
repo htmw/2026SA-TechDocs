@@ -32,14 +32,13 @@ export default function CravingButton({ date }: { date: Date }) {
             event: {
                 occurred_at: dateInitialized.toISOString(),
                 craving_prompt: form.craving_prompt,
+                recipe: recipe,
                 suggested_actions: [
                     `Make ${recipe.title} with only ${recipe.calories} calories!`,
                 ],
                 reasoning: "",
             },
         };
-
-        console.log(payload);
 
         await createCravingEvent.mutateAsync(payload);
     }

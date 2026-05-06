@@ -1,5 +1,6 @@
 import { craving_intensity, craving_triggers, craving_type, energy_rating, food_type, hunger_level, meal_type, MealType, stress_level } from "@/lib/enums";
 import z from "zod";
+import { RecipeZodSchema } from "./recipes_schema";
 
 export const DailyLogZodSchema = z.object({
     date: z.coerce.date(),
@@ -17,6 +18,7 @@ export const CravingPromptSchema = z.object({
 export const CravingEventSchema = z.object({
     occurred_at: z.coerce.date(),
     craving_prompt: z.string().min(1, "Craving prompt cannot be empty").max(1000, "Craving prompt cannot exceed 1000 characters"),
+    recipe: RecipeZodSchema,
     suggested_actions: z.array(z.string()).optional(),
     reasoning: z.string().optional(),
 });
@@ -24,6 +26,7 @@ export const CravingEventSchema = z.object({
 export const HungerEventZodSchema = z.object({
     occurred_at: z.coerce.date(),
     hunger_level: z.enum(hunger_level.values, `Hunger level is required (${hunger_level.values.join(" | ")})`),
+    recipe: RecipeZodSchema,
     suggested_actions: z.array(z.string()).optional(),
     reasoning: z.string().optional(),
 });

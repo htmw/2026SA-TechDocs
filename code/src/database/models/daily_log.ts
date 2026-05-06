@@ -77,6 +77,9 @@ const HungerEventSchema = new Schema<IHungerEvent, DailyLogModel>(
             enum: hunger_level.values,
             required: true,
         },
+        recipe: {
+            type: Object,
+        },
         suggested_actions: {
             type: [String],
         },
@@ -95,6 +98,9 @@ const CravingEventSchema = new Schema<ICravingEvent, DailyLogModel>(
         craving_prompt: {
             type: String,
             required: true,
+        },
+        recipe: {
+            type: Object,
         },
         suggested_actions: {
             type: [String],

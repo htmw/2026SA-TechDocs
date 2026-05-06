@@ -30,6 +30,7 @@ export default function HungryButton({ date }: { date: Date }) {
             event: {
                 occurred_at: dateInitialized.toISOString(),
                 hunger_level: form.hunger_level,
+                recipe: recipe,
                 suggested_actions: [
                     `Make ${recipe.title} with only ${recipe.calories} calories!`,
                 ],
