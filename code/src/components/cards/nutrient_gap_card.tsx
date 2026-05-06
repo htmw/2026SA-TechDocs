@@ -1,17 +1,36 @@
 "use client";
 
-import { NutrientGap, calculateNutritionScore } from "@/lib/utils/nutrition_utils";
+import { NutrientGap, analyzeNutrientGaps, calculateDietaryGuidelines, calculateNutritionScore } from "@/lib/utils/nutrition_utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle, Activity, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Progress } from "@/components/ui/progress";
+import { useMeals } from "@/lib/hooks/api-hooks/use-meals";
+import { NutritionItem } from "@/lib/zod_schemas/nutrition_schema";
+import { useAuth } from "@/lib/hooks/useAuthProvider";
 
-type NutrientGapCardProps = {
-    gaps: NutrientGap[];
-    className?: string;
-};
 
-export function NutrientGapCard({ gaps, className }: NutrientGapCardProps) {
+export function NutrientGapCard({
+    date
+}: {
+    date: Date
+}) {
+    const { user } = useAuth();
+
+    const { data: meals = [], isLoading: meals_loading } = useMeals(date);
+    const combined_meals: NutritionItem[] = meals.map(m => ({
+        id: m._id?.toString() || "",
+        name: m.food_item,
+        calories: m.calories,
+        protein: m.protein,
+        carbohydrates: m.carbohydrates,
+        sodium: m.sodium,
+        fat: m.fat,
+    }));
+
+    const guidelines = calculateDietaryGuidelines(user?.profile, user?.profile.goals);
+    const gaps: NutrientGap[] = analyzeNutrientGaps(combined_meals, guidelines);
+
     const score = calculateNutritionScore(gaps);
 
     // Sort gaps: deficient first, then borderline, surplus, optimal
@@ -21,7 +40,7 @@ export function NutrientGapCard({ gaps, className }: NutrientGapCardProps) {
     });
 
     return (
-        <Card className={cn("w-full", className)}>
+        <Card className="w-full">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div className="space-y-1 block">
                     <CardTitle>Diet Analysis</CardTitle>
@@ -32,8 +51,8 @@ export function NutrientGapCard({ gaps, className }: NutrientGapCardProps) {
                 <div className={cn(
                     "flex flex-col items-center justify-center rounded-full h-16 w-16 border-4 font-bold text-lg",
                     score >= 80 ? "border-green-500 text-green-600" :
-                    score >= 50 ? "border-yellow-500 text-yellow-600" :
-                    "border-destructive text-destructive"
+                        score >= 50 ? "border-yellow-500 text-yellow-600" :
+                            "border-destructive text-destructive"
                 )}>
                     {score}
                 </div>
@@ -43,11 +62,11 @@ export function NutrientGapCard({ gaps, className }: NutrientGapCardProps) {
                     {sortedGaps.map((gap) => {
                         const percentage = gap.target > 0 ? (gap.current / gap.target) * 100 : 100;
                         const clampedPercentage = Math.min(percentage, 100);
-                        
+
                         let statusColor = "text-green-500";
                         let indicatorColor = "bg-green-500";
                         let Icon = CheckCircle;
-                        
+
                         if (gap.status === "deficient") {
                             statusColor = "text-destructive";
                             indicatorColor = "bg-destructive";
