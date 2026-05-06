@@ -67,7 +67,7 @@ export function RecipeDialog<TValues extends Record<string, unknown>>({
             setRecipes([recipeSuggestions]);
             }
 
-setRecipeIndex(0);
+            setRecipeIndex(0);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
             const fallback = "Unable to generate recipe. Please try again.";
