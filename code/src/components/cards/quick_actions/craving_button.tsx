@@ -9,10 +9,14 @@ import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { CravingPromptValues } from "@/lib/zod_schemas/health_schema";
 import { ClientRecipes } from "@/lib/types/mongo_recipe_types";
+import { format } from "date-fns";
+import { useCreateCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
+import { meal_type } from "@/lib/enums";
 
 export default function CravingButton({ date }: { date: Date }) {
     const { user } = useAuth();
     const timezone = user?.profile?.timezone || "America/New_York";
+    const createCravingEvent = useCreateCravingEvent();
 
     const [dateInitialized, setDateInitialized] = React.useState(new Date());
     const [cravingOpen, setCravingOpen] = React.useState(false);
@@ -20,26 +24,24 @@ export default function CravingButton({ date }: { date: Date }) {
     const { data: daily_log, isLoading: loading_daily_log } = useDailyLog(date);
 
     const submitCraving = async (recipe: ClientRecipes, form: CravingPromptValues) => {
-        console.log(form);
-        // const formatted_date = format(date, "yyyy-MM-dd", { timeZone: tz(timezone) });
-        // const formatted_date = format(date, "yyyy-MM-dd", { in: tz(timezone), })
+        console.log(recipe);
+        const formatted_date = format(date, "yyyy-MM-dd", { in: tz(timezone), })
 
-        // const payload = {
-        //     date: formatted_date,
-        //     event: {
-        //         occurred_at: dateInitialized.toISOString(),
-        //         craving_type: value.craving_type,
-        //         intensity: value.craving_intensity,
-        //         trigger: value.craving_trigger,
-        //         suggested_actions: [
-        //             "Some snack 1",
-        //             "Some action 2",
-        //             "Some action 3",
-        //         ],
-        //         reasoning: "Some type of reasoning",
-        //     },
-        // };
-        // await createCraving.mutateAsync(payload);
+        const payload = {
+            date: formatted_date,
+            event: {
+                occurred_at: dateInitialized.toISOString(),
+                craving_prompt: form.craving_prompt,
+                suggested_actions: [
+                    `Make ${recipe.title} with only ${recipe.calories} calories!`,
+                ],
+                reasoning: "",
+            },
+        };
+
+        console.log(payload);
+
+        await createCravingEvent.mutateAsync(payload);
     }
 
     return <>
