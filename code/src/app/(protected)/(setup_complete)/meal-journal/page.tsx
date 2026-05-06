@@ -18,6 +18,7 @@ import MealCard from "@/components/cards/meal_card";
 
 import React, { use, useEffect, useState } from "react";
 import SearchFoodCard from "@/components/cards/search_food_card";
+import { CheckInCard } from "@/components/cards/check_in_card";
 
 export default function CalorieCalculatorPage() {
     const { user } = useAuth();
@@ -97,6 +98,7 @@ export default function CalorieCalculatorPage() {
                     weekStartsOn={0}
                     day_statuses={day_status_array}
                 />
+                <CheckInCard date={selected_date} />
                 <NutritionSummaryCard date={selected_date} />
                 <SearchFoodCard date={selected_date} />
                 {meal_type.entries.map(([label, value]) => (

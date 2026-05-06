@@ -54,24 +54,22 @@ export function CheckInCard({ date }: { date: Date }) {
             </CardHeader>
 
             <CardContent className="space-y-4">
-                {!daily_log && (
-                    <p className="text-sm text-muted-foreground">
-                        In order to enter meals for this day, you need to complete your daily check-in first.
-                    </p>
-                )}
-                <div className="flex flex-row justify-center w-full">
-                    {
-                        daily_log
-                            ?
-                            <div className="rounded-xl border border-border bg-muted p-4 w-full">
-                                <p className="text-sm font-medium text-foreground">Great job — your check-in is complete for today.</p>
-                            </div>
-                            :
-                            <Button onClick={() => setCheckInOpen(true)} disabled={loadingDailyLog}>
+                {!daily_log ? (
+                    <div className="rounded-xl border border-border bg-muted p-4 w-full">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="text-sm text-muted-foreground">
+                                In order to enter meals for this day, you need to complete your daily check-in first.
+                            </p>
+                            <Button onClick={() => setCheckInOpen(true)} disabled={loadingDailyLog} className="w-full sm:w-auto">
                                 {loadingDailyLog ? <><Spinner /><span>Loading</span></> : "Check In"}
                             </Button>
-                    }
-                </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="rounded-xl border border-border bg-muted p-4 w-full">
+                        <p className="text-sm text-muted-foreground">Great job — your check-in is complete for today.</p>
+                    </div>
+                )}
             </CardContent>
 
             <CheckInDialog open={checkInOpen} onOpenChange={setCheckInOpen} onSubmit={handleSubmit} />
