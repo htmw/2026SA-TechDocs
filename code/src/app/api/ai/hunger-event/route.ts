@@ -2,6 +2,7 @@ import { DailyLog } from "@/database/models/daily_log";
 import { Recipe } from "@/database/models/recipe";
 import { createDateValidator } from "@/lib/api/middleware";
 import { createApiRoute, createTypedApiRoute } from "@/lib/api/route";
+import { getEnv } from "@/lib/env";
 import { createErrorResponse, createSuccessResponse } from "@/lib/types/shared";
 import { normalizeDocument } from "@/lib/utils/database_utils";
 import { CravingEventSchema, CravingPromptSchema, HungerEventZodSchema } from "@/lib/zod_schemas/health_schema";
@@ -12,11 +13,8 @@ export const POST = createApiRoute(
     async ({ body }) => {
         const parsed = body as z.infer<typeof HungerEventZodSchema>;
 
-        // Call AI Backend
-        // 5 second delay for ai
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const aiResponse = await fetch("http://127.0.0.1:8000/recommend-hunger", {
+        const recommender_url = new URL("/recommend-hunger", getEnv().AI_RECOMMENDER_URL).href;
+        const aiResponse = await fetch(recommender_url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
