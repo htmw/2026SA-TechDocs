@@ -27,11 +27,20 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ClientCravingEvent, ClientHungerEvent } from "@/lib/types/mongo_daily_log_types";
 import { format } from "date-fns";
-import { craving_intensity, craving_triggers, craving_type, hunger_level } from "@/lib/enums";
+import { craving_intensity, craving_triggers, craving_type, hunger_level, MealType } from "@/lib/enums";
 import { useDeleteHungerEvent, useHungerEvents } from "@/lib/hooks/api-hooks/use-hunger-events";
 import { useCravingEvents, useDeleteCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
+import { useCreateMeal } from "@/lib/hooks/api-hooks/use-meals";
+import { useAuth } from "@/lib/hooks/useAuthProvider";
+import { tz } from "@date-fns/tz";
 
 type EventsCardProps<T> = {
     events: T[];
@@ -41,8 +50,10 @@ type EventsCardProps<T> = {
     empty_label: string;
     renderAccordionItem: (
         event: T,
-        onDelete?: (date: string, id: string) => void
+        onAdd?: (date: string, id: string, meal_type: MealType) => void,
+        onDelete?: (date: string, id: string) => void,
     ) => React.ReactNode;
+    onAdd?: (date: string, id: string, meal_type: MealType) => void;
     onDelete?: (date: string, id: string) => void;
 };
 
@@ -98,9 +109,10 @@ type EventAccordionItemProps = {
     icon: React.ReactNode;
     event_label: string;
     occurred_at: Date;
-    badge_content: React.ReactNode;
+    badge_content?: React.ReactNode;
     detail_items: Array<{ label: string; value: React.ReactNode }>;
     suggested_actions: string[];
+    onAdd?: (date: string, id: string, meal_type: MealType) => void;
     onDelete?: (date: string, id: string) => void;
 };
 
@@ -112,6 +124,7 @@ function EventAccordionItem({
     badge_content,
     detail_items,
     suggested_actions,
+    onAdd,
     onDelete,
 }: EventAccordionItemProps) {
     return (
@@ -133,16 +146,18 @@ function EventAccordionItem({
                         </div>
                     </div>
 
-                    <Badge variant="secondary">
-                        {badge_content}
-                    </Badge>
+                    {badge_content && (
+                        <Badge variant="secondary">
+                            {badge_content}
+                        </Badge>
+                    )}
                 </div>
             </AccordionTrigger>
 
             <AccordionContent className="px-4">
                 <Card className="rounded-2xl shadow-none">
                     <CardContent className="space-y-4 px-4">
-                        <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="grid gap-3">
                             {detail_items.map((item, idx) => (
                                 <EventDetailItem
                                     key={idx}
@@ -158,16 +173,31 @@ function EventAccordionItem({
                             <p className="text-sm font-medium">Suggested Actions</p>
                             <div className="flex flex-row justify-between items-center">
                                 <SuggestedActions actions={suggested_actions} />
-                                {onDelete && (
-                                    <div className="flex justify-end">
+                                <div className="flex justify-end gap-2 items-center">
+                                    {onAdd && (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button className="text-sm rounded-full" variant="secondary">
+                                                    Add meal
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => onAdd?.(format(occurred_at, "yyyy-MM-dd"), id, "breakfast")}>Breakfast</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => onAdd?.(format(occurred_at, "yyyy-MM-dd"), id, "lunch")}>Lunch</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => onAdd?.(format(occurred_at, "yyyy-MM-dd"), id, "dinner")}>Dinner</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => onAdd?.(format(occurred_at, "yyyy-MM-dd"), id, "snack")}>Snack</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    )}
+                                    {onDelete && (
                                         <Button
                                             className="text-sm text-red-600 bg-red-600/30 hover:bg-red-600/50 rounded-full"
                                             onClick={() => onDelete(format(occurred_at, "yyyy-MM-dd"), id)}
                                         >
                                             <Trash className="size-3" />
                                         </Button>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </CardContent>
@@ -184,6 +214,7 @@ function EventsCard<T>({
     icon,
     empty_label,
     renderAccordionItem,
+    onAdd,
     onDelete,
 }: EventsCardProps<T>) {
     return (
@@ -211,7 +242,7 @@ function EventsCard<T>({
                     <ScrollArea className={"pr-4"}>
                         <Accordion type="single" collapsible className="space-y-3 max-h-[500px]">
                             {events.map((event) =>
-                                renderAccordionItem(event, onDelete)
+                                renderAccordionItem(event, onAdd, onDelete)
                             )}
                         </Accordion>
                     </ScrollArea>
@@ -226,8 +257,40 @@ export function HungerEventsCard({
 }: {
     date: Date
 }) {
+    const { user } = useAuth();
+    const timezone = user?.profile?.timezone || "UTC";
+    const formatted_selected_date = format(date, "yyyy-MM-dd", { in: tz(timezone), });
+
     const { data: hunger_events = [], isLoading: loading_hunger } = useHungerEvents(date);
     const delete_hunger = useDeleteHungerEvent();
+
+    const { mutate: create_meal } = useCreateMeal();
+
+    const handleAddMeal = (date: string, id: string, meal_type: MealType) => {
+        const event = hunger_events.find(event => event._id === id);
+        if (!event) return; //throw error or something
+
+        const recipe = event.recipe;
+
+        create_meal({
+            date: formatted_selected_date,
+            meal: {
+                meal_type: meal_type,
+                food_item: recipe.title,
+                calories: recipe.calories,
+                protein: recipe.protein,
+                carbohydrates: 0,
+                fat: recipe.fat,
+                fiber: 0,
+                sugar: 0,
+                sodium: recipe.sodium,
+                cholesterol: 0,
+                water_intake: 0,
+                servings: 1,
+                logged_at: new Date().toISOString(),
+            }
+        });
+    }
 
     return (
         <EventsCard
@@ -236,23 +299,24 @@ export function HungerEventsCard({
             description="Logged hunger moments and recommended next steps."
             icon={<Zap className="size-5 text-muted-foreground" />}
             empty_label="No hunger events logged yet."
-            renderAccordionItem={(event, onDelete) => (
+            renderAccordionItem={(event, onAdd, onDelete) => (
                 <EventAccordionItem
                     key={event._id}
                     id={event._id}
                     icon={<Flame className="size-4 text-muted-foreground" />}
                     event_label="Hunger Event"
                     occurred_at={new Date(event.occurred_at)}
-                    badge_content={hunger_level.map[event.hunger_level]}
                     detail_items={[
                         { label: "Occurred At", value: new Date(event.occurred_at).toLocaleString() },
                         { label: "Hunger Level", value: hunger_level.map[event.hunger_level] },
                     ]}
                     suggested_actions={event.suggested_actions}
                     onDelete={onDelete}
+                    onAdd={onAdd}
                 />
             )}
             onDelete={(date, id) => { delete_hunger.mutate({ date, id }) }}
+            onAdd={handleAddMeal}
         />
     );
 }
@@ -262,8 +326,40 @@ export function CravingEventsCard({
 }: {
     date: Date
 }) {
+    const { user } = useAuth();
+    const timezone = user?.profile?.timezone || "UTC";
+    const formatted_selected_date = format(date, "yyyy-MM-dd", { in: tz(timezone), });
+
     const { data: craving_events = [], isLoading: loading_craving } = useCravingEvents(date);
     const delete_craving = useDeleteCravingEvent();
+
+    const { mutate: create_meal } = useCreateMeal();
+
+    const handleAddMeal = (date: string, id: string, meal_type: MealType) => {
+        const event = craving_events.find(event => event._id === id);
+        if (!event) return; //throw error or something
+
+        const recipe = event.recipe;
+
+        create_meal({
+            date: formatted_selected_date,
+            meal: {
+                meal_type: meal_type,
+                food_item: recipe.title,
+                calories: recipe.calories,
+                protein: recipe.protein,
+                carbohydrates: 0,
+                fat: recipe.fat,
+                fiber: 0,
+                sugar: 0,
+                sodium: recipe.sodium,
+                cholesterol: 0,
+                water_intake: 0,
+                servings: 1,
+                logged_at: new Date().toISOString(),
+            }
+        });
+    }
 
     return (
         <EventsCard
@@ -272,25 +368,24 @@ export function CravingEventsCard({
             description="Logged craving moments and recommended next steps."
             icon={<Zap className="size-5 text-muted-foreground" />}
             empty_label="No craving events logged yet."
-            renderAccordionItem={(event, onDelete) => (
+            renderAccordionItem={(event, onAdd, onDelete) => (
                 <EventAccordionItem
                     key={event._id}
                     id={event._id}
                     icon={<Siren className="h-4 w-4 text-muted-foreground" />}
                     event_label="Craving Event"
                     occurred_at={new Date(event.occurred_at)}
-                    badge_content={craving_intensity.map[event.intensity]}
                     detail_items={[
                         { label: "Occurred At", value: new Date(event.occurred_at).toLocaleString() },
-                        { label: "Craving Type", value: craving_type.map[event.craving_type] },
-                        { label: "Intensity", value: craving_intensity.map[event.intensity] },
-                        { label: "Trigger", value: craving_triggers.map[event.trigger] },
+                        { label: "Craving Prompt", value: event.craving_prompt },
                     ]}
                     suggested_actions={event.suggested_actions}
                     onDelete={onDelete}
+                    onAdd={onAdd}
                 />
             )}
             onDelete={(date, id) => { delete_craving.mutate({ date, id }) }}
+            onAdd={handleAddMeal}
         />
     );
 }

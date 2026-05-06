@@ -2,7 +2,7 @@ import { ToPrimitive } from "@/lib/types/mongo_primitive_types";
 import { CravingIntensity, CravingTrigger, CravingType, EnergyRating, FoodType, HungerLevel, MealType, StressLevel } from "@/lib/enums";
 import { Types } from "mongoose";
 import { IFood } from "./mongo_food_types";
-import { IRecipe } from "@/lib/types/mongo_weekly_diet_plan";
+import { IRecipes } from "./mongo_recipe_types";
 
 export interface IDailyLog {
     _id: Types.ObjectId;
@@ -39,6 +39,7 @@ export interface IHungerEvent {
     _id: Types.ObjectId;
     occurred_at: Date;
     hunger_level: HungerLevel;
+    recipe: IRecipes;
     suggested_actions: string[];
     reasoning: string;
 }
@@ -46,9 +47,8 @@ export interface IHungerEvent {
 export interface ICravingEvent {
     _id: Types.ObjectId;
     occurred_at: Date;
-    craving_type: CravingType;
-    intensity: CravingIntensity;
-    trigger: CravingTrigger;
+    craving_prompt: string;
+    recipe: IRecipes;
     suggested_actions: string[];
     reasoning: string;
 }

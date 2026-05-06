@@ -75,7 +75,7 @@ export function GenericMealsCard({
                                     <ItemDescription className="mt-2 flex flex-wrap gap-2">
                                         <Badge variant="outline">{meal.calories} cal</Badge>
                                         <Badge variant="outline">{meal.protein}g pro</Badge>
-                                        {meal.carbohydrates && <Badge variant="outline">{meal.carbohydrates}g carb</Badge>}
+                                        {meal.carbohydrates ? <Badge variant="outline">{meal.carbohydrates}g carb</Badge> : null}
                                         <Badge variant="outline">{meal.fat}g fat</Badge>
                                     </ItemDescription>
                                 </ItemContent>

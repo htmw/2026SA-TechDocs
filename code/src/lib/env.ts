@@ -5,6 +5,8 @@ export interface Env {
 
     APP_NAME: string;
 
+    AI_RECOMMENDER_URL: string;
+
     OPENAI_API_KEY: string;
 }
 
@@ -26,10 +28,9 @@ export function getEnv(): Env {
 
     const env: Env = {
         NODE_ENV: (process.env.NODE_ENV as Env["NODE_ENV"]) ?? "development",
-
         MONGODB_URL: requireKey("MONGODB_URL"),
-
         APP_NAME: requireKey("APP_NAME"),
+        AI_RECOMMENDER_URL: requireKey("AI_RECOMMENDER_URL"),
         OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
     };
 

@@ -8,7 +8,7 @@ export const RecipeZodSchema = z.object({
     fat: z.number().nonnegative("Fat must be a non-negative number"),
     protein: z.number().nonnegative("Protein must be a non-negative number"),
     sodium: z.number().nonnegative("Sodium must be a non-negative number"),
-    name: z.string(),
+    title: z.string(),
 });
 
 export type Recipe = z.infer<typeof RecipeZodSchema>;
