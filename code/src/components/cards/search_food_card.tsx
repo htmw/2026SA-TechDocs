@@ -1,16 +1,42 @@
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
-import { Card } from "../ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
+import { ScrollArea } from "../ui/scroll-area";
 import { useFoods } from "@/lib/hooks/api-hooks/use-food";
 import { useRecipes } from "@/lib/hooks/api-hooks/use-recipe";
 import { useCreateMeal } from "@/lib/hooks/api-hooks/use-meals";
 import { ClientFood } from "@/lib/types/mongo_food_types";
 import { ClientRecipes } from "@/lib/types/mongo_recipe_types";
-import { MealType } from "@/lib/enums";
+import { meal_type, MealType } from "@/lib/enums";
 import { useAuth } from "@/lib/hooks/useAuthProvider";
 import { tz } from "@date-fns/tz";
 import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
+
+export function FoodItem<T extends ClientFood | ClientRecipes>({
+    item, handleSelection
+}: {
+    item: T;
+    handleSelection: (item: T) => void
+}) {
+    const title = "food_item" in item ? item.food_item : item.title;
+    const carbohydrates = "carbohydrates" in item ? item.carbohydrates : 0;
+
+    return <Button
+        key={item._id}
+        variant="outline"
+        className="w-full justify-start"
+        onClick={() => handleSelection(item)}
+    >
+        {title}
+        <span className="text-muted-foreground">({item.calories} cal)</span>
+        <span className="text-orange-300">{item.protein}g protein</span>
+        <span className="text-green-300">{carbohydrates}g carbs</span>
+        <span className="text-yellow-300">{item.fat}g fat</span>
+    </Button>
+}
+
 
 export default function SearchFoodCard({ date }: { date: Date }) {
     const { user } = useAuth();
@@ -18,8 +44,7 @@ export default function SearchFoodCard({ date }: { date: Date }) {
 
     const [search_input, setSearchInput] = useState("");
     const [debounced_search, setDebouncedSearch] = useState("");
-    const [search, setSearch] = useState(false);
-    const [add, setAdd] = useState("");
+    const [add, setAdd] = useState<MealType>("breakfast");
 
     const formatted_selected_date = format(date, "yyyy-MM-dd", { in: tz(timezone), });
 
@@ -44,14 +69,10 @@ export default function SearchFoodCard({ date }: { date: Date }) {
     const recipeList = recipes?.recipes ?? [];
 
     function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
-        setSearch(true);
         setSearchInput(e.target.value);
     }
 
-
     function handleFoodSelect(food: ClientFood) {
-        const carbsValue = food.carbohydrates ?? 0;
-
         create_meal.mutate({
             date: formatted_selected_date,
             meal: {
@@ -59,7 +80,7 @@ export default function SearchFoodCard({ date }: { date: Date }) {
                 food_item: food.food_item,
                 calories: food.calories,
                 protein: food.protein,
-                carbohydrates: carbsValue,
+                carbohydrates: food.carbohydrates,
                 fat: food.fat,
                 fiber: food.fiber,
                 sugar: food.sugar,
@@ -98,103 +119,59 @@ export default function SearchFoodCard({ date }: { date: Date }) {
     }
 
     function reset() {
-        setSearch(false);
         setSearchInput("");
         setDebouncedSearch("");
-        setAdd("");
     }
+
     return (
-        <>
-            <Card className="p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
-                    <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={() => setAdd("breakfast")}
-                    >
-                        Add Breakfast
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={() => setAdd("lunch")}
-                    >
-                        Add Lunch
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={() => setAdd("dinner")}
-                    >
-                        Add Dinner
-                    </Button>
-                    <Button
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={() => setAdd("snack")}
-                    >
-                        Add Snack
-                    </Button>
+        <Card>
+            <CardHeader>
+                <CardTitle>Search Foods & Recipes</CardTitle>
+                <CardDescription>Find and add foods or recipes to your daily log.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+                <h1 className="text-md font-semibold">Meal Type</h1>
+                <div className="flex flex-col lg:flex-row gap-2 justify-start mb-3">
+                    {meal_type.entries.map(([value, label]) => (
+                        <Button
+                            key={value}
+                            variant={add === value ? "secondary" : "outline"}
+                            size="sm"
+                            className="min-w-[8rem]"
+                            onClick={() => setAdd(value)}
+                        >
+                            {label}
+                        </Button>
+                    ))}
                 </div>
 
-                {add !== "" && (
-                    <Input
-                        className="w-lg mt-2 sm:w-lg mx-auto block"
-                        placeholder={`Add a ${add} item to your daily log. Try searching for 'steak' or 'salad'...`}
-                        value={search_input}
-                        onChange={handleSearch}
-                    />
-                )}
+                <Separator />
+                <h1 className="text-md font-semibold">Search</h1>
+                <Input
+                    className="mx-auto mb-3"
+                    placeholder={`Try searching for 'steak' or 'salad'...`}
+                    value={search_input}
+                    onChange={handleSearch}
+                />
+                <Separator />
 
-            </Card>
-            {search && (
-                <>
-                    {foodList.length > 0 && (
-                        <>
-                            <p className="text-xs px-2 mt-2">Foods</p>
-
-                            {foodList.map((food) => (
-                                <Button key={food._id} variant="outline" className="w-full justify-start" onClick={() =>
-                                        handleFoodSelect(food)}
-                                >
-                                    {food.food_item}
-                                    <span className="text-muted-foreground">({food.calories} cal)</span>
-                                    <span className="text-orange-300">{food.protein}g protein</span>
-                                    <span className="text-green-300">{food.carbohydrates ?? 0}g carbs</span>
-                                    <span className="text-yellow-300">{food.fat}g fat</span>
-                                </Button>
-                            ))}
-                        </>
-                    )}
-
-                    {foodList.length === 0 && recipeList.length > 0 && (
-                        <>
-                            <p className="text-xs px-2 mt-2">Recipes</p>
-
-                            {recipeList.map((recipe) => (
-                                <Button
-                                    key={recipe._id}
-                                    variant="outline"
-                                    className="w-full justify-start"
-                                    onClick={() => handleRecipeSelect(recipe)}
-                                >
-                                    {recipe.title}
-                                    <span className="text-muted-foreground">({recipe.calories} cal)</span>
-                                    <span className="text-orange-300">{recipe.protein}g protein</span>
-                                    <span className="text-green-300">0g carbs</span>
-                                    <span className="text-yellow-300">{recipe.fat}g fat</span>
-                                </Button>
-                            ))}
-                        </>
-                    )}
-
+                <h1 className="text-md font-semibold">Results</h1>
+                <ScrollArea className="h-[18rem] pr-3">
                     {foodList.length === 0 && recipeList.length === 0 && (
-                        <p className="text-sm px-2">No food or recipe results found</p>
+                        <div className="text-center text-muted-foreground mt-4">
+                            No results found. Try adjusting your search?
+                        </div>
                     )}
-                </>
-            )}
-        </>
+                    <div className="flex flex-col gap-2">
+                        {foodList.map((food) => (
+                            <FoodItem key={food._id} item={food} handleSelection={handleFoodSelect} />
+                        ))}
+                        {recipeList.map((recipe) => (
+                            <FoodItem key={recipe._id} item={recipe} handleSelection={handleRecipeSelect} />
+                        ))}
+                    </div>
+                </ScrollArea>
+            </CardContent>
+        </Card>
     )
 }

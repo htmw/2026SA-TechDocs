@@ -2,56 +2,15 @@
 
 import { NutritionSummaryCard } from "@/components/cards/macro_card";
 import { SingleWeekPicker } from "@/components/cards/single_week_picker";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { meal_type, MealType } from "@/lib/enums";
 import { useDailyLogStatus } from "@/lib/hooks/api-hooks/use-daily-log";
-import { useFoods } from "@/lib/hooks/api-hooks/use-food";
-import { useCreateMeal, useDeleteMeal, useMeals } from "@/lib/hooks/api-hooks/use-meals";
-import { useAuth } from "@/lib/hooks/useAuthProvider";
-import { IFood } from "@/lib/types/mongo_food_types";
-import { ToPrimitive } from "@/lib/types/mongo_primitive_types";
-import { tz } from "@date-fns/tz";
-import { endOfWeek, format, startOfWeek } from "date-fns";
-import MealCard from "@/components/cards/meal_card";
+import { endOfWeek, startOfWeek } from "date-fns";
 
-import React, { use, useEffect, useState } from "react";
+import React from "react";
 import SearchFoodCard from "@/components/cards/search_food_card";
 import { CheckInCard } from "@/components/cards/check_in_card";
+import JournalMealCard from "@/components/cards/journal_meal_cards/journal_meal_card";
 
 export default function CalorieCalculatorPage() {
-    const { user } = useAuth();
-    const timezone = user?.profile?.timezone || "UTC";
-
-    // API hook to create a meal
-    /**
-     * Example request body
-     * {
-     *   "date": format(selected_date, "yyyy-MM-dd", { in: tz(timezone), }),
-     *   "meal": {
-     *          "meal_type": "breakfast",
-     *          "food_item": "Scrambled Eggs",
-     *          "calories": 180,
-     *          "protein": 12,
-     *          "carbohydrates": 2,
-     *          "fat": 14,
-     *          "fiber": 0,
-     *          "sugar": 1,
-     *          "sodium": 180,
-     *          "cholesterol": 370,
-     *          "water_intake": 250,
-     *          "serving_quantity": 2,
-     *          "servings": 3,
-     *          "logged_at": "2026-03-28T21:40:24.724Z"
-     *   }
-     * }
-     * 
-     * create_meal.mutate(body);
-     * NOTE: User needs to checkin before they can log meals
-     * 
-     */
-
     // States for week picker
     const [selected_date, setSelectedDate] = React.useState(new Date());
     const [week_start, setWeekStart] = React.useState(startOfWeek(selected_date, { weekStartsOn: 0 }));
@@ -65,26 +24,6 @@ export default function CalorieCalculatorPage() {
     });
     const day_status_array = day_status_data.map(status => status.date);
 
-    const { data: meals = [], isLoading: meals_loading } = useMeals(selected_date);
-
-    /**
-     * Usage Example:
-     * delete_meal.mutate({ date, meal_id }, { 
-     *      onSuccess: () => console.log("Meal deleted successfully"), // refresh meals or remove the meal from local state
-     *      onError: (err) => console.error("Failed to delete meal", err) 
-     * })
-     */
-    const delete_meal = useDeleteMeal();
-
-    const formatted_selected_date = format(selected_date, "yyyy-MM-dd", { in: tz(timezone), });
-
-    const mealsByType = {
-        breakfast: meals.filter(m => m.meal_type === 'breakfast'),
-        lunch: meals.filter(m => m.meal_type === 'lunch'),
-        dinner: meals.filter(m => m.meal_type === 'dinner'),
-        snack: meals.filter(m => m.meal_type === 'snack'),
-    };
-    
     return (
         <>
             <div className="gap-5 p-6 grid grid-cols-1">
@@ -101,21 +40,7 @@ export default function CalorieCalculatorPage() {
                 <CheckInCard date={selected_date} />
                 <NutritionSummaryCard date={selected_date} />
                 <SearchFoodCard date={selected_date} />
-                {meal_type.entries.map(([label, value]) => (
-                    <div key={label}>
-                        <h3 className="capitalize 2xl:text-xl font-bold">{value}</h3>
-                        {mealsByType[label].length === 0
-                            ? <p className="text-muted-foreground text-sm">Nothing logged yet.</p>
-                            : mealsByType[label].map(meal => (
-                                <MealCard
-                                    key={meal._id}
-                                    meal={meal}
-                                    onDelete={() => delete_meal.mutate({ date: formatted_selected_date, id: meal._id })}
-                                />
-                            ))
-                        }
-                    </div>
-                ))}
+                <JournalMealCard date={selected_date} />
             </div>
         </>
     );
