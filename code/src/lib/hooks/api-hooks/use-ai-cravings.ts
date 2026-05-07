@@ -5,16 +5,17 @@ import { ClientRecipes } from "@/lib/types/mongo_recipe_types";
 
 interface AiCravingResponse {
     recipe: ClientRecipes;
+    recipes?: ClientRecipes[];
 }
 
 export function useAiCravings() {
-    return useMutation<ClientRecipes, Error, CravingPromptValues, unknown>({
+    return useMutation<ClientRecipes[], Error, CravingPromptValues, unknown>({
         mutationFn: async (payload) => {
             const response = await callApi<AiCravingResponse>(`/api/ai/craving-event`, {
                 method: "POST",
                 body: JSON.stringify(payload),
             });
-            return response.recipe;
+            return response.recipes ?? [response.recipe];
         },
     });
 }

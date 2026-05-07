@@ -1,4 +1,4 @@
-import { Calculator, Calendar, LayoutDashboard, Settings, LucideIcon, CircleUser, MessageCircle, Flag } from "lucide-react";
+import { ClipboardList, Calendar, LayoutDashboard, LucideIcon, CircleUser, MessageCircle, Flag, Utensils, Candy, Settings } from "lucide-react";
 
 export type NavItem = { title: string; url: string; icon: LucideIcon };
 
@@ -9,14 +9,24 @@ export const navMainItems: NavItem[] = [
         icon: LayoutDashboard,
     },
     {
-        title: "Calorie Calculator",
-        url: "/calorie-calculator",
-        icon: Calculator,
+        title: "Meal Journal",
+        url: "/meal-journal",
+        icon: ClipboardList,
     },
     {
         title: "Daily Log",
         url: "/daily-log",
         icon: Calendar,
+    },
+    {
+        title: "I'm Hungry",
+        url: "/hunger-check",
+        icon: Utensils,
+    },
+    {
+        title: "I'm Craving",
+        url: "/craving-check",
+        icon: Candy,
     },
     {
         title: "Goals",
@@ -32,15 +42,16 @@ export const navMainItems: NavItem[] = [
 
 export const navFooterItems: NavItem[] = [
     {
-        title: "Profile",
-        url: "/profile",
-        icon: CircleUser,
-    },
-    {
         title: "Settings",
         url: "/settings",
         icon: Settings,
     },
+    {
+        title: "Profile",
+        url: "/profile",
+        icon: CircleUser,
+    },
+
 ];
 
 export const pageTitleMap: Record<string, string> = [...navMainItems, ...navFooterItems].reduce(

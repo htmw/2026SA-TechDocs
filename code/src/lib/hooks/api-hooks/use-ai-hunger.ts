@@ -5,18 +5,19 @@ import { HungerEventValues } from "@/lib/zod_schemas/health_schema";
 
 interface AiHungerResponse {
     recipe: ClientRecipes;
+    recipes?: ClientRecipes[];
 }
 
 type AiHungerRequest = Pick<HungerEventValues, "hunger_level">;
 
 export function useAiHunger() {
-    return useMutation<ClientRecipes, Error, AiHungerRequest, unknown>({
+    return useMutation<ClientRecipes[], Error, AiHungerRequest, unknown>({
         mutationFn: async (payload) => {
             const response = await callApi<AiHungerResponse>(`/api/ai/hunger-event`, {
                 method: "POST",
                 body: JSON.stringify(payload),
             });
-            return response.recipe;
+            return response.recipes ?? [response.recipe];
         },
     });
 }

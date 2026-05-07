@@ -1,7 +1,61 @@
 "use client"
 
 import { fitness_level, hobby_options, occupation_options, diet_restrictions, medical_history_options } from "@/lib/enums"
+import Link from "next/link"
 import { useState, useEffect } from "react"
+
+type GoalValue = "lose" | "maintain" | "gain" | "energy" | ""
+
+function GoalSummary({ goal, bmi }: { goal: GoalValue, bmi: string }) {
+    // Shows saved goal name.
+    function getGoalLabel() {
+        if (goal === "lose") return "Lose Weight"
+        if (goal === "maintain") return "Maintain Weight"
+        if (goal === "gain") return "Build Muscle"
+        if (goal === "energy") return "Improve Energy"
+
+        return "--"
+    }
+
+    // Shows saved goal focus.
+    function getGoalFocus() {
+        if (goal === "lose") return "Calorie deficit"
+        if (goal === "gain") return "Calorie surplus"
+        if (goal === "maintain") return "Balanced intake"
+        if (goal === "energy") return "Energy support"
+
+        return "No goal set yet"
+    }
+
+    return (
+        <div>
+            <h3 className="mb-3 text-lg font-bold">Your Goal Summary</h3>
+
+            <div className="rounded-xl border p-4">
+                <p className="text-sm text-gray-600">
+                    Goal: {getGoalLabel()}
+                </p>
+
+                <p className="mt-2 text-sm text-gray-600">
+                    Focus: {getGoalFocus()}
+                </p>
+
+                {bmi && (
+                    <p className="mt-2 text-sm text-gray-600">
+                        BMI: {bmi}
+                    </p>
+                )}
+
+                <Link
+                    className="mt-4 inline-flex w-full justify-center rounded-lg border px-4 py-2 text-sm"
+                    href="/goals"
+                >
+                    Edit Goal
+                </Link>
+            </div>
+        </div>
+    )
+}
 
 export default function ProfilePage() {
     // stores all profile form values
@@ -42,6 +96,7 @@ export default function ProfilePage() {
     const [energyScore, setEnergyScore] = useState(0)
     const [errorMessage, setErrorMessage] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
+    const [goal, setGoal] = useState<GoalValue>("")
 
     // loads saved profile data when the page opens
     useEffect(() => {
@@ -59,6 +114,10 @@ export default function ProfilePage() {
                     const profile = data.data.user.profile || {};
                     const fitnessRaw = profile.fitness_level ?? ""
                     const finalFitness = fitnessRaw
+
+                    // gets saved goal from profile data
+                    const savedGoals = profile.goals ?? []
+                    setGoal(savedGoals[0] ?? "")
 
                     setFormData({
                         name: data.data.user.name ?? "",
@@ -183,6 +242,7 @@ export default function ProfilePage() {
                     occupation: formData.occupation,
                     fitness_level: formData.fitnessLevel,
                     hobbies: formData.hobbies,
+                    goals: goal ? [goal] : [],
                     avg_calories: formData.averageCalories,
                     current_energy: formData.currentEnergyLevel,
                     gender: formData.gender,
@@ -554,14 +614,7 @@ export default function ProfilePage() {
                             </p>
                         </div>
 
-                        <div className="rounded-xl border p-4">
-                            <p className="text-sm text-gray-600">Demo Notes</p>
-                            <p className="mt-2 text-sm text-gray-700">
-                                This is a starter skeleton for the presentation. It shows the
-                                profile inputs, calculated BMI, and a simple energy meter that
-                                can later be replaced with full AI logic.
-                            </p>
-                        </div>
+                        <GoalSummary goal={goal} bmi={bmi} />
                     </div>
                 </div>
             </div>

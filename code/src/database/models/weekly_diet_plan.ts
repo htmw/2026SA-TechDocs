@@ -32,19 +32,15 @@ export const WeeklyDietPlanSchema = new Schema<IWeeklyDietPlan, WeeklyDietPlanMo
                 },
                 breakfast: {
                     recipe: { type: String, required: true },
-                    vitamins: { type: String, required: false },
                 },
                 lunch: {
                     recipe: { type: String, required: true },
-                    vitamins: { type: String, required: false },
                 },
                 dinner: {
                     recipe: { type: String, required: true },
-                    vitamins: { type: String, required: false },
                 },
                 snacks: {
                     recipe: { type: String, required: true },
-                    vitamins: { type: String, required: false },
                 },
             },
         ],
