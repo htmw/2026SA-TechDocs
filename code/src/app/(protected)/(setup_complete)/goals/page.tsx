@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { calculateGoals } from "@/services/goal-calculation-service"
 import { useAuth } from "@/lib/hooks/useAuthProvider"
+import { calculateGoals } from "@/services/goal-calculation-service"
+import { useEffect, useState } from "react"
 
 type Profile = {
     height: number
@@ -69,13 +69,6 @@ export default function GoalsPage() {
             : `You need to lose ${Math.abs(diff)} lbs`
     }
 
-<<<<<<< HEAD
-    const { user } = useAuth()
-    // saves the selected goal on the page
-    const handleSave = () => {
-        const calc = calculateGoals(user?.profile, goal)
-        console.log("CALCULATED GOALS:", calc)
-=======
     // Shows saved goal name.
     const getGoalLabel = () => {
         if (goal === "lose") return "Lose Weight"
@@ -93,10 +86,9 @@ export default function GoalsPage() {
 
         return "Balanced intake"
     }
-
+    const { user } = useAuth()
     // Saves selected goal to profile.
     const handleSave = async () => {
->>>>>>> master
         if (!goal) return
 
         try {
@@ -126,7 +118,8 @@ export default function GoalsPage() {
                 }
                 : previousProfile
             )
-
+            const calc = calculateGoals(user?.profile, goal)
+            console.log("CALCULATED GOALS:", calc)
             setSaved(true)
         } catch (error) {
             console.error("Failed to save goal", error)

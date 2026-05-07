@@ -43,7 +43,7 @@ export async function calculateGoals(userProfile: IUserProfile | undefined, goal
     const tdee = bmr * multiplier;
 
     //step 4: account for lose weight/gain muscle
-    var calorieIntake = tdee; // default to maintain weight
+    let calorieIntake = tdee; // default to maintain weight
 
     switch (goal) {
         case 'lose':
@@ -67,6 +67,11 @@ export async function calculateGoals(userProfile: IUserProfile | undefined, goal
 
     //TODO: step 6: account for calories user had throughout week
     
+    //setp 7: return, include minimums
+    if (calorieIntake < 1200) {
+        calorieIntake = 1200;
+    }
+
     return {
     calorieIntake: Math.round(calorieIntake),
     proteinIntake: proteinIntake,
