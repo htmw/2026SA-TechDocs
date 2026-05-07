@@ -1,6 +1,6 @@
 "use client";
 
-import { NutrientGap, analyzeNutrientGaps, calculateDietaryGuidelines, calculateNutritionScore } from "@/lib/utils/nutrition_utils";
+import { NutrientGap, NutrientGuidelines, analyzeNutrientGaps, calculateDietaryGuidelines, calculateNutritionScore } from "@/lib/utils/nutrition_utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, CheckCircle, Activity, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
@@ -8,16 +8,22 @@ import { Progress } from "@/components/ui/progress";
 import { useMeals } from "@/lib/hooks/api-hooks/use-meals";
 import { NutritionItem } from "@/lib/zod_schemas/nutrition_schema";
 import { useAuth } from "@/lib/hooks/useAuthProvider";
+import { useEffect, useState } from "react";
 
 
-export function NutrientGapCard({
-    date
-}: {
-    date: Date
-}) {
+export function NutrientGapCard({ date }: { date: Date }) {
     const { user } = useAuth();
-
     const { data: meals = [], isLoading: meals_loading } = useMeals(date);
+    const [guidelines, setGuidelines] = useState<NutrientGuidelines | null>(null);
+
+    useEffect(() => {
+        const fetch = async () => {
+            const result = await calculateDietaryGuidelines(user?.profile, user?.profile?.goals);
+            setGuidelines(result);
+        };
+        if (user?.profile) fetch();
+    }, [user]);
+
     const combined_meals: NutritionItem[] = meals.map(m => ({
         id: m._id?.toString() || "",
         name: m.food_item,
@@ -28,16 +34,16 @@ export function NutrientGapCard({
         fat: m.fat,
     }));
 
-    const guidelines = calculateDietaryGuidelines(user?.profile, user?.profile.goals);
-    const gaps: NutrientGap[] = analyzeNutrientGaps(combined_meals, guidelines);
+    if (!guidelines) return null;
 
+    const gaps: NutrientGap[] = analyzeNutrientGaps(combined_meals, guidelines);
     const score = calculateNutritionScore(gaps);
 
-    // Sort gaps: deficient first, then borderline, surplus, optimal
     const sortedGaps = [...gaps].sort((a, b) => {
         const priority = { deficient: 1, borderline: 2, surplus: 3, optimal: 4 };
         return priority[a.status] - priority[b.status];
     });
+
 
     return (
         <Card className="w-full">

@@ -10,10 +10,11 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { ChartConfig, ChartContainer } from "@/components/ui/chart";
-import { calculateDietaryGuidelines } from "@/lib/utils/nutrition_utils";
+import { calculateDietaryGuidelines, NutrientGuidelines } from "@/lib/utils/nutrition_utils";
 import { useAuth } from "@/lib/hooks/useAuthProvider";
 import { useMeals } from "@/lib/hooks/api-hooks/use-meals";
 import { NutritionItem } from "@/lib/zod_schemas/nutrition_schema";
+import { useEffect, useState } from "react";
 
 type MacroRadialProps = {
     label: string;
@@ -121,19 +122,24 @@ function MacroRadial({
     );
 }
 
-export function NutritionSummaryCard({
-    date
-}: {
-    date: Date
-}) {
+export function NutritionSummaryCard({ date }: { date: Date }) {
     const { user } = useAuth();
-
     const { data: meals = [], isLoading: meals_loading } = useMeals(date);
+    const [guidelines, setGuidelines] = useState<NutrientGuidelines | null>(null);
+
+    useEffect(() => {
+        const fetchGuidelines = async () => {
+            const result = await calculateDietaryGuidelines(user?.profile, user?.profile?.goals);
+            setGuidelines(result);
+        };
+        if (user?.profile) fetchGuidelines();
+    }, [user]);
+
     const total_calories = meals.reduce((total, meal) => total + meal.calories, 0);
     const total_protein = meals.reduce((total, meal) => total + meal.protein, 0);
     const total_fat = meals.reduce((total, meal) => total + meal.fat, 0);
 
-    const guidelines = calculateDietaryGuidelines(user?.profile, user?.profile.goals);
+    if (!guidelines) return null; // or a skeleton/loader
 
     return (
         <Card className="w-full">

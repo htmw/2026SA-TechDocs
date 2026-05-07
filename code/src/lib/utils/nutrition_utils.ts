@@ -1,3 +1,4 @@
+import { calculateGoals } from "@/services/goal-calculation-service";
 import { NutritionItem } from "../zod_schemas/nutrition_schema";
 
 export type NutrientGuidelines = {
@@ -19,8 +20,9 @@ export type NutrientGap = {
 };
 
 // Simplistic guideline generation based on generic goals
-export function calculateDietaryGuidelines(profile?: any, goals?: string[]): NutrientGuidelines {
+export async function calculateDietaryGuidelines(profile?: any, goals?: string[]): Promise<NutrientGuidelines> {
     // defaults
+    /*
     let calories = 2000;
     if (profile?.gender === "male") calories = 2500;
     
@@ -34,6 +36,15 @@ export function calculateDietaryGuidelines(profile?: any, goals?: string[]): Nut
         fat: Math.round((calories * 0.25) / 9), // 25% from fat
         carbs: Math.round((calories * 0.45) / 4), // 45% from carbs
     };
+    */
+    const targets = await calculateGoals(profile, 'lose');
+    const calories = targets.calorieIntake
+    return {
+        calories,
+        protein: targets.proteinIntake,
+        fat: targets.fatIntake,
+        carbs: targets.carbohydrateIntake
+    }
 }
 
 export function analyzeNutrientGaps(meals: NutritionItem[], guidelines: NutrientGuidelines): NutrientGap[] {
