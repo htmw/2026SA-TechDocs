@@ -1,7 +1,8 @@
 "use client"
 
+import { GoalsCard } from "@/components/cards/goals_card"
 import { useAuth } from "@/lib/hooks/useAuthProvider"
-import { calculateGoals } from "@/services/goal-calculation-service"
+import { calculateGoals, UserGoals } from "@/services/goal-calculation-service"
 import { useEffect, useState } from "react"
 
 type Profile = {
@@ -18,6 +19,7 @@ export default function GoalsPage() {
     const [timeline, setTimeline] = useState("")
     const [saved, setSaved] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
+    const [calc, setCalc] = useState<UserGoals | null>(null);
 
     // Stores saved profile data.
     const [profile, setProfile] = useState<Profile | null>(null)
@@ -118,8 +120,8 @@ export default function GoalsPage() {
                 }
                 : previousProfile
             )
-            const calc = calculateGoals(user?.profile, goal)
-            console.log("CALCULATED GOALS:", calc)
+            const calc = await calculateGoals(user?.profile, goal)
+            setCalc(calc)
             setSaved(true)
         } catch (error) {
             console.error("Failed to save goal", error)
@@ -277,7 +279,8 @@ export default function GoalsPage() {
                     {errorMessage}
                 </p>
             )}
-
+            {saved && 
+            <GoalsCard goals={calc} goal={goal} /> }
         </main>
     )
 }
