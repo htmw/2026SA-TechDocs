@@ -2,6 +2,7 @@ import { getCurrentSession } from "@/app/actions";
 import { AppSidebar } from "@/components/dashboard/app_sidebar";
 import { SiteHeader } from "@/components/dashboard/sidebar_header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import NotificationPrompt from "@/components/notifications/notification_prompt";
 import { redirect } from "next/navigation";
 
 export default async function ProtectedLayout({
@@ -28,6 +29,7 @@ export default async function ProtectedLayout({
             <AppSidebar variant="inset" />
             <SidebarInset>
                 <SiteHeader />
+                <NotificationPrompt />
                 {children}
             </SidebarInset>
         </SidebarProvider>

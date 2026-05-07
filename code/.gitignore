@@ -46,3 +46,7 @@ docker-compose.yml
 
 # visual studio
 .vs/
+
+#Python Cache
+__pycache__/
+*.pyc

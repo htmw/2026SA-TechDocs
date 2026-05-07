@@ -2,6 +2,7 @@ import { DailyLog } from "@/database/models/daily_log";
 import { Recipe } from "@/database/models/recipe";
 import { createDateValidator } from "@/lib/api/middleware";
 import { createApiRoute, createTypedApiRoute } from "@/lib/api/route";
+import { getEnv } from "@/lib/env";
 import { createErrorResponse, createSuccessResponse } from "@/lib/types/shared";
 import { normalizeDocument } from "@/lib/utils/database_utils";
 import { CravingEventSchema, CravingPromptSchema, HungerEventZodSchema } from "@/lib/zod_schemas/health_schema";
@@ -12,18 +13,42 @@ export const POST = createApiRoute(
     async ({ body }) => {
         const parsed = body as z.infer<typeof HungerEventZodSchema>;
 
-        // Call AI Backend
-        // 5 second delay for ai
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        
-        const recipes = await Recipe.search({
-            title_contains: "ham persillade with mustard potato salad and mashed peas",
-            limit: "1"
+        const recommender_url = new URL("/recommend-hunger", getEnv().AI_RECOMMENDER_URL).href;
+        const aiResponse = await fetch(recommender_url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                hungerLevel: parsed.hunger_level,
+                topN: 5,
+            }),
         });
 
-        const payload = { recipe: recipes.recipes[0] };
+        if (!aiResponse.ok) {
+            return NextResponse.json(
+                createErrorResponse("AI_BACKEND_ERROR", "AI backend failed"),
+                { status: 500 }
+            );
+        }
+
+        const aiData = await aiResponse.json();
+
+        let recipes = aiData.recommendations ?? [];
+        recipes = recipes.map((recipe: any) => {
+            recipe.categories = recipe.categories.split(" ");
+            return recipe;
+        });
+
+        const payload = {
+            recipes,
+            recipe: recipes[0],
+        };
         const normalizedPayload = normalizeDocument(payload);
-        return NextResponse.json(createSuccessResponse(normalizedPayload), { status: 201 });
+        return NextResponse.json(createSuccessResponse(normalizedPayload), {
+            status: 201,
+        });
+
     },
     { body_schema: HungerEventZodSchema.pick({ hunger_level: true }) }
 );

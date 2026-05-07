@@ -34,33 +34,7 @@ export const POST = createRoute(
 
         // Creates or loads the daily log for the selected date.
         if (!daily_log) {
-            try {
-                daily_log = await DailyLog.findOneAndUpdate(
-                    {
-                        user_id: user!._id,
-                        date: parsed_date,
-                    },
-                    {
-                        $setOnInsert: {
-                            user_id: user!._id,
-                            date: parsed_date,
-                            morning_weight: 0,
-                            sleep_hours: 0,
-                            timezone: user?.profile?.timezone || "UTC",
-                            meals: [],
-                            craving_events: [],
-                            hunger_events: [],
-                        },
-                    },
-                    {
-                        new: true,
-                        upsert: true,
-                    }
-                );
-            } catch (err) {
-                console.error("Error creating or loading daily log:", err);
-                return NextResponse.json(createErrorResponse("DAILY_LOG_CREATE_ERROR", "An error occurred while creating or loading the daily log"), { status: 500 });
-            }
+            return NextResponse.json(createErrorResponse("DAILY_LOG_NOT_FOUND", "No daily log found for the specified date"), { status: 404 });
         }
 
         if (await daily_log.getMealByTime(parsed.logged_at)) {

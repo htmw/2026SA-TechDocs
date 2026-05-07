@@ -4,7 +4,8 @@ import mongoose, { Schema, Model, Types, HydratedDocument } from "mongoose";
 import { DailyLogValues } from "@/lib/zod_schemas/health_schema";
 import { craving_intensity, craving_triggers, craving_type, energy_rating, hunger_level, meal_type, stress_level } from "@/lib/enums";
 import { buildSearch, QuerySearchConfig } from "@/lib/utils/query_filter";
-import { normalizeDateToTimezoneDay } from "@/lib/utils/utils";
+import { normalizeDateToTimezoneDay, getTimezoneDayString } from "@/lib/utils/utils";
+import { User } from "./user";
 
 const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
     {
@@ -22,11 +23,6 @@ const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
             required: true,
         },
         protein: {
-            type: Number,
-            required: true,
-            default: 0,
-        },
-        carbs: {
             type: Number,
             required: true,
             default: 0,
@@ -64,14 +60,6 @@ const MealLogSchema = new Schema<IMealLog, DailyLogModel>(
             type: Number,
             required: false,
         },
-        vitamins: {
-            type: [String],
-            required: false,
-        },
-        minerals: {
-            type: String,
-            required: false,
-        },
         logged_at: {
             type: Date,
             required: true,
@@ -90,6 +78,9 @@ const HungerEventSchema = new Schema<IHungerEvent, DailyLogModel>(
             enum: hunger_level.values,
             required: true,
         },
+        recipe: {
+            type: Object,
+        },
         suggested_actions: {
             type: [String],
         },
@@ -105,20 +96,12 @@ const CravingEventSchema = new Schema<ICravingEvent, DailyLogModel>(
             type: Date,
             required: true,
         },
-        craving_type: {
+        craving_prompt: {
             type: String,
-            enum: craving_type.values,
             required: true,
         },
-        intensity: {
-            type: String,
-            enum: craving_intensity.values,
-            required: true,
-        },
-        trigger: {
-            type: String,
-            enum: craving_triggers.values,
-            required: true,
+        recipe: {
+            type: Object,
         },
         suggested_actions: {
             type: [String],
@@ -383,12 +366,16 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
             },
 
             async getDailyLogByDate(user_id: Types.ObjectId, date: Date): Promise<HydratedDailyLog | null> {
-                const dayStart = startOfDay(date);
+                const user = await User.findById(user_id).exec();
+                const timezone = user?.profile?.timezone || "UTC";
+                const dayStart = normalizeDateToTimezoneDay(getTimezoneDayString(date, timezone), timezone);
                 return await this.findOne({ user_id, date: dayStart }).exec();
             },
 
             async hasDailyLog(user_id: Types.ObjectId, date: Date): Promise<boolean> {
-                const dayStart = startOfDay(date);
+                const user = await User.findById(user_id).exec();
+                const timezone = user?.profile?.timezone || "UTC";
+                const dayStart = normalizeDateToTimezoneDay(getTimezoneDayString(date, timezone), timezone);
                 const log = await this.findOne({ user_id, date: dayStart }).exec();
                 return !!log;
             },
@@ -401,11 +388,11 @@ const DailyLogSchema = new Schema<IDailyLog, DailyLogModel, IDailyLogMethods>(
                 sleep_hours,
                 stress_level
             }: DailyLogValues): Promise<HydratedDailyLog> {
-                const dayStart = startOfDay(date);
+                const dayStart = normalizeDateToTimezoneDay(getTimezoneDayString(date, timezone), timezone);
 
                 const dailyLog = this.create({
                     user_id,
-                    date: dayStart,
+                    date: new Date(dayStart),
                     timezone,
                     morning_weight,
                     energy_rating,

@@ -10,15 +10,10 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { ChartConfig, ChartContainer } from "@/components/ui/chart";
-
-type NutritionSummaryCardProps = {
-    total_calories: number;
-    calorie_goal: number;
-    total_protein: number;
-    protein_goal: number;
-    total_fat: number;
-    fat_goal: number;
-};
+import { calculateDietaryGuidelines } from "@/lib/utils/nutrition_utils";
+import { useAuth } from "@/lib/hooks/useAuthProvider";
+import { useMeals } from "@/lib/hooks/api-hooks/use-meals";
+import { NutritionItem } from "@/lib/zod_schemas/nutrition_schema";
 
 type MacroRadialProps = {
     label: string;
@@ -127,13 +122,19 @@ function MacroRadial({
 }
 
 export function NutritionSummaryCard({
-    total_calories,
-    calorie_goal,
-    total_protein,
-    protein_goal,
-    total_fat,
-    fat_goal,
-}: NutritionSummaryCardProps) {
+    date
+}: {
+    date: Date
+}) {
+    const { user } = useAuth();
+
+    const { data: meals = [], isLoading: meals_loading } = useMeals(date);
+    const total_calories = meals.reduce((total, meal) => total + meal.calories, 0);
+    const total_protein = meals.reduce((total, meal) => total + meal.protein, 0);
+    const total_fat = meals.reduce((total, meal) => total + meal.fat, 0);
+
+    const guidelines = calculateDietaryGuidelines(user?.profile, user?.profile.goals);
+
     return (
         <Card className="w-full">
             <CardHeader>
@@ -148,21 +149,21 @@ export function NutritionSummaryCard({
                     <MacroRadial
                         label="Calories"
                         value={total_calories}
-                        goal={calorie_goal}
+                        goal={guidelines.calories}
                         unit="kcal"
                         chart_config={chart_config}
                     />
                     <MacroRadial
                         label="Protein"
                         value={total_protein}
-                        goal={protein_goal}
+                        goal={guidelines.protein}
                         unit="g"
                         chart_config={chart_config}
                     />
                     <MacroRadial
                         label="Fat"
                         value={total_fat}
-                        goal={fat_goal}
+                        goal={guidelines.fat}
                         unit="g"
                         chart_config={chart_config}
                     />

@@ -4,7 +4,10 @@ export interface Env {
     MONGODB_URL: string;
 
     APP_NAME: string;
-    BASE_URL: string;
+
+    AI_RECOMMENDER_URL: string;
+
+    OPENAI_API_KEY: string;
 }
 
 let cachedEnv: Env | null = null;
@@ -25,11 +28,10 @@ export function getEnv(): Env {
 
     const env: Env = {
         NODE_ENV: (process.env.NODE_ENV as Env["NODE_ENV"]) ?? "development",
-
         MONGODB_URL: requireKey("MONGODB_URL"),
-
         APP_NAME: requireKey("APP_NAME"),
-        BASE_URL: requireKey("BASE_URL"),
+        AI_RECOMMENDER_URL: requireKey("AI_RECOMMENDER_URL"),
+        OPENAI_API_KEY: process.env.OPENAI_API_KEY || "",
     };
 
     if (missing.length > 0) {

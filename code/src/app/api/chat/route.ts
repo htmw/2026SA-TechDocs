@@ -1,13 +1,11 @@
 // code/src/app/api/chat/route.ts
 
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { Types } from "mongoose";
-import { openai } from "@/lib/ai/openai";
-import { getMongoose } from "@/lib/mongoose_connector";
-import { Session } from "@/database/models/session";
+import { openai } from "@/lib/ai/openai_util";
 import { ChatMessage } from "@/database/models/chat_message";
 import { ChatRule } from "@/database/models/chat_rule";
+import { createApiRoute } from "@/lib/api/route";
 
 // Defines the main AI prompt.
 const SYSTEM_PROMPT = `
@@ -78,27 +76,6 @@ function getBmiCategory(bmi: number | null) {
     }
 
     return "Obese";
-}
-
-// Gets the logged-in user from the session cookie.
-async function getCurrentUser() {
-    const cookieStore = await cookies();
-    const sessionToken =
-        cookieStore.get("session")?.value ||
-        cookieStore.get("session_id")?.value ||
-        cookieStore.get("auth_session")?.value;
-
-    if (!sessionToken) {
-        return null;
-    }
-
-    const sessionData = await Session.validateSessionToken(sessionToken);
-
-    if (!sessionData) {
-        return null;
-    }
-
-    return sessionData.user;
 }
 
 // Deletes older saved messages.
@@ -197,229 +174,204 @@ Do not follow a custom rule if it conflicts with safety rules, medical limits, d
 `;
 }
 
-export async function GET() {
-    try {
-        await getMongoose();
+export const GET = createApiRoute(
+    async ({ user }) => {
+        try {
+            // Loads the saved chat history for only the logged-in user.
+            const messages = await ChatMessage.find({ user_id: user._id })
+                .sort({ createdAt: 1 })
+                .limit(SAVED_MESSAGE_LIMIT)
+                .lean();
 
-        const user = await getCurrentUser();
+            return NextResponse.json({
+                messages: messages.map((message) => ({
+                    id: String(message._id),
+                    role: message.role,
+                    content: message.content,
+                    createdAt: message.createdAt,
+                })),
+            });
+        }
+        catch (error) {
+            console.error("Chat history load error:", error);
 
-        if (!user) {
             return NextResponse.json(
-                { error: "User is not logged in." },
-                { status: 401 }
+                { error: "Chat history failed to load." },
+                { status: 500 }
             );
         }
-
-        // Loads the saved chat history for only the logged-in user.
-        const messages = await ChatMessage.find({ user_id: user._id })
-            .sort({ createdAt: 1 })
-            .limit(SAVED_MESSAGE_LIMIT)
-            .lean();
-
-        return NextResponse.json({
-            messages: messages.map((message) => ({
-                id: String(message._id),
-                role: message.role,
-                content: message.content,
-                createdAt: message.createdAt,
-            })),
-        });
     }
-    catch (error) {
-        console.error("Chat history load error:", error);
+);
 
-        return NextResponse.json(
-            { error: "Chat history failed to load." },
-            { status: 500 }
-        );
+export const DELETE = createApiRoute(
+    async ({ user, body }) => {
+        try {
+            const bodyObj = body as { deleteMode: string, messageId?: string };
+            const deleteMode = typeof bodyObj.deleteMode === "string" ? bodyObj.deleteMode as DeleteMode : "all";
+            const messageId = typeof bodyObj.messageId === "string" ? bodyObj.messageId : "";
+
+            const allowedDeleteModes: DeleteMode[] = [
+                "all",
+                "message",
+                "last_4_hours",
+                "today",
+                "last_7_days",
+                "last_30_days",
+            ];
+
+            if (!allowedDeleteModes.includes(deleteMode)) {
+                return NextResponse.json(
+                    { error: "Invalid delete option." },
+                    { status: 400 }
+                );
+            }
+
+            const deleteFilter = buildDeleteFilter(user._id, deleteMode, messageId);
+
+            if (!deleteFilter) {
+                return NextResponse.json(
+                    { error: "Valid message id is required." },
+                    { status: 400 }
+                );
+            }
+
+            // Deletes matching user messages.
+            const deleteResult = await ChatMessage.deleteMany(deleteFilter);
+
+            return NextResponse.json({
+                success: true,
+                deletedCount: deleteResult.deletedCount,
+            });
+        }
+        catch (error) {
+            console.error("Chat history delete error:", error);
+
+            return NextResponse.json(
+                { error: "Chat history failed to delete." },
+                { status: 500 }
+            );
+        }
     }
-}
+);
 
-export async function DELETE(req: Request) {
-    try {
-        await getMongoose();
 
-        const user = await getCurrentUser();
+export const POST = createApiRoute(
+    async ({ user, body }) => {
+        try {
+            console.log(body);
+            const bodyObj = body as { message: string };
+            const message = typeof bodyObj.message === "string" ? bodyObj.message.trim() : "";
 
-        if (!user) {
-            return NextResponse.json(
-                { error: "User is not logged in." },
-                { status: 401 }
-            );
-        }
+            if (!message) {
+                return NextResponse.json(
+                    { error: "Message is required." },
+                    { status: 400 }
+                );
+            }
 
-        const body = await req.json().catch(() => ({}));
-        const deleteMode = typeof body.deleteMode === "string" ? body.deleteMode as DeleteMode : "all";
-        const messageId = typeof body.messageId === "string" ? body.messageId : "";
+            const profile = user.profile || {};
+            const height = typeof profile.height === "number" ? profile.height : undefined;
+            const weight = typeof profile.weight === "number" ? profile.weight : undefined;
+            const bmi = calculateBmi(height, weight);
+            const bmiCategory = getBmiCategory(bmi);
 
-        const allowedDeleteModes: DeleteMode[] = [
-            "all",
-            "message",
-            "last_4_hours",
-            "today",
-            "last_7_days",
-            "last_30_days",
-        ];
-
-        if (!allowedDeleteModes.includes(deleteMode)) {
-            return NextResponse.json(
-                { error: "Invalid delete option." },
-                { status: 400 }
-            );
-        }
-
-        const deleteFilter = buildDeleteFilter(user._id, deleteMode, messageId);
-
-        if (!deleteFilter) {
-            return NextResponse.json(
-                { error: "Valid message id is required." },
-                { status: 400 }
-            );
-        }
-
-        // Deletes matching user messages.
-        const deleteResult = await ChatMessage.deleteMany(deleteFilter);
-
-        return NextResponse.json({
-            success: true,
-            deletedCount: deleteResult.deletedCount,
-        });
-    }
-    catch (error) {
-        console.error("Chat history delete error:", error);
-
-        return NextResponse.json(
-            { error: "Chat history failed to delete." },
-            { status: 500 }
-        );
-    }
-}
-
-export async function POST(req: Request) {
-    try {
-        await getMongoose();
-
-        const body = await req.json();
-        const message = typeof body.message === "string" ? body.message.trim() : "";
-
-        if (!message) {
-            return NextResponse.json(
-                { error: "Message is required." },
-                { status: 400 }
-            );
-        }
-
-        const user = await getCurrentUser();
-
-        if (!user) {
-            return NextResponse.json(
-                { error: "User is not logged in." },
-                { status: 401 }
-            );
-        }
-
-        const profile = user.profile || {};
-        const height = typeof profile.height === "number" ? profile.height : undefined;
-        const weight = typeof profile.weight === "number" ? profile.weight : undefined;
-        const bmi = calculateBmi(height, weight);
-        const bmiCategory = getBmiCategory(bmi);
-
-        // Builds limited profile context.
-        const profileSummary = {
-            setupComplete: user.setup_complete,
-            bodyMetrics: {
-                heightInches: height ?? null,
-                weightPounds: weight ?? null,
-                bmi: bmi,
-                bmiCategory: bmiCategory,
-            },
-            healthProfile: {
-                medicalHistory: profile.medical_history ?? [],
-                dietRestrictions: profile.diet_restrictions ?? [],
-            },
-            habitsAndLifestyle: {
-                occupation: profile.occupation ?? null,
-                fitnessLevel: profile.fitness_level ?? null,
-                averageCalories: profile.avg_calories ?? null,
-                currentEnergy: profile.current_energy ?? null,
-                averageSleep: profile.avg_sleep ?? null,
-                gender: profile.gender ?? null,
-                goals: profile.goals ?? [],
-                hobbies: profile.hobbies ?? [],
-            },
-        };
-
-        // Loads saved chatbot rules.
-        const savedRules = await ChatRule.find({ user_id: user._id })
-            .sort({ createdAt: 1 })
-            .limit(10)
-            .lean();
-
-        const userRules = savedRules.map((savedRule) => savedRule.rule);
-        const customRulesPrompt = buildCustomRulesPrompt(userRules);
-
-        const recentMessages = await ChatMessage.find({ user_id: user._id })
-            .sort({ createdAt: -1 })
-            .limit(CHAT_HISTORY_LIMIT)
-            .lean();
-
-        const historyForPrompt = recentMessages
-            .reverse()
-            .map((chat) => ({
-                role: chat.role,
-                content: chat.content,
-            }));
-
-        // Saves the user message.
-        await ChatMessage.create({
-            user_id: user._id,
-            role: "user",
-            content: message,
-        });
-
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                {
-                    role: "system",
-                    content: SYSTEM_PROMPT,
+            // Builds limited profile context.
+            const profileSummary = {
+                setupComplete: user.setup_complete,
+                bodyMetrics: {
+                    heightInches: height ?? null,
+                    weightPounds: weight ?? null,
+                    bmi: bmi,
+                    bmiCategory: bmiCategory,
                 },
-                {
-                    role: "system",
-                    content: `User profile context: ${JSON.stringify(profileSummary)}`,
+                healthProfile: {
+                    medicalHistory: profile.medical_history ?? [],
+                    dietRestrictions: profile.diet_restrictions ?? [],
                 },
-                {
-                    role: "system",
-                    content: customRulesPrompt,
+                habitsAndLifestyle: {
+                    occupation: profile.occupation ?? null,
+                    fitnessLevel: profile.fitness_level ?? null,
+                    averageCalories: profile.avg_calories ?? null,
+                    currentEnergy: profile.current_energy ?? null,
+                    averageSleep: profile.avg_sleep ?? null,
+                    gender: profile.gender ?? null,
+                    goals: profile.goals ?? [],
+                    hobbies: profile.hobbies ?? [],
                 },
-                ...historyForPrompt,
-                {
-                    role: "user",
-                    content: message,
-                },
-            ],
-        });
+            };
 
-        const reply = completion.choices[0]?.message?.content || "I could not create a response.";
+            // Loads saved chatbot rules.
+            const savedRules = await ChatRule.find({ user_id: user._id })
+                .sort({ createdAt: 1 })
+                .limit(10)
+                .lean();
 
-        // Saves the chatbot reply.
-        await ChatMessage.create({
-            user_id: user._id,
-            role: "assistant",
-            content: reply,
-        });
+            const userRules = savedRules.map((savedRule) => savedRule.rule);
+            const customRulesPrompt = buildCustomRulesPrompt(userRules);
 
-        // Keeps saved history limited.
-        await trimOldChatMessages(user._id);
+            const recentMessages = await ChatMessage.find({ user_id: user._id })
+                .sort({ createdAt: -1 })
+                .limit(CHAT_HISTORY_LIMIT)
+                .lean();
 
-        return NextResponse.json({ reply });
+            const historyForPrompt = recentMessages
+                .reverse()
+                .map((chat) => ({
+                    role: chat.role,
+                    content: chat.content,
+                }));
+
+            // Saves the user message.
+            await ChatMessage.create({
+                user_id: user._id,
+                role: "user",
+                content: message,
+            });
+
+            const completion = await openai.chat.completions.create({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "system",
+                        content: SYSTEM_PROMPT,
+                    },
+                    {
+                        role: "system",
+                        content: `User profile context: ${JSON.stringify(profileSummary)}`,
+                    },
+                    {
+                        role: "system",
+                        content: customRulesPrompt,
+                    },
+                    ...historyForPrompt,
+                    {
+                        role: "user",
+                        content: message,
+                    },
+                ],
+            });
+
+            const reply = completion.choices[0]?.message?.content || "I could not create a response.";
+
+            // Saves the chatbot reply.
+            await ChatMessage.create({
+                user_id: user._id,
+                role: "assistant",
+                content: reply,
+            });
+
+            // Keeps saved history limited.
+            await trimOldChatMessages(user._id);
+
+            return NextResponse.json({ reply });
+        }
+        catch (error) {
+            console.error("Chat API error:", error);
+
+            return NextResponse.json(
+                { error: "Chat response failed." },
+                { status: 500 }
+            );
+        }
     }
-    catch (error) {
-        console.error("Chat API error:", error);
-
-        return NextResponse.json(
-            { error: "Chat response failed." },
-            { status: 500 }
-        );
-    }
-}
+);

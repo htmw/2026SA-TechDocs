@@ -1,5 +1,6 @@
 import { craving_intensity, craving_triggers, craving_type, energy_rating, food_type, hunger_level, meal_type, MealType, stress_level } from "@/lib/enums";
 import z from "zod";
+import { RecipeZodSchema } from "./recipes_schema";
 
 export const DailyLogZodSchema = z.object({
     date: z.coerce.date(),
@@ -16,9 +17,8 @@ export const CravingPromptSchema = z.object({
 
 export const CravingEventSchema = z.object({
     occurred_at: z.coerce.date(),
-    craving_type: z.enum(craving_type.values, `Craving type is required (${craving_type.values.join(" | ")})`),
-    intensity: z.enum(craving_intensity.values, `Intensity is required (${craving_intensity.values.join(" | ")})`),
-    trigger: z.enum(craving_triggers.values, `Trigger is required (${craving_triggers.values.join(" | ")})`),
+    craving_prompt: z.string().min(1, "Craving prompt cannot be empty").max(1000, "Craving prompt cannot exceed 1000 characters"),
+    recipe: RecipeZodSchema,
     suggested_actions: z.array(z.string()).optional(),
     reasoning: z.string().optional(),
 });
@@ -26,6 +26,7 @@ export const CravingEventSchema = z.object({
 export const HungerEventZodSchema = z.object({
     occurred_at: z.coerce.date(),
     hunger_level: z.enum(hunger_level.values, `Hunger level is required (${hunger_level.values.join(" | ")})`),
+    recipe: RecipeZodSchema,
     suggested_actions: z.array(z.string()).optional(),
     reasoning: z.string().optional(),
 });
@@ -43,7 +44,6 @@ export const MealZodSchema = z.object({
     cholesterol: z.number().min(0, "Cholesterol cannot be negative"),
     water_intake: z.number().min(0, "Water intake cannot be negative"),
     servings: z.number().positive("Servings must be a positive number").optional(),
-    vitamins: z.array(z.string()).optional(),
     logged_at: z.coerce.date(),
 });
 

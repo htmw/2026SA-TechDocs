@@ -32,7 +32,12 @@ export const POST = createApiRoute(
 
         //Create daily log
         try {
-            const createdLog = await DailyLog.createDailyLog(user._id, parsed);
+            const createPayload = {
+                ...parsed,
+                date: parsed_date,
+                timezone,
+            };
+            const createdLog = await DailyLog.createDailyLog(user._id, createPayload);
             if (!createdLog) {
                 return NextResponse.json(createErrorResponse("DAILY_LOG_CREATION_FAILED", "Failed to create daily log"), { status: 500 });
             }
