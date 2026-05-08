@@ -27,20 +27,26 @@ export default function CalorieCalculatorPage() {
     return (
         <>
             <div className="gap-5 p-6 grid grid-cols-1">
-                <SingleWeekPicker
-                    value={selected_date}
-                    onChange={(date, start_week, end_week) => {
-                        setSelectedDate(date);
-                        setWeekStart(start_week);
-                        setWeekEnd(end_week);
-                    }}
-                    weekStartsOn={0}
-                    day_statuses={day_status_array}
-                />
-                <CheckInCard date={selected_date} />
-                <NutritionSummaryCard date={selected_date} />
-                <SearchFoodCard date={selected_date} />
-                <JournalMealCard date={selected_date} />
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                    <SingleWeekPicker
+                        value={selected_date}
+                        onChange={(date, start_week, end_week) => {
+                            setSelectedDate(date);
+                            setWeekStart(start_week);
+                            setWeekEnd(end_week);
+                        }}
+                        weekStartsOn={0}
+                        day_statuses={day_status_array}
+                    />
+                    <CheckInCard date={selected_date} />
+                </div>
+                <div className="col-span-2">
+                    <NutritionSummaryCard date={selected_date} />
+                </div>
+                <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                    <SearchFoodCard date={selected_date} />
+                    <JournalMealCard date={selected_date} />
+                </div>
             </div>
         </>
     );

@@ -26,14 +26,20 @@ export function FoodItem<T extends ClientFood | ClientRecipes>({
     return <Button
         key={item._id}
         variant="outline"
-        className="w-full justify-start"
+        className="w-full justify-start h-[4rem]"
         onClick={() => handleSelection(item)}
     >
-        {title}
-        <span className="text-muted-foreground">({item.calories} cal)</span>
-        <span className="text-orange-300">{item.protein}g protein</span>
-        <span className="text-green-300">{carbohydrates}g carbs</span>
-        <span className="text-yellow-300">{item.fat}g fat</span>
+        <div className="flex flex-col text-left">
+            <div>
+                {title}
+            </div>
+            <div className="flex gap-2 text-sm">
+                <span className="text-muted-foreground">({item.calories} cal)</span>
+                <span className="text-orange-300">{item.protein}g protein</span>
+                <span className="text-green-300">{carbohydrates}g carbs</span>
+                <span className="text-yellow-300">{item.fat}g fat</span>
+            </div>
+        </div>
     </Button>
 }
 
@@ -131,7 +137,7 @@ export default function SearchFoodCard({ date }: { date: Date }) {
             </CardHeader>
             <CardContent className="flex flex-col gap-2">
                 <h1 className="text-md font-semibold">Meal Type</h1>
-                <div className="flex flex-col lg:flex-row gap-2 justify-start mb-3">
+                <div className="flex flex-col 2xl:flex-row gap-2 justify-start mb-3">
                     {meal_type.entries.map(([value, label]) => (
                         <Button
                             key={value}
@@ -156,7 +162,7 @@ export default function SearchFoodCard({ date }: { date: Date }) {
                 <Separator />
 
                 <h1 className="text-md font-semibold">Results</h1>
-                <ScrollArea className="h-[18rem] pr-3">
+                <ScrollArea className="h-[24rem] pr-3">
                     {foodList.length === 0 && recipeList.length === 0 && (
                         <div className="text-center text-muted-foreground mt-4">
                             No results found. Try adjusting your search?
