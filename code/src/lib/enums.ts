@@ -218,8 +218,7 @@ export const diet_restrictions = createLabeledEnum({
     soy: "Soy",
     eggs: "Eggs",
     vegetarian: "Vegetarian",
-    vegan: "Vegan",
-    none: "None"
+    vegan: "Vegan"
 } as const);
 
 export type DietRestriction = keyof typeof diet_restrictions.map;
@@ -230,6 +229,32 @@ export const medical_history_options = [
     "High Blood Pressure",
     "Heart Disease",
     "Asthma",
-    "Allergies",
-    "None"
+    "Allergies"
 ]
+
+
+/******************************************
+ * 
+ * GOALS 
+ * ENUMS, LABELS, AND TYPES
+ * 
+ *****************************************/
+
+
+// Goal Label
+export const goal = createLabeledEnum({
+    lose: "Lose Weight",
+    maintain: "Maintain Weight",
+    gain: "Build Muscle",
+    energy: "Improve Energy",
+} as const);
+export type Goal = keyof typeof goal.map;
+
+// Goal Label
+export const goal_focus = createLabeledEnum({
+    lose: "Calorie Deficit",
+    gain: "Calorie Surplus",
+    maintain: "Balanced Intake",
+    energy: "Energy Support",
+} as const);
+export type GoalFocus = keyof typeof goal_focus.map;
