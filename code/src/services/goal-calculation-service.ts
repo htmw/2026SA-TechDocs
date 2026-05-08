@@ -7,7 +7,7 @@ export interface UserGoals {
     fatIntake: number;
 }
 
-export async function calculateGoals(userProfile: IUserProfile | undefined, goals: string[]): Promise<UserGoals> {
+export async function calculateGoals(userProfile: IUserProfile | undefined, goals: string[] | undefined): Promise<UserGoals> {
     //step 1: get user profile data
     const weight = userProfile?.weight || 0; 
     const height = userProfile?.height || 0;
@@ -67,7 +67,7 @@ export async function calculateGoals(userProfile: IUserProfile | undefined, goal
 
     //step 5: protein/carb/fat breakdown
     const proteinMultiplier = { lose: 1.0, maintain: 0.8, gain: 1.2, energy: 0.8 }[goal] ?? 0.8;
-    const fatPercent = goal === "gain" ? 0.25 : 0.20;
+    const fatPercent = goal === "gain" ? 0.35 : 0.30;
 
     const proteinIntake = Math.round(weight * proteinMultiplier);
     const fatIntake = Math.round((calorieIntake * fatPercent) / 9);
