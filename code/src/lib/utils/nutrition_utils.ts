@@ -37,7 +37,7 @@ export async function calculateDietaryGuidelines(profile?: any, goals?: string[]
         carbs: Math.round((calories * 0.45) / 4), // 45% from carbs
     };
     */
-    const targets = await calculateGoals(profile, 'lose');
+    const targets = await calculateGoals(profile, 'lose', 'slow');
     const calories = targets.calorieIntake
     return {
         calories,

@@ -120,7 +120,7 @@ export default function GoalsPage() {
                 }
                 : previousProfile
             )
-            const calc = await calculateGoals(user?.profile, goal)
+            const calc = await calculateGoals(user?.profile, goal, timeline)
             setCalc(calc)
             setSaved(true)
         } catch (error) {

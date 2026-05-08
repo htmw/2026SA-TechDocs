@@ -7,7 +7,9 @@ export interface UserGoals {
     fatIntake: number;
 }
 
-export async function calculateGoals(userProfile: IUserProfile | undefined, goal: string): Promise<UserGoals> {
+export async function calculateGoals(userProfile: IUserProfile | undefined, 
+    goal: string,
+    pace: string): Promise<UserGoals> {
     //step 1: get user profile data
     const weight = userProfile?.weight || 0; 
     const height = userProfile?.height || 0;
@@ -44,17 +46,23 @@ export async function calculateGoals(userProfile: IUserProfile | undefined, goal
 
     //step 4: account for lose weight/gain muscle
     let calorieIntake = tdee; // default to maintain weight
+    
+    const paceAmount = pace === 'slow' ? 250 : pace === 'aggressive' ? 750 : 500;
 
     switch (goal) {
         case 'lose':
-            calorieIntake -= 500;
+            calorieIntake -= paceAmount;
             break;
         case 'gain':
-            calorieIntake += 500;
+            calorieIntake += paceAmount;
             break;
         case 'energy':
-            calorieIntake += 200;
+            calorieIntake += paceAmount / 2; // energy boost is gentler
             break;
+    }
+    
+    if (calorieIntake < 1200) {
+        calorieIntake = 1200;
     }
 
     //step 5: protein/carb/fat breakdown
@@ -67,10 +75,7 @@ export async function calculateGoals(userProfile: IUserProfile | undefined, goal
 
     //TODO: step 6: account for calories user had throughout week
     
-    //setp 7: return, include minimums
-    if (calorieIntake < 1200) {
-        calorieIntake = 1200;
-    }
+    //step 7: return, include minimums
 
     return {
     calorieIntake: Math.round(calorieIntake),
