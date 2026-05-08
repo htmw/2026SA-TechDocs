@@ -7,9 +7,7 @@ export interface UserGoals {
     fatIntake: number;
 }
 
-export async function calculateGoals(userProfile: IUserProfile | undefined, 
-    goal: string,
-    pace: string): Promise<UserGoals> {
+export async function calculateGoals(userProfile: IUserProfile | undefined, goals: string[]): Promise<UserGoals> {
     //step 1: get user profile data
     const weight = userProfile?.weight || 0; 
     const height = userProfile?.height || 0;
@@ -28,6 +26,8 @@ export async function calculateGoals(userProfile: IUserProfile | undefined,
 
     // Usage
     const age = getAge(userProfile?.dob || new Date());
+    const goal = goals[0]
+    const pace = goals[1]
 
     //step 2: get bmr
     const weightKg = weight * 0.453592;
@@ -76,7 +76,6 @@ export async function calculateGoals(userProfile: IUserProfile | undefined,
     //TODO: step 6: account for calories user had throughout week
     
     //step 7: return, include minimums
-
     return {
     calorieIntake: Math.round(calorieIntake),
     proteinIntake: proteinIntake,

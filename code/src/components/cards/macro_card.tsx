@@ -126,7 +126,7 @@ export function NutritionSummaryCard({ date }: { date: Date }) {
     const { user } = useAuth();
     const { data: meals = [], isLoading: meals_loading } = useMeals(date);
     const [guidelines, setGuidelines] = useState<NutrientGuidelines | null>(null);
-
+    console.log(user?.profile?.goals)
     useEffect(() => {
         const fetchGuidelines = async () => {
             const result = await calculateDietaryGuidelines(user?.profile, user?.profile?.goals);

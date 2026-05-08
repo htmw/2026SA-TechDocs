@@ -92,7 +92,7 @@ export default function GoalsPage() {
     // Saves selected goal to profile.
     const handleSave = async () => {
         if (!goal) return
-
+        if (!timeline) return
         try {
             setSaved(false)
             setErrorMessage("")
@@ -103,7 +103,7 @@ export default function GoalsPage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    goals: [goal],
+                    goals: [goal, timeline],
                 }),
             })
 
@@ -120,7 +120,7 @@ export default function GoalsPage() {
                 }
                 : previousProfile
             )
-            const calc = await calculateGoals(user?.profile, goal, timeline)
+            const calc = await calculateGoals(user?.profile, [goal, timeline])
             setCalc(calc)
             setSaved(true)
         } catch (error) {

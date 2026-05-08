@@ -1,5 +1,6 @@
 import { calculateGoals } from "@/services/goal-calculation-service";
 import { NutritionItem } from "../zod_schemas/nutrition_schema";
+import { IUserProfile } from "../types/mongo_user_types";
 
 export type NutrientGuidelines = {
     calories: number;
@@ -37,7 +38,7 @@ export async function calculateDietaryGuidelines(profile?: any, goals?: string[]
         carbs: Math.round((calories * 0.45) / 4), // 45% from carbs
     };
     */
-    const targets = await calculateGoals(profile, 'lose', 'slow');
+    const targets = await calculateGoals(profile, goals);
     const calories = targets.calorieIntake
     return {
         calories,
