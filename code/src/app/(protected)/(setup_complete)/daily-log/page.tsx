@@ -2,6 +2,7 @@
 
 import { SingleWeekPicker } from "@/components/cards/single_week_picker";
 import * as React from "react";
+import { useSearchParams } from "next/navigation";
 import { DailyCheckInSummaryCard } from "@/components/cards/check_in_summary_card";
 import { NutritionSummaryCard } from "@/components/cards/macro_card";
 import { CravingEventsCard, HungerEventsCard } from "@/components/cards/events_card";
@@ -15,6 +16,10 @@ import { tz } from "@date-fns/tz";
 import { useAuth } from "@/lib/hooks/useAuthProvider";
 
 export default function DailyLogPage() {
+    // reads the popup action from the URL after Hunger Check or Craving Check redirects here
+    const searchParams = useSearchParams();
+    const action = searchParams.get("action");
+
     const {user} = useAuth();
     const timeZone = user?.profile?.timezone || "UTC";
     
@@ -32,7 +37,7 @@ export default function DailyLogPage() {
         <>
             <div className="gap-5 p-6 grid grid-cols-1 xl:grid-cols-5">
                 <div className="flex flex-col justify-items-center place-items-center gap-5 xl:col-span-2">
-                    <QuickActionsCard date={selected_date} />
+                    <QuickActionsCard date={selected_date} openAction={action} />
                     <CheckInCard date={selected_date} />
                     <SingleWeekPicker
                         value={selected_date}

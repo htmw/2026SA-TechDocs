@@ -13,7 +13,13 @@ import { format } from "date-fns";
 import { useCreateCravingEvent } from "@/lib/hooks/api-hooks/use-craving-events";
 import { meal_type } from "@/lib/enums";
 
-export default function CravingButton({ date }: { date: Date }) {
+export default function CravingButton({
+    date,
+    shouldOpen = false,
+}: {
+    date: Date;
+    shouldOpen?: boolean;
+}) {
     const { user } = useAuth();
     const timezone = user?.profile?.timezone || "America/New_York";
     const createCravingEvent = useCreateCravingEvent();
@@ -22,6 +28,14 @@ export default function CravingButton({ date }: { date: Date }) {
     const [cravingOpen, setCravingOpen] = React.useState(false);
 
     const { data: daily_log, isLoading: loading_daily_log } = useDailyLog(date);
+
+    React.useEffect(() => {
+        // open the craving popup when Daily Log gets action=craving from the URL
+        if (shouldOpen && daily_log) {
+            setDateInitialized(new Date());
+            setCravingOpen(true);
+        }
+    }, [shouldOpen, daily_log]);
 
     const submitCraving = async (recipe: ClientRecipes, form: CravingPromptValues) => {
         console.log(recipe);
@@ -58,7 +72,7 @@ export default function CravingButton({ date }: { date: Date }) {
             }}
         >
             <Sparkles />
-            I'm Craving
+            I&apos;m Craving
         </Button>
         <CravingDialog open={cravingOpen} onOpenChange={setCravingOpen} onSubmit={submitCraving} />
     </>

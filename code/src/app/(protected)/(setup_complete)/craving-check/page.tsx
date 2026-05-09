@@ -71,8 +71,11 @@ export default function CravingCheckPage() { // shows questions to check for a c
     ])
 
     const handleContinue = () => {
-        // sends user to the next page based on the result
-        const route = cravingAnalysis.isCraving ? "/craving" : "/hungry"
+        // sends user to Daily Log and opens the correct popup based on the result
+        const route = cravingAnalysis.isCraving
+            ? "/daily-log?action=craving"
+            : "/daily-log?action=hunger"
+
         router.push(route)
     }
 

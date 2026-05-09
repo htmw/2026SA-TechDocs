@@ -11,7 +11,13 @@ import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 import { ClientRecipes } from "@/lib/types/mongo_recipe_types";
 
-export default function HungryButton({ date }: { date: Date }) {
+export default function HungryButton({
+    date,
+    shouldOpen = false,
+}: {
+    date: Date;
+    shouldOpen?: boolean;
+}) {
     const { user } = useAuth();
     const timezone = user?.profile?.timezone || "America/New_York";
     const createHungerEvent = useCreateHungerEvent();
@@ -20,6 +26,14 @@ export default function HungryButton({ date }: { date: Date }) {
     const [hungryOpen, setHungryOpen] = React.useState(false);
 
     const { data: daily_log, isLoading: loading_daily_log,  } = useDailyLog(date);
+
+    React.useEffect(() => {
+        // open the hunger popup when Daily Log gets action=hunger from the URL
+        if (shouldOpen && daily_log) {
+            setDateInitialized(new Date());
+            setHungryOpen(true);
+        }
+    }, [shouldOpen, daily_log]);
 
     const submitHunger = async (recipe: ClientRecipes, form: HungryDialogFormValues) => {
         console.log(form);
