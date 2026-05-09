@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/chart"
 import { format } from "date-fns"
 import { useDailyLogs } from "@/lib/hooks/api-hooks/use-daily-log"
+import { useAuth } from "@/lib/hooks/useAuthProvider"
+import { calculateGoals } from "@/services/goal-calculation-service"
 
 export type WeightData = {
     date: string;
@@ -32,29 +34,39 @@ const chartConfig = {
 
 export default function GoalTrackingPage() {
     const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs({
-        sortDir: "asc",
-        sortField: "date"
+        sortDir: "desc"
     });
 
-    const data = daily_logs.map(log => ({
+    const { user } = useAuth();
+    const data = daily_logs
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .map(log => ({
         date: format(new Date(log.date), "MM/dd"),
         meals: log.meals,
         weight: log.morning_weight,
         calories: log.meals.reduce((sum, meal) => sum + meal.calories * (meal.servings ?? 1), 0),
+        protein:  log.meals.reduce((sum, meal) => sum + meal.protein * (meal.servings ?? 1), 0),
+        carbohydrates: log.meals.reduce((sum, meal) => sum + meal.carbohydrates * (meal.servings ?? 1), 0),
+        fat:  log.meals.reduce((sum, meal) => sum + meal.fat * (meal.servings ?? 1), 0)
     }))
     const avgCalories = data.reduce((sum, day) => sum + day.calories, 0) / data.length || 0;
+    const avgProtein = data.reduce((sum, day) => sum + day.protein, 0) / data.length || 0;
+    const avgCarbs = data.reduce((sum, day) => sum + day.carbohydrates, 0) / data.length || 0;
+    const avgFat = data.reduce((sum, day) => sum + day.fat, 0) / data.length || 0;
+
+    const targets = calculateGoals(user?.profile, user?.profile.goals)
+    const targetCalories = targets.calorieIntake;
 
     return (
         <div className="p-4">
             <h1 className="text-2xl font-bold mb-4">Goal Tracking</h1>
-            <p>Track your progress towards your nutrition goals here.</p>
 
 
             <Card className="mt-5">
                 <CardHeader>
                     <CardTitle>Weight Progress</CardTitle>
                     <CardDescription>
-                        Weight Progress Over Time
+                        Weight Progress Over Your NutriAI Journey
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -108,16 +120,46 @@ export default function GoalTrackingPage() {
                     <CardTitle>Calories</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
                         <div className="bg-muted rounded-md p-4">
                             <p className="text-sm text-muted-foreground mb-1">Avg. calories / day</p>
                             <p className="text-3xl font-medium">{avgCalories.toLocaleString()}</p>
                             <p className="text-xs text-muted-foreground mt-1">kcal</p>
                         </div>
                         <div className="bg-muted rounded-md p-4">
+                            <p className="text-sm text-muted-foreground mb-1">Current Calorie Target</p>
+                            <p className="text-3xl font-medium">{targetCalories.toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground mt-1">kcal</p>
+                        </div>
+                        <div className="bg-muted rounded-md p-4">
                             <p className="text-sm text-muted-foreground mb-1">Days logged</p>
                             <p className="text-3xl font-medium">{daily_logs.length}</p>
                             <p className="text-xs text-muted-foreground mt-1">days</p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="mt-5">
+                <CardHeader>
+                    <CardTitle>Macros</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                        <div className="bg-muted rounded-md p-4">
+                            <p className="text-sm text-muted-foreground mb-1">Avg. Protein / day</p>
+                            <p className="text-3xl font-medium">{avgProtein.toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground mt-1">g</p>
+                        </div>
+                        <div className="bg-muted rounded-md p-4">
+                            <p className="text-sm text-muted-foreground mb-1">Avg. Carbs / day</p>
+                            <p className="text-3xl font-medium">{avgCarbs.toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground mt-1">g</p>
+                        </div>
+                        <div className="bg-muted rounded-md p-4">
+                            <p className="text-sm text-muted-foreground mb-1">Avg. Fat / day</p>
+                            <p className="text-3xl font-medium">{avgFat.toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground mt-1">g</p>
                         </div>
                     </div>
                 </CardContent>
