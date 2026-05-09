@@ -91,6 +91,7 @@ export default function GoalTrackingPage() {
             date: format(new Date(log.date), "MM/dd"),
             meals: log.meals,
             weight: log.morning_weight,
+            sleep: log.sleep_hours,
             calories:      log.meals.reduce((sum, meal) => sum + meal.calories      * (meal.servings ?? 1), 0),
             protein:       log.meals.reduce((sum, meal) => sum + meal.protein       * (meal.servings ?? 1), 0),
             carbohydrates: log.meals.reduce((sum, meal) => sum + meal.carbohydrates * (meal.servings ?? 1), 0),
@@ -101,7 +102,10 @@ export default function GoalTrackingPage() {
     const avgProtein  = data.reduce((sum, day) => sum + day.protein,  0) / data.length || 0;
     const avgCarbs    = data.reduce((sum, day) => sum + day.carbohydrates, 0) / data.length || 0;
     const avgFat      = data.reduce((sum, day) => sum + day.fat,      0) / data.length || 0;
+    const avgSleep    = data.reduce((sum, day) => sum + day.sleep,      0) / data.length || 0
     
+    const goodSleepDays = data.filter(log => (log.sleep ?? 0) >= 8).length;
+
     const todayTarget = calculateGoals(user?.profile, user?.profile.goals).calorieIntake;
 
     const [targets, setTargets] = useState({ calorieIntake: 0 });
@@ -190,6 +194,51 @@ export default function GoalTrackingPage() {
                 <CardHeader><CardTitle>Target Tracking</CardTitle></CardHeader>
                 <CardDescription className="px-6">Reaching within 10% of your macro goals counts!</CardDescription>
                 <GoalSummaryCards results={goalResults} />
+            </Card>
+
+
+            <Card className="mt-5">
+                <CardHeader>
+                    <CardTitle>Sleep Progress</CardTitle>
+                    <CardDescription>Hours of Sleep You've Had on Your NutriAI Journey</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {data.length === 0 ? (
+                        <Card className="border border-dashed shadow-none">
+                            <CardContent className="flex min-h-[120px] items-center justify-center p-6">
+                                <p className="text-sm text-muted-foreground">No sleep data logged</p>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <ChartContainer config={chartConfig} className="h-40 w-full">
+                            <LineChart accessibilityLayer data={data} margin={{ left: 0, right: 20 }}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="date" tickLine={false} axisLine={false} interval={0} />
+                                <YAxis domain={['dataMin - 3', 'dataMax + 3']} tickFormatter={(v) => `${v} hrs`} tickMargin={12} />
+                                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" hideLabel />} />
+                                <Line dataKey="sleep" type="linear" stroke="var(--color-weight)" strokeWidth={3} />
+                            </LineChart>
+                        </ChartContainer>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card className="mt-5">
+                <CardHeader><CardTitle>Sleep</CardTitle></CardHeader>
+                <CardContent>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        <div className="bg-muted rounded-md p-4">
+                            <p className="text-sm text-muted-foreground mb-1">Avg. sleep / day</p>
+                            <p className="text-3xl font-medium">{Math.round(avgSleep).toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground mt-1">hrs</p>
+                        </div>
+                        <div className="bg-muted rounded-md p-4">
+                            <p className="text-sm text-muted-foreground mb-1">Days Slept 8 or more Hours</p>
+                            <p className="text-3xl font-medium">{goodSleepDays.toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground mt-1">days</p>
+                        </div>
+                    </div>
+                </CardContent>
             </Card>
         </div>
     );
