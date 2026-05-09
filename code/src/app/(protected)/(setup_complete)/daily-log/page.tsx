@@ -2,6 +2,7 @@
 
 import { SingleWeekPicker } from "@/components/cards/single_week_picker";
 import * as React from "react";
+import { useSearchParams } from "next/navigation";
 import { DailyCheckInSummaryCard } from "@/components/cards/check_in_summary_card";
 import { NutritionSummaryCard } from "@/components/cards/macro_card";
 import { CravingEventsCard, HungerEventsCard } from "@/components/cards/events_card";
@@ -13,6 +14,10 @@ import { MealsCard } from "@/components/cards/meal_cards/meals_cards";
 import { CheckInCard } from "@/components/cards/check_in_card";
 
 export default function DailyLogPage() {
+    // reads the popup action from the URL after Hunger Check or Craving Check redirects here
+    const searchParams = useSearchParams();
+    const action = searchParams.get("action");
+
     const [selected_date, setSelectedDate] = React.useState(new Date());
     const [week_start, setWeekStart] = React.useState(startOfWeek(selected_date as Date, { weekStartsOn: 0 }));
     const [week_end, setWeekEnd] = React.useState(endOfWeek(selected_date, { weekStartsOn: 0 }));
@@ -27,7 +32,7 @@ export default function DailyLogPage() {
         <>
             <div className="gap-5 p-6 grid grid-cols-1 xl:grid-cols-5">
                 <div className="flex flex-col justify-items-center place-items-center gap-5 xl:col-span-2">
-                    <QuickActionsCard date={selected_date} />
+                    <QuickActionsCard date={selected_date} openAction={action} />
                     <CheckInCard date={selected_date} />
                     <SingleWeekPicker
                         value={selected_date}

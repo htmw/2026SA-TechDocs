@@ -13,10 +13,14 @@ import CheckInButton from "@/components/cards/quick_actions/checkin_button";
 
 type QuickActionsCardProps = {
     date: Date;
+
+    // allows Daily Log to tell Quick Actions which popup should open
+    openAction?: string | null;
 };
 
 export function QuickActionsCard({
     date,
+    openAction,
 }: QuickActionsCardProps) {
     return (
         <Card className="w-full">
@@ -29,8 +33,16 @@ export function QuickActionsCard({
 
             <CardContent>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-center">
-                    <CravingButton date={date} />
-                    <HungryButton date={date} />
+                    <CravingButton
+                        date={date}
+                        shouldOpen={openAction === "craving"}
+                    />
+
+                    <HungryButton
+                        date={date}
+                        shouldOpen={openAction === "hunger"}
+                    />
+
                     <CheckInButton date={date} />
                 </div>
             </CardContent>

@@ -59,11 +59,13 @@ export default function HungerCheckPage() { // shows questions to decide hunger 
         setResultMessage(hungerAnalysis.summary)
 
         if (hungerAnalysis.isHungry) {
-            router.push("/hungry")
+            // send hungry result to Daily Log and request the hunger popup
+            router.push("/daily-log?action=hunger")
             return
         }
 
-        router.push("/craving")
+        // send craving result to Daily Log and request the craving popup
+        router.push("/daily-log?action=craving")
     }
 
     return (
