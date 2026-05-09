@@ -51,7 +51,7 @@ function toFrequencyData(stress_data: StressData[]) {
 }
 
 
-export function StressCard({ time }: { time: string }) {
+export function StressCard({ time }: { time?: string }) {
     const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs({
         limit: time == 'all' ? undefined : 7,
         sortDir: "desc",

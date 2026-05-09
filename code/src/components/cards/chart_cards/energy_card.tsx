@@ -49,7 +49,7 @@ function toFrequencyData(energy_data: EnergyData[]) {
 }
 
 
-export function EnergyCard({ time }: { time: string }) {
+export function EnergyCard({ time }: { time?: string }) {
     const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs({
         limit: time == 'all' ? undefined : 7,
         sortDir: "desc",
