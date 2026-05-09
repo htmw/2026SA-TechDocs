@@ -217,7 +217,7 @@ def build_vectorizer(df):
     #return tfidf, tfidf_matrix
 
 #Funtion to filter recipes
-def filter_recipes(df, query, top_n=5):
+def filter_recipes(df, query, top_n=5, max_calories=None):
     filtered_df = df.copy()
     query = query.lower().strip()
 
@@ -252,19 +252,26 @@ def filter_recipes(df, query, top_n=5):
             (filtered_df["protein"] >= 20) &
             (filtered_df["calories"] > 500)
         ]
-        
-    # fallback
-    if filtered_df.shape[0] < top_n:
-        filtered_df = df.copy()
+
+
+    if max_calories is not None:
+        filtered_df = filtered_df[
+            filtered_df["calories"] <= max_calories
+        ]    
+
+    # fallback when there is no calorie limit
+    if filtered_df.shape[0] == 0:
+        return filtered_df
 
     return filtered_df
-
 #Recommender
-def recommend_food(user_input, df, tfidf, top_n=5):
+def recommend_food(user_input, df, tfidf, top_n=5, max_calories=None):
     query = user_input.lower().strip()
 
-    filtered_df = filter_recipes(df, query, top_n=top_n)
+    filtered_df = filter_recipes(df, query, top_n=top_n, max_calories=max_calories)
 
+    if filtered_df.empty: 
+        return pd.DataFrame(columns=[ "title", "calories", "protein", "fat", "sodium", "categories", "ingredients", "directions", "score" ])
     filtered_matrix = tfidf.transform(filtered_df["search_text"])
     query_vector = tfidf.transform([query])
 
