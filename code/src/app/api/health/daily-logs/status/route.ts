@@ -5,6 +5,7 @@ import { normalizeDocument } from "@/lib/utils/database_utils";
 import { normalizeDateToTimezoneDay } from "@/lib/utils/utils";
 import { NextResponse } from "next/server";
 import { isValid, format } from "date-fns";
+import { tz } from "@date-fns/tz";
 
 export const GET = createApiRoute(async (context: ApiRouteContext) => {
     const { user, req } = context;
@@ -82,7 +83,7 @@ export const GET = createApiRoute(async (context: ApiRouteContext) => {
     }
 
     const days = logs.map((log) => {
-        const row: Record<string, any> = { date: format(log.date, "yyyy-MM-dd") };
+        const row: Record<string, any> = { date: format(log.date, "yyyy-MM-dd", { in: tz(timezone) }) };
 
         if (status === "daily_checkins") {
             row.daily_checkins = true;
