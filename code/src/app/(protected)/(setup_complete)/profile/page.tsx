@@ -1,167 +1,131 @@
 "use client"
 
-import { fitness_level, hobby_options, occupation_options, diet_restrictions, medical_history_options } from "@/lib/enums"
+import { fitness_level, hobby_options, occupation_options, diet_restrictions, medical_history_options, gender, current_energy, avg_sleep, avg_calories, goal as goalEnum, goal_focus } from "@/lib/enums"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
+import { z } from "zod"
+import { useAppForm } from "@/components/form/form"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { useAuth } from "@/lib/hooks/useAuthProvider"
+import { useRouter } from "next/navigation"
 
-type GoalValue = "lose" | "maintain" | "gain" | "energy" | ""
+type GoalValue = keyof typeof goalEnum.map | ""
 
-function GoalSummary({ goal, bmi }: { goal: GoalValue, bmi: string }) {
-    // Shows saved goal name.
-    function getGoalLabel() {
-        if (goal === "lose") return "Lose Weight"
-        if (goal === "maintain") return "Maintain Weight"
-        if (goal === "gain") return "Build Muscle"
-        if (goal === "energy") return "Improve Energy"
+const ProfileFormSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    dob: z.date("Date of birth is required"),
+    height: z.coerce.number<string>().min(1, "Height is required"),
+    weight: z.coerce.number<string>().min(1, "Weight is required"),
+    occupation: z.string().min(1, "Occupation is required"),
+    fitness_level: z.string().min(1, "Fitness level is required"),
+    hobbies: z.array(z.string()),
+    avg_calories: z.string().min(1, "Average calories is required"),
+    current_energy: z.string().min(1, "Current energy level is required"),
+    gender: z.string().min(1, "Gender is required"),
+    avg_sleep: z.string().min(1, "Sleep hours are required"),
+    diet_restrictions: z.array(z.string()),
+    medical_history: z.array(z.string()),
+})
 
-        return "--"
-    }
-
-    // Shows saved goal focus.
-    function getGoalFocus() {
-        if (goal === "lose") return "Calorie deficit"
-        if (goal === "gain") return "Calorie surplus"
-        if (goal === "maintain") return "Balanced intake"
-        if (goal === "energy") return "Energy support"
-
-        return "No goal set yet"
-    }
+function GoalSummary({ goal, bmi }: { goal: GoalValue; bmi: string }) {
+    const goalLabel = goal ? goalEnum.map[goal] : "--"
+    const goalFocus = goal ? goal_focus.map[goal as keyof typeof goal_focus.map] ?? "Balanced Intake" : "No goal set yet"
 
     return (
-        <div>
-            <h3 className="mb-3 text-lg font-bold">Your Goal Summary</h3>
-
-            <div className="rounded-xl border p-4">
-                <p className="text-sm text-gray-600">
-                    Goal: {getGoalLabel()}
-                </p>
-
-                <p className="mt-2 text-sm text-gray-600">
-                    Focus: {getGoalFocus()}
-                </p>
-
-                {bmi && (
-                    <p className="mt-2 text-sm text-gray-600">
-                        BMI: {bmi}
-                    </p>
-                )}
-
-                <Link
-                    className="mt-4 inline-flex w-full justify-center rounded-lg border px-4 py-2 text-sm"
-                    href="/goals"
-                >
-                    Edit Goal
-                </Link>
-            </div>
-        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>Your Goal Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1">
+                <p className="text-sm text-gray-600">Goal: {goalLabel}</p>
+                <p className="text-sm text-gray-600">Focus: {goalFocus}</p>
+                {bmi && <p className="text-sm text-gray-600">BMI: {bmi}</p>}
+            </CardContent>
+            <CardFooter>
+                <Button asChild className="w-full">
+                    <Link href="/goals">Edit Goal</Link>
+                </Button>
+            </CardFooter>
+        </Card>
     )
 }
 
 export default function ProfilePage() {
-    // stores all profile form values
-    type ProfileForm = {
-        name: string
-        age: string
-        height: string
-        weight: string
-        occupation: string
-        fitnessLevel: string
-        hobbies: string[]
-        averageCalories: string
-        currentEnergyLevel: string
-        gender: string
-        sleepHours: string
-        dietRestrictions: string[]
-        medicalHistory: string[]
-    }
+    type ProfileForm = z.input<typeof ProfileFormSchema>
 
-    const [formData, setFormData] = useState<ProfileForm>({
-        name: "",
-        age: "",
-        height: "",
-        weight: "",
-        occupation: "",
-        fitnessLevel: "",
-        hobbies: [],
-        averageCalories: "",
-        currentEnergyLevel: "",
-        gender: "",
-        sleepHours: "",
-        dietRestrictions: [],
-        medicalHistory: []
-    })
+    const { user } = useAuth();
+    const profile = user!.profile;
 
-    // stores profile results and messages
+    const router = useRouter();
+
     const [bmi, setBmi] = useState("")
     const [energyScore, setEnergyScore] = useState(0)
     const [errorMessage, setErrorMessage] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
-    const [goal, setGoal] = useState<GoalValue>("")
 
-    // loads saved profile data when the page opens
-    useEffect(() => {
+    const form = useAppForm({
+        defaultValues: {
+            name: user!.name ?? "",
+            dob: new Date(profile.dob ?? ""),
+            height: String(profile.height),
+            weight: String(profile.weight),
+            occupation: profile.occupation ?? "",
+            fitness_level: profile.fitness_level ?? "",
+            hobbies: profile.hobbies ?? [],
+            avg_calories: profile.avg_calories ?? "",
+            current_energy: profile.current_energy ?? "",
+            gender: profile.gender ?? "",
+            avg_sleep: profile.avg_sleep ?? "",
+            diet_restrictions: profile.diet_restrictions ?? [],
+            medical_history: profile.medical_history ?? [],
+        } as ProfileForm,
+        validators: {
+            onSubmitAsync: async ({ value }: { value: ProfileForm }) => {
+                setErrorMessage("")
+                setSuccessMessage("")
 
-        async function loadProfile() {
-
-            try {
-
-                const response = await fetch("/api/profile")
+                const response = await fetch("/api/profile", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        name: value.name,
+                        dob: value.dob,
+                        height: value.height,
+                        weight: value.weight,
+                        occupation: value.occupation,
+                        fitness_level: value.fitness_level,
+                        hobbies: value.hobbies,
+                        avg_calories: value.avg_calories,
+                        current_energy: value.current_energy,
+                        gender: value.gender,
+                        avg_sleep: value.avg_sleep,
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        diet_restrictions: value.diet_restrictions,
+                        medical_history: value.medical_history,
+                    }),
+                })
 
                 const data = await response.json()
 
-                if (response.ok && data.data?.user) {
-
-                    const profile = data.data.user.profile || {};
-                    const fitnessRaw = profile.fitness_level ?? ""
-                    const finalFitness = fitnessRaw
-
-                    // gets saved goal from profile data
-                    const savedGoals = profile.goals ?? []
-                    setGoal(savedGoals[0] ?? "")
-
-                    setFormData({
-                        name: data.data.user.name ?? "",
-                        age: profile.dob ? String(new Date().getFullYear() - new Date(profile.dob).getFullYear()) : "", // age is calculated from date of birth
-                        height: profile.height ?? "",
-                        weight: profile.weight ?? "",
-                        occupation: profile.occupation ?? "",
-                        fitnessLevel: finalFitness,
-                        hobbies: profile.hobbies ?? [],
-                        averageCalories: profile.avg_calories ?? "",
-                        currentEnergyLevel: profile.current_energy ?? "",
-                        gender: profile.gender ?? "",
-                        sleepHours: profile.avg_sleep ?? "",
-                        dietRestrictions: profile.diet_restrictions ?? [],
-                        medicalHistory: profile.medical_history ?? []
-                    })
-
-                    const loadedHeight = Number(profile.height)
-                    const loadedWeight = Number(profile.weight)
-
-                    // sets bmi from saved height and weight
-                    if (loadedHeight && loadedWeight) {
-                        const bmiValue = (loadedWeight * 703) / (loadedHeight * loadedHeight)
-                        setBmi(bmiValue.toFixed(1))
-                    }
-
+                if (!response.ok) {
+                    const message = data?.error?.message || "Failed to save profile."
+                    setErrorMessage(message)
+                    return message
                 }
 
-            } catch (error) {
+                setSuccessMessage("Profile saved successfully.")
 
-                console.error("Failed to load profile:", error)
+                router.refresh();
+            },
+        },
+    })
 
-            }
-
-        }
-
-        loadProfile()
-
-    }, [])
-
-    // updates bmi when height or weight changes
     useEffect(() => {
-        const height = Number(formData.height)
-        const weight = Number(formData.weight)
+        const height = Number(profile.height)
+        const weight = Number(profile.weight)
 
         if (!height || !weight) {
             setBmi("")
@@ -170,451 +134,243 @@ export default function ProfilePage() {
 
         const bmiValue = (weight * 703) / (height * height)
         setBmi(bmiValue.toFixed(1))
-    }, [formData.height, formData.weight])
+    }, [profile.height, profile.weight])
 
-    // updates energy score from sleep, energy, and fitness level
     useEffect(() => {
         let score = 0
 
-        if (formData.sleepHours === "7-9") score += 40
-        else if (formData.sleepHours === "5-7") score += 25
-        else if (formData.sleepHours) score += 10
+        if (profile.avg_sleep === "7-9") score += 40
+        else if (profile.avg_sleep === "5-7") score += 25
+        else if (profile.avg_sleep) score += 10
 
-        if (formData.currentEnergyLevel === "high") score += 40
-        else if (formData.currentEnergyLevel === "medium") score += 25
-        else if (formData.currentEnergyLevel === "low") score += 10
+        if (profile.current_energy === "high") score += 40
+        else if (profile.current_energy === "medium") score += 25
+        else if (profile.current_energy === "low") score += 10
 
-        if (formData.fitnessLevel === "Active") score += 20
-        else if (formData.fitnessLevel === "Moderate") score += 10
+        if (profile.fitness_level === "active") score += 20
+        else if (profile.fitness_level === "moderate") score += 10
 
         setEnergyScore(score)
-    }, [
-        formData.sleepHours,
-        formData.currentEnergyLevel,
-        formData.fitnessLevel
-    ])
+    }, [profile.avg_sleep, profile.current_energy, profile.fitness_level])
 
-    // returns the bmi category based on the bmi value
-    function getBMICategory(bmi: number) {
-        if (bmi < 18.5) return "Underweight"
-        if (bmi < 25) return "Normal Weight"
-        if (bmi < 30) return "Overweight"
+    function getBMICategory(bmiValue: number) {
+        if (bmiValue < 18.5) return "Underweight"
+        if (bmiValue < 25) return "Normal Weight"
+        if (bmiValue < 30) return "Overweight"
         return "Obese"
     }
 
-    // updates form values when the user types or selects
-    function handleChange(
-        event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-    ) {
-        const { name, value } = event.target
-
-        setFormData((previousData) => ({
-            ...previousData,
-            [name]: value,
-        }))
-    }
-
-    // saves profile data to the database
-    async function handleSaveProfile() {
-        if (!formData.fitnessLevel) {
-            setErrorMessage("Select fitness level")
-            return
-        }
-
-        try {
-            setErrorMessage("")
-            setSuccessMessage("") // clears old success message
-
-            const currentYear = new Date().getFullYear()
-            const birthYear = currentYear - Number(formData.age)
-            const dob = `${birthYear}-01-01` // date format: YYYY-MM-DD
-
-            const response = await fetch("/api/profile", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    name: formData.name,
-                    dob: dob,
-                    height: formData.height,
-                    weight: formData.weight,
-                    occupation: formData.occupation,
-                    fitness_level: formData.fitnessLevel,
-                    hobbies: formData.hobbies,
-                    goals: goal ? [goal] : [],
-                    avg_calories: formData.averageCalories,
-                    current_energy: formData.currentEnergyLevel,
-                    gender: formData.gender,
-                    avg_sleep: formData.sleepHours,
-                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                    diet_restrictions: formData.dietRestrictions,
-                    medical_history: formData.medicalHistory
-                }),
-            })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(JSON.stringify(data) || "Profile save failed.")
-            }
-
-            setSuccessMessage("Profile saved successfully.")
-
-        } catch (error) {
-            setErrorMessage(error instanceof Error ? error.message : "Failed to save profile.")
-        }
-    }
-
     return (
-        <div className="mx-auto max-w-4xl">
-            {/* page heading */}
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold">Build Your Profile</h1>
-                <p className="mt-2 text-sm text-gray-600">
-                    Enter your basic information to calculate BMI and preview your energy
-                    score.
-                </p>
-            </div>
-
-            {/* main page layout */}
-            <div className="grid gap-6 md:grid-cols-2">
-                {/* profile form section */}
-                <div className="rounded-2xl border p-6 shadow-sm">
-                    <h2 className="mb-4 text-xl font-semibold">Profile Information</h2>
-
-                    <div className="grid gap-4">
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">Name</label>
-                            <input
-                                className="w-full rounded-lg border p-2"
-                                name="name"
-                                type="text"
-                                value={formData.name}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">Age</label>
-                            <input
-                                className="w-full rounded-lg border p-2"
-                                name="age"
-                                type="number"
-                                min={1}
-                                value={formData.age}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">
-                                Height (inches)
-                            </label>
-                            <input
-                                className="w-full rounded-lg border p-2"
-                                name="height"
-                                type="number"
-                                min={1}
-                                value={formData.height}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">
-                                Weight (lbs)
-                            </label>
-                            <input
-                                className="w-full rounded-lg border p-2"
-                                name="weight"
-                                type="number"
-                                min={1}
-                                value={formData.weight}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">
-                                Occupation
-                            </label>
-                            <select
-                                className="w-full rounded-lg border p-2"
-                                name="occupation"
-                                value={formData.occupation}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="">Select</option>
-
-                                {occupation_options.entries.map(([value, label]) => (
-                                    <option key={value} value={value}>
-                                        {label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">
-                                Fitness Level
-                            </label>
-                            <select
-                                className="w-full rounded-lg border p-2"
-                                name="fitnessLevel"
-                                value={formData.fitnessLevel}
-                                onChange={handleChange}
-                            >
-                                <option value="">Select</option>
-                                {fitness_level.entries.map(([value, label]) => (
-                                    <option key={value} value={value}>
-                                        {label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">
-                                Hobbies
-                            </label>
-
-                            <div className="relative">
-                                <details className="w-full">
-                                    <summary className="cursor-pointer rounded-lg border p-2">
-                                        {formData.hobbies.length > 0
-                                            ? `${formData.hobbies.length} selected`
-                                            : "Select hobbies"}
-                                    </summary>
-
-                                    <div className="absolute z-10 mt-2 w-full rounded-lg border bg-background text-foreground p-2 shadow">
-                                        {hobby_options.entries.map(([value, label]) => {
-                                            const isChecked = formData.hobbies.includes(value)
-
-                                            return (
-                                                <label key={value} className="flex items-center gap-2 p-1">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isChecked}
-                                                        onChange={() => {
-                                                            setFormData((prev) => ({
-                                                                ...prev,
-                                                                hobbies: isChecked
-                                                                    ? prev.hobbies.filter((h) => h !== value)
-                                                                    : [...prev.hobbies, value],
-                                                            }))
-                                                        }}
-                                                    />
-                                                    {label}
-                                                </label>
-                                            )
-                                        })}
-                                    </div>
-                                </details>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">
-                                Diet Restrictions
-                            </label>
-
-                            <div className="relative">
-                                <details className="w-full">
-                                    <summary className="cursor-pointer rounded-lg border p-2">
-                                        {formData.dietRestrictions.length > 0
-                                            ? `${formData.dietRestrictions.length} selected`
-                                            : "Select restrictions"}
-                                    </summary>
-
-                                    <div className="absolute z-10 mt-2 w-full rounded-lg border bg-background text-foreground p-2 shadow">
-                                        {diet_restrictions.entries.map(([value, label]) => {
-                                            const isChecked = formData.dietRestrictions.includes(value)
-
-                                            return (
-                                                <label key={value} className="flex items-center gap-2 p-1">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isChecked}
-                                                        onChange={() => {
-                                                            setFormData((prev) => ({
-                                                                ...prev,
-                                                                dietRestrictions: isChecked
-                                                                    ? prev.dietRestrictions.filter((d) => d !== value)
-                                                                    : [...prev.dietRestrictions, value],
-                                                            }))
-                                                        }}
-                                                    />
-                                                    {label}
-                                                </label>
-                                            )
-                                        })}
-                                    </div>
-                                </details>
-                            </div>
-                        </div>
-
-                        {/* medical history section */}
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">
-                                Medical History
-                            </label>
-
-                            <div className="relative">
-                                <details className="w-full">
-                                    <summary className="cursor-pointer rounded-lg border p-2">
-                                        {formData.medicalHistory.length > 0
-                                            ? `${formData.medicalHistory.length} selected`
-                                            : "Select medical history"}
-                                    </summary>
-
-                                    <div className="absolute z-10 mt-2 w-full rounded-lg border bg-background text-foreground p-2 shadow">
-                                        {medical_history_options.map((item) => {
-
-                                            const isChecked = formData.medicalHistory.includes(item)
-
-                                            return (
-                                                <label key={item} className="flex items-center gap-2 p-1">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isChecked}
-                                                        onChange={() => {
-                                                            setFormData((prev) => ({
-                                                                ...prev,
-                                                                medicalHistory: isChecked
-                                                                    ? prev.medicalHistory.filter((m) => m !== item)
-                                                                    : [...prev.medicalHistory, item],
-                                                            }))
-                                                        }}
-                                                    />
-                                                    {item}
-                                                </label>
-                                            )
-                                        })}
-                                    </div>
-                                </details>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">
-                                Average Calorie Intake
-                            </label>
-                            <select
-                                className="w-full rounded-lg border p-2"
-                                name="averageCalories"
-                                value={formData.averageCalories}
-                                onChange={handleChange}
-                            >
-                                <option value="">Select</option>
-                                <option value="lt-1000">Less than 1000</option>
-                                <option value="1000-1500">1000-1500</option>
-                                <option value="1500-2000">1500-2000</option>
-                                <option value="2000-2500">2000-2500</option>
-                                <option value="gt-2500">More than 2500</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">
-                                Current Energy Level
-                            </label>
-                            <select
-                                className="w-full rounded-lg border p-2"
-                                name="currentEnergyLevel"
-                                value={formData.currentEnergyLevel}
-                                onChange={handleChange}
-                            >
-                                <option value="">Select</option>
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">Gender</label>
-                            <select
-                                className="w-full rounded-lg border p-2"
-                                name="gender"
-                                value={formData.gender}
-                                onChange={handleChange}
-                            >
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="mb-1 block text-sm font-medium">
-                                Average Hours of Sleep
-                            </label>
-                            <select
-                                className="w-full rounded-lg border p-2"
-                                name="sleepHours"
-                                value={formData.sleepHours}
-                                onChange={handleChange}
-                            >
-                                <option value="">Select</option>
-                                <option value="lt-5">Less than 5</option>
-                                <option value="5-7">5-7</option>
-                                <option value="7-9">7-9</option>
-                                <option value="9-11">9-11</option>
-                                <option value="gt-11">More than 11</option>
-                            </select>
-                        </div>
-
-                        <button
-                            className="rounded-lg border bg-green-600 px-4 py-2 text-white"
-                            type="button"
-                            onClick={handleSaveProfile}
-                        >
-                            Update Profile
-                        </button>
-
-                        {errorMessage ? (
-                            <p className="text-sm text-red-600">{errorMessage}</p>
-                        ) : null}
-                        {successMessage ? (
-                            <p className="text-sm text-green-600">{successMessage}</p>
-                        ) : null}
-                    </div>
-                </div>
-
-                {/* profile summary section */}
-                <div className="rounded-2xl border p-6 shadow-sm">
-                    <h2 className="mb-4 text-xl font-semibold">Profile Summary</h2>
-
-                    <div className="space-y-6">
-                        <div className="rounded-xl border p-4">
-                            <p className="text-sm text-gray-600">BMI</p>
-                            <p className="text-3xl font-bold">{bmi || "--"}</p>
-                            <p className="text-sm text-gray-600">
-                                {bmi ? getBMICategory(Number(bmi)) : ""}
-                            </p>
-                            <p className="mt-2 text-sm text-gray-500">
-                                Auto calculated from height and weight.
-                            </p>
-                        </div>
-
-                        <div className="rounded-xl border p-4">
-                            <p className="text-sm text-gray-600">Energy Meter</p>
-                            <div className="mt-3 h-4 w-full overflow-hidden rounded-full bg-gray-200">
-                                <div
-                                    className="h-full rounded-full bg-green-500 transition-all"
-                                    style={{ width: `${energyScore}%` }}
+        <div className="mx-auto w-full">
+            <div className="grid gap-6 p-6 lg:grid-cols-2">
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault()
+                        form.handleSubmit()
+                    }}
+                >
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Profile Information</CardTitle>
+                        </CardHeader>
+                        <form.AppForm>
+                            <CardContent>
+                                <form.Subscribe
+                                    selector={(state) => state.errorMap.onSubmit}
+                                    children={(submitError) =>
+                                        submitError ? (
+                                            <div className="text-sm text-red-600">{String(submitError)}</div>
+                                        ) : null
+                                    }
                                 />
-                            </div>
-                            <p className="mt-3 text-2xl font-bold">{energyScore}%</p>
-                            <p className="mt-2 text-sm text-gray-500">
-                                Basic demo score based on sleep, current energy, and fitness
-                                level.
-                            </p>
-                        </div>
+                                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                                    <form.AppField
+                                        name="name"
+                                        validators={{
+                                            onBlur: ProfileFormSchema.shape.name
+                                        }}
+                                        children={(field) => (
+                                            <field.TextField label="Name" placeholder="Jane Doe" required />
+                                        )}
+                                    />
+                                    <form.AppField
+                                        name="dob"
+                                        children={(field) => (
+                                            <field.DateField label="Date of Birth" required />
+                                        )}
+                                    />
+                                    <form.AppField
+                                        name="height"
+                                        validators={{
+                                            onBlur: ProfileFormSchema.shape.height
+                                        }}
+                                        children={(field) => (
+                                            <field.NumberField label="Height (inches)" placeholder="Enter height" required />
+                                        )}
+                                    />
+                                    <form.AppField
+                                        name="weight"
+                                        validators={{
+                                            onBlur: ProfileFormSchema.shape.weight
+                                        }}
+                                        children={(field) => (
+                                            <field.NumberField label="Weight (lbs)" placeholder="Enter weight" required />
+                                        )}
+                                    />
+                                    <form.AppField
+                                        name="occupation"
+                                        validators={{
+                                            onBlur: ProfileFormSchema.shape.occupation
+                                        }}
+                                        children={(field) => (
+                                            <field.SelectField
+                                                label="Occupation"
+                                                placeholder="Select occupation"
+                                                required
+                                                options={occupation_options.entries.map(([value, label]) => ({ value, label }))}
+                                            />
+                                        )}
+                                    />
+                                    <form.AppField
+                                        name="fitness_level"
+                                        validators={{
+                                            onBlur: ProfileFormSchema.shape.fitness_level
+                                        }}
+                                        children={(field) => (
+                                            <field.SelectField
+                                                label="Fitness Level"
+                                                placeholder="Select fitness level"
+                                                required
+                                                options={fitness_level.entries.map(([value, label]) => ({ value, label }))}
+                                            />
+                                        )}
+                                    />
+                                    <form.AppField
+                                        name="hobbies"
+                                        validators={{
+                                            onBlur: ProfileFormSchema.shape.hobbies
+                                        }}
+                                        children={(field) => (
+                                            <field.MultiSelectField
+                                                label="Hobbies"
+                                                placeholder="Select hobbies"
+                                                options={hobby_options.entries.map(([value, label]) => ({ value, label }))}
+                                            />
+                                        )}
+                                    />
+                                    <form.AppField
+                                        name="avg_calories"
+                                        validators={{
+                                            onBlur: ProfileFormSchema.shape.avg_calories
+                                        }}
+                                        children={(field) => (
+                                            <field.SelectField
+                                                label="Average Calorie Intake"
+                                                placeholder="Select intake"
+                                                required
+                                                options={avg_calories.entries.map(([value, label]) => ({ value, label }))}
+                                            />
+                                        )}
+                                    />
+                                    <form.AppField
+                                        name="current_energy"
+                                        validators={{
+                                            onBlur: ProfileFormSchema.shape.current_energy
+                                        }}
+                                        children={(field) => (
+                                            <field.SelectField
+                                                label="Current Energy Level"
+                                                placeholder="Select energy level"
+                                                required
+                                                options={current_energy.entries.map(([value, label]) => ({ value, label }))}
+                                            />
+                                        )}
+                                    />
+                                    <form.AppField
+                                        name="gender"
+                                        validators={{
+                                            onBlur: ProfileFormSchema.shape.gender
+                                        }}
+                                        children={(field) => (
+                                            <field.SelectField
+                                                label="Gender"
+                                                placeholder="Select gender"
+                                                required
+                                                options={gender.entries.map(([value, label]) => ({ value, label }))}
+                                            />
+                                        )}
+                                    />
+                                    <form.AppField
+                                        name="avg_sleep"
+                                        validators={{
+                                            onBlur: ProfileFormSchema.shape.avg_sleep
+                                        }}
+                                        children={(field) => (
+                                            <field.SelectField
+                                                label="Average Hours of Sleep"
+                                                placeholder="Select sleep range"
+                                                required
+                                                options={avg_sleep.entries.map(([value, label]) => ({ value, label }))}
+                                            />
+                                        )}
+                                    />
+                                    <form.AppField
+                                        name="diet_restrictions"
+                                        children={(field) => (
+                                            <field.MultiSelectField
+                                                label="Diet Restrictions"
+                                                placeholder="Select restrictions"
+                                                options={diet_restrictions.entries.map(([value, label]) => ({ value, label }))}
+                                            />
+                                        )}
+                                    />
+                                    <form.AppField
+                                        name="medical_history"
+                                        children={(field) => (
+                                            <field.MultiSelectField
+                                                label="Medical History"
+                                                placeholder="Select medical history"
+                                                options={medical_history_options.map((item) => ({ value: item, label: item }))}
+                                            />
+                                        )}
+                                    />
+                                </div>
+                            </CardContent>
+                            <CardFooter className="flex flex-col gap-2">
+                                <form.SubmitButton label="Update Profile" />
+                                {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
+                                {successMessage && <p className="text-sm text-green-600">{successMessage}</p>}
+                            </CardFooter>
+                        </form.AppForm>
+                    </Card>
+                </form>
+                <div>
+                    <div className="space-y-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>BMI</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-1">
+                                <p className="text-3xl font-bold">{bmi || "--"}</p>
+                                <p className="text-sm text-gray-600">{bmi ? getBMICategory(Number(bmi)) : ""}</p>
+                                <p className="mt-2 text-xs text-gray-500">Auto calculated from height and weight.</p>
+                            </CardContent>
+                        </Card>
 
-                        <GoalSummary goal={goal} bmi={bmi} />
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Energy Meter</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                <div className="h-4 w-full overflow-hidden rounded-full bg-gray-200">
+                                    <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${energyScore}%` }} />
+                                </div>
+                                <p className="text-2xl font-bold">{energyScore}%</p>
+                                <p className="text-sm text-gray-500">Basic demo score based on sleep, current energy, and fitness level.</p>
+                            </CardContent>
+                        </Card>
+
+                        <GoalSummary goal={(profile.goals?.[0] ?? "") as GoalValue} bmi={bmi} />
                     </div>
                 </div>
             </div>

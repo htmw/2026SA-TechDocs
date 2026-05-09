@@ -32,6 +32,7 @@ export function normalizeDateToTimezoneDay(date: string, timeZone: string) {
 export function getTimezoneDayString(date: Date, timeZone: string) {
     return format(
         date,
-        "yyyy-MM-dd"
+        "yyyy-MM-dd",
+        { in: tz(timeZone) }
     );
 }

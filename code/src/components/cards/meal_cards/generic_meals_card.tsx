@@ -43,17 +43,18 @@ export function GenericMealsCard({
                 <CardTitle className="tracking-tight">
                     {title}
                 </CardTitle>
-
-                <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="rounded-full"
-                    onClick={onAddMeal}
-                    aria-label={`Add meal to ${title}`}
-                >
-                    <Plus />
-                </Button>
+                {onAddMeal && (
+                    <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="rounded-full"
+                        onClick={onAddMeal}
+                        aria-label={`Add meal to ${title}`}
+                    >
+                        <Plus />
+                    </Button>
+                )}
             </CardHeader>
 
             <CardContent>
