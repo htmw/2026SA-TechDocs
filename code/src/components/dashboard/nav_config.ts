@@ -19,12 +19,12 @@ export const navMainItems: NavItem[] = [
         icon: Calendar,
     },
     {
-        title: "I'm Hungry",
+        title: "Hunger Check",
         url: "/hunger-check",
         icon: Utensils,
     },
     {
-        title: "I'm Craving",
+        title: "Craving Check",
         url: "/craving-check",
         icon: Candy,
     },
