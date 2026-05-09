@@ -265,7 +265,7 @@ def filter_recipes(df, query, top_n=5, max_calories=None):
 
     return filtered_df
 #Recommender
-def recommend_food(user_input, df, tfidf, top_n=5, max_calories=None):
+def recommend_food(user_input, df, tfidf, top_n=10, max_calories=None):
     query = user_input.lower().strip()
 
     filtered_df = filter_recipes(df, query, top_n=top_n, max_calories=max_calories)
@@ -276,16 +276,24 @@ def recommend_food(user_input, df, tfidf, top_n=5, max_calories=None):
     query_vector = tfidf.transform([query])
 
     similarity_scores = cosine_similarity(query_vector, filtered_matrix).flatten()
-    top_indices = similarity_scores.argsort()[::-1][:top_n]
+    #Create pool of top 15 indices for rotating recommendations.
+    candidate_n = min(15, len(similarity_scores))
+    candidate_indices = similarity_scores.argsort()[::-1][:candidate_n]
 
-    results = filtered_df.iloc[top_indices][
+    selected_indices = np.random.choice(
+        candidate_indices,
+        size=min(top_n, len(candidate_indices)),
+        replace=False
+    )
+
+    results = filtered_df.iloc[selected_indices][
         ["title","calories","protein","fat","sodium","categories", "ingredients", "directions"]
     ].copy()
 
     results["ingredients"] = results["ingredients"].apply(parse_ingredients)
     results["directions"] = results["directions"].apply(parse_directions)
 
-    results["score"] = similarity_scores[top_indices]
+    results["score"] = similarity_scores[selected_indices]
 
     return results
 
