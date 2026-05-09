@@ -17,7 +17,7 @@ export const POST = createApiRoute(
         const prompt = parsed.craving_prompt;
         const profile = user.profile;
 
-        const guidelines = calculateDietaryGuidelines(profile, profile?.goals);
+        const guidelines = calculateDietaryGuidelines(profile?.goals ?? [], profile);
 
         //Logic to calculate remaining calories for user
         const today = new Date();

@@ -15,7 +15,7 @@ export const POST = createApiRoute(
         const parsed = body as z.infer<typeof HungerEventZodSchema>;
         const profile = user.profile;
         
-        const guidelines = calculateDietaryGuidelines(profile, profile?.goals);
+        const guidelines = calculateDietaryGuidelines(profile?.goals ?? [], profile);
 
         //Logic to calculate remaining calories for user
         const today = new Date();
