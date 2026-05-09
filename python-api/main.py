@@ -12,10 +12,12 @@ class RecommendationRequest(BaseModel):
     craving: Optional[str] = ""
     mealType: Optional[str] = ""
     topN: Optional[int] = 3
+    maxCalories: Optional[int] = None
 
 class HungerRequest(BaseModel):
     hungerLevel: str
     topN: int = 5
+    maxCalories: Optional[int] = None
 
 @app.get("/")
 def home():
@@ -47,7 +49,7 @@ def recommend(data: RecommendationRequest):
 
     top_n = data.topN if data.topN else 3
 
-    results_df = recommend_food(user_query, recipe_df, tfidf, top_n=top_n)
+    results_df = recommend_food(user_query, recipe_df, tfidf, top_n=top_n, max_calories=data.maxCalories)
 
     recommendations = results_df.to_dict(orient="records")
 
@@ -77,7 +79,8 @@ def recommend_hunger(data: HungerRequest):
         user_input=user_query,
         df=recipe_df,
         tfidf=tfidf,
-        top_n=data.topN
+        top_n=data.topN,
+        max_calories=data.maxCalories
     )
 
     return {

@@ -6,13 +6,32 @@ import { getEnv } from "@/lib/env";
 import { createErrorResponse, createSuccessResponse } from "@/lib/types/shared";
 import { normalizeDocument } from "@/lib/utils/database_utils";
 import { CravingEventSchema, CravingPromptSchema, HungerEventZodSchema } from "@/lib/zod_schemas/health_schema";
+import { calculateDietaryGuidelines } from "@/lib/utils/nutrition_utils";
 import { NextResponse } from "next/server";
 import z from "zod";
 
 export const POST = createApiRoute(
-    async ({ body }) => {
+    async ({ user, body }) => {
         const parsed = body as z.infer<typeof HungerEventZodSchema>;
+        const profile = user.profile;
+        
+        const guidelines = calculateDietaryGuidelines(profile?.goals ?? [], profile);
 
+        //Logic to calculate remaining calories for user
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const dailyLog = await DailyLog.findOne({
+             user_id: user._id,
+            date: today,
+        });
+        
+        const totalCalories = dailyLog?.meals?.reduce(
+        (total, meal) => total + meal.calories,
+        0
+        ) ?? 0;
+        
+        const remainingCalories = Math.max(guidelines.calories - totalCalories, 0);
         const recommender_url = new URL("/recommend-hunger", getEnv().AI_RECOMMENDER_URL).href;
         const aiResponse = await fetch(recommender_url, {
             method: "POST",
@@ -22,6 +41,7 @@ export const POST = createApiRoute(
             body: JSON.stringify({
                 hungerLevel: parsed.hunger_level,
                 topN: 5,
+                maxCalories: remainingCalories,
             }),
         });
 
@@ -33,6 +53,17 @@ export const POST = createApiRoute(
         }
 
         const aiData = await aiResponse.json();
+        if (!aiData.recommendations || aiData.recommendations.length === 0) {
+            return NextResponse.json(
+                createSuccessResponse({
+                    recipes: [],
+                    recipe: null,
+                    message: "Sorry, there are no recommendations within your calorie limit.",
+                    }),
+                    { status: 200 }
+            );
+        }
+
 
         let recipes = aiData.recommendations ?? [];
         recipes = recipes.map((recipe: any) => {

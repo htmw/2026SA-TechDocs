@@ -6,6 +6,7 @@ import { HungerEventValues } from "@/lib/zod_schemas/health_schema";
 interface AiHungerResponse {
     recipe: ClientRecipes;
     recipes?: ClientRecipes[];
+    message?: string;
 }
 
 type AiHungerRequest = Pick<HungerEventValues, "hunger_level">;
@@ -17,6 +18,9 @@ export function useAiHunger() {
                 method: "POST",
                 body: JSON.stringify(payload),
             });
+            if (!response.recipe || response.recipes?.length === 0) {
+                throw new Error(response.message ?? "Sorry, there are no recommendations within your calorie limit.");
+            }
             return response.recipes ?? [response.recipe];
         },
     });
