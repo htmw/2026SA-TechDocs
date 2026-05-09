@@ -3,14 +3,19 @@
 import { NutritionSummaryCard } from "@/components/cards/macro_card";
 import { SingleWeekPicker } from "@/components/cards/single_week_picker";
 import { useDailyLogStatus } from "@/lib/hooks/api-hooks/use-daily-log";
-import { endOfWeek, startOfWeek } from "date-fns";
+import { endOfWeek, format, startOfWeek } from "date-fns";
 
 import React from "react";
 import SearchFoodCard from "@/components/cards/search_food_card";
 import { CheckInCard } from "@/components/cards/check_in_card";
 import JournalMealCard from "@/components/cards/journal_meal_cards/journal_meal_card";
+import { tz } from "@date-fns/tz/tz";
+import { useAuth } from "@/lib/hooks/useAuthProvider";
 
 export default function CalorieCalculatorPage() {
+    const {user} = useAuth();
+    const timeZone = user?.profile?.timezone || "UTC";
+    
     // States for week picker
     const [selected_date, setSelectedDate] = React.useState(new Date());
     const [week_start, setWeekStart] = React.useState(startOfWeek(selected_date, { weekStartsOn: 0 }));
@@ -22,7 +27,9 @@ export default function CalorieCalculatorPage() {
         endDate: week_end,
         status: "daily_checkins",
     });
-    const day_status_array = day_status_data.map(status => status.date);
+    const day_statuses_array = day_status_data.map(log => {
+        return format(log.date, "yyyy-MM-dd", { in: tz(timeZone) })
+    });
 
     return (
         <>
@@ -36,7 +43,7 @@ export default function CalorieCalculatorPage() {
                             setWeekEnd(end_week);
                         }}
                         weekStartsOn={0}
-                        day_statuses={day_status_array}
+                        day_statuses={day_statuses_array}
                     />
                     <CheckInCard date={selected_date} />
                 </div>

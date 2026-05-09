@@ -11,8 +11,13 @@ import { QuickActionsCard } from "@/components/cards/quick_actions_card";
 import { NutrientGapCard } from "@/components/cards/nutrient_gap_card";
 import { MealsCard } from "@/components/cards/meal_cards/meals_cards";
 import { CheckInCard } from "@/components/cards/check_in_card";
+import { tz } from "@date-fns/tz";
+import { useAuth } from "@/lib/hooks/useAuthProvider";
 
 export default function DailyLogPage() {
+    const {user} = useAuth();
+    const timeZone = user?.profile?.timezone || "UTC";
+    
     const [selected_date, setSelectedDate] = React.useState(new Date());
     const [week_start, setWeekStart] = React.useState(startOfWeek(selected_date as Date, { weekStartsOn: 0 }));
     const [week_end, setWeekEnd] = React.useState(endOfWeek(selected_date, { weekStartsOn: 0 }));
@@ -20,7 +25,7 @@ export default function DailyLogPage() {
     const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs({ startDate: week_start });
 
     const day_statuses = daily_logs.map(log => {
-        return format(log.date, "yyyy-MM-dd")
+        return format(log.date, "yyyy-MM-dd", {in: tz(timeZone) })
     });
 
     return (
