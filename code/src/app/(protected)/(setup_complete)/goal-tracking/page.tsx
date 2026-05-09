@@ -242,7 +242,7 @@ export default function GoalTrackingPage() {
                     </div>
                 </CardContent>
             </Card>
-        <div className="mt-5 grid grid-cols-2 gap-3 w-fit">
+        <div className="mt-5 grid grid-cols-2 gap-3 w-full">
             <StressCard time='all' />
             <EnergyCard time='all' />
         </div>
