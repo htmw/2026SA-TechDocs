@@ -17,6 +17,7 @@ class RecommendationRequest(BaseModel):
 class HungerRequest(BaseModel):
     hungerLevel: str
     topN: int = 5
+    maxCalories: Optional[int] = None
 
 @app.get("/")
 def home():
@@ -78,7 +79,8 @@ def recommend_hunger(data: HungerRequest):
         user_input=user_query,
         df=recipe_df,
         tfidf=tfidf,
-        top_n=data.topN
+        top_n=data.topN,
+        max_calories=data.maxCalories
     )
 
     return {
