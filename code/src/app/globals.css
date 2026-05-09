@@ -123,14 +123,6 @@
         @apply border-border outline-ring/50;
     }
 
-    body {
-        @apply bg-background text-foreground;
-    }
-    select {
-        color: white;
-        background-color: #0a0a0a;
-    }
-
     details > div {
         background-color: #0a0a0a;
         color: #0a0a0a;

@@ -6,6 +6,7 @@ import {
     useContext,
     useState,
     ReactNode,
+    useEffect,
 } from "react";
 
 type AuthContextValue = AuthState & {
@@ -22,6 +23,10 @@ export function AuthProvider({
     initialValue: AuthState;
 }) {
     const [state, setState] = useState<AuthState>(initialValue);
+
+    useEffect(() => {
+        setState(initialValue);
+    }, [initialValue]);
 
     const value: AuthContextValue = {
         ...state,

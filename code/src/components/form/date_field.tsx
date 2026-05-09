@@ -26,6 +26,14 @@ export function DateField({
     const [date, setDate] = React.useState<Date | undefined>(undefined)
 
     const field = useFieldContext<string>();
+    React.useEffect(() => {
+        if (field.state.value) {
+            const parsed = new Date(field.state.value)
+            setDate(!Number.isNaN(parsed.getTime()) ? parsed : undefined)
+        } else {
+            setDate(undefined)
+        }
+    }, [field.state.value])
     const form = useFormContext();
     const [isFocused, setIsFocused] = React.useState(false);
     const showError =
@@ -66,6 +74,7 @@ export function DateField({
                             captionLayout="dropdown"
                             onSelect={(date) => {
                                 setDate(date)
+                                field.handleChange(date?.toISOString() || "")
                                 setOpen(false)
                             }}
                         />

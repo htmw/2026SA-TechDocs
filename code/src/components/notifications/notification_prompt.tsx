@@ -88,7 +88,7 @@ export default function NotificationPrompt() {
     return (
         <div className="space-y-4">
             {showMealReminder ? (
-                <Card className="border-emerald-500 bg-emerald-50 text-emerald-900">
+                <Card className="border-emerald-500 bg-emerald-50 text-emerald-900 m-6 mb-0">
                     <CardHeader>
                         <CardTitle>Meal reminder</CardTitle>
                         <CardDescription>{mealReminder?.message}</CardDescription>
