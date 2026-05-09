@@ -8,6 +8,7 @@ import { useAppForm } from "@/components/form/form"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/hooks/useAuthProvider"
+import { useRouter } from "next/navigation"
 
 type GoalValue = keyof typeof goalEnum.map | ""
 
@@ -56,12 +57,13 @@ export default function ProfilePage() {
     const { user } = useAuth();
     const profile = user!.profile;
 
-    const [goal, setGoal] = useState<GoalValue>("")
+    const router = useRouter();
+
     const [bmi, setBmi] = useState("")
     const [energyScore, setEnergyScore] = useState(0)
     const [errorMessage, setErrorMessage] = useState("")
     const [successMessage, setSuccessMessage] = useState("")
-    
+
     const form = useAppForm({
         defaultValues: {
             name: user!.name ?? "",
@@ -71,7 +73,6 @@ export default function ProfilePage() {
             occupation: profile.occupation ?? "",
             fitness_level: profile.fitness_level ?? "",
             hobbies: profile.hobbies ?? [],
-            goals: profile.goals ?? [],
             avg_calories: profile.avg_calories ?? "",
             current_energy: profile.current_energy ?? "",
             gender: profile.gender ?? "",
@@ -97,7 +98,6 @@ export default function ProfilePage() {
                         occupation: value.occupation,
                         fitness_level: value.fitness_level,
                         hobbies: value.hobbies,
-                        goals: goal ? [goal] : [],
                         avg_calories: value.avg_calories,
                         current_energy: value.current_energy,
                         gender: value.gender,
@@ -117,48 +117,11 @@ export default function ProfilePage() {
                 }
 
                 setSuccessMessage("Profile saved successfully.")
+
+                router.refresh();
             },
         },
     })
-
-    const values = form.state.values as ProfileForm
-    
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const response = await fetch("/api/profile")
-                const data = await response.json()
-
-                if (!response.ok || !data.data?.user) {
-                    throw new Error("Failed to load profile.")
-                }
-
-                const profile = data.data.user.profile || {}
-                const dob = profile.dob ? new Date(profile.dob) : new Date()
-                const loadedGoal = profile.goals?.[0] ?? ""
-
-                form.setFieldValue("name", data.data.user.name ?? "")
-                form.setFieldValue("dob", dob)
-                form.setFieldValue("height", profile.height ?? "")
-                form.setFieldValue("weight", profile.weight ?? "")
-                form.setFieldValue("occupation", profile.occupation ?? "")
-                form.setFieldValue("fitness_level", profile.fitness_level ?? "")
-                form.setFieldValue("hobbies", profile.hobbies ?? [])
-                form.setFieldValue("avg_calories", profile.avg_calories ?? "")
-                form.setFieldValue("current_energy", profile.current_energy ?? "")
-                form.setFieldValue("gender", profile.gender ?? "")
-                form.setFieldValue("avg_sleep", profile.avg_sleep ?? "")
-                form.setFieldValue("diet_restrictions", profile.diet_restrictions ?? [])
-                form.setFieldValue("medical_history", profile.medical_history ?? [])
-                setGoal(loadedGoal)
-            } catch (error) {
-                console.error("Failed to load profile:", error)
-                setErrorMessage("Failed to load profile.")
-            }
-        }
-
-        fetchProfile()
-    }, [form])
 
     useEffect(() => {
         const height = Number(profile.height)
@@ -171,24 +134,24 @@ export default function ProfilePage() {
 
         const bmiValue = (weight * 703) / (height * height)
         setBmi(bmiValue.toFixed(1))
-    }, [values.height, values.weight])
+    }, [profile.height, profile.weight])
 
     useEffect(() => {
         let score = 0
 
-        if (values.avg_sleep === "7-9") score += 40
-        else if (values.avg_sleep === "5-7") score += 25
-        else if (values.avg_sleep) score += 10
+        if (profile.avg_sleep === "7-9") score += 40
+        else if (profile.avg_sleep === "5-7") score += 25
+        else if (profile.avg_sleep) score += 10
 
-        if (values.current_energy === "high") score += 40
-        else if (values.current_energy === "medium") score += 25
-        else if (values.current_energy === "low") score += 10
+        if (profile.current_energy === "high") score += 40
+        else if (profile.current_energy === "medium") score += 25
+        else if (profile.current_energy === "low") score += 10
 
-        if (values.fitness_level === "Active") score += 20
-        else if (values.fitness_level === "Moderate") score += 10
+        if (profile.fitness_level === "active") score += 20
+        else if (profile.fitness_level === "moderate") score += 10
 
         setEnergyScore(score)
-    }, [values.avg_sleep, values.current_energy, values.fitness_level])
+    }, [profile.avg_sleep, profile.current_energy, profile.fitness_level])
 
     function getBMICategory(bmiValue: number) {
         if (bmiValue < 18.5) return "Underweight"
@@ -407,7 +370,7 @@ export default function ProfilePage() {
                             </CardContent>
                         </Card>
 
-                        <GoalSummary goal={goal} bmi={bmi} />
+                        <GoalSummary goal={(profile.goals?.[0] ?? "") as GoalValue} bmi={bmi} />
                     </div>
                 </div>
             </div>

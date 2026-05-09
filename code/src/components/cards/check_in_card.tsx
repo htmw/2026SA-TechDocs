@@ -17,6 +17,15 @@ export function CheckInCard({ date }: { date: Date }) {
     const createDailyLog = useCreateDailyLog();
     const [checkInOpen, setCheckInOpen] = React.useState(false);
 
+    const isToday = (date: Date): boolean => {
+        const today = new Date();
+        return (
+            date.getFullYear() === today.getFullYear() &&
+            date.getMonth() === today.getMonth() &&
+            date.getDate() === today.getDate()
+        );
+    };
+
     const handleSubmit = async (value: CheckInDialogFormValues) => {
         const payload = {
             date: date.toISOString(),
@@ -30,6 +39,18 @@ export function CheckInCard({ date }: { date: Date }) {
         try {
             await createDailyLog.mutateAsync(payload);
             setCheckInOpen(false);
+            if (isToday(date)) {
+                const response = await fetch("/api/profile", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        weight: value.morning_weight,
+                    }),
+                })
+                if (!response.ok) console.log("Failed to save weight to profile");
+        }
             toast.success("Checked in for today!");
         } catch (err) {
             toast.error("Unable to complete check-in. Please try again.");
