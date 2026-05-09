@@ -2,15 +2,21 @@
 
 import { NutritionSummaryCard } from "@/components/cards/macro_card";
 import { SingleWeekPicker } from "@/components/cards/single_week_picker";
-import { useDailyLogStatus } from "@/lib/hooks/api-hooks/use-daily-log";
-import { endOfWeek, startOfWeek } from "date-fns";
+import { useDailyLogs, useDailyLogStatus } from "@/lib/hooks/api-hooks/use-daily-log";
+import { endOfWeek, format, startOfWeek } from "date-fns";
 
 import React from "react";
 import SearchFoodCard from "@/components/cards/search_food_card";
 import { CheckInCard } from "@/components/cards/check_in_card";
 import JournalMealCard from "@/components/cards/journal_meal_cards/journal_meal_card";
+import { tz } from "@date-fns/tz/tz";
+import { useAuth } from "@/lib/hooks/useAuthProvider";
+import { TZDate } from "react-day-picker";
 
 export default function CalorieCalculatorPage() {
+    const { user } = useAuth();
+    const timeZone = user?.profile?.timezone || "UTC";
+
     // States for week picker
     const [selected_date, setSelectedDate] = React.useState(new Date());
     const [week_start, setWeekStart] = React.useState(startOfWeek(selected_date, { weekStartsOn: 0 }));
@@ -22,25 +28,33 @@ export default function CalorieCalculatorPage() {
         endDate: week_end,
         status: "daily_checkins",
     });
-    const day_status_array = day_status_data.map(status => status.date);
+    const day_statuses_array = day_status_data.map(log => {
+        return log.date;
+    });
 
     return (
         <>
             <div className="gap-5 p-6 grid grid-cols-1">
-                <SingleWeekPicker
-                    value={selected_date}
-                    onChange={(date, start_week, end_week) => {
-                        setSelectedDate(date);
-                        setWeekStart(start_week);
-                        setWeekEnd(end_week);
-                    }}
-                    weekStartsOn={0}
-                    day_statuses={day_status_array}
-                />
-                <CheckInCard date={selected_date} />
-                <NutritionSummaryCard date={selected_date} />
-                <SearchFoodCard date={selected_date} />
-                <JournalMealCard date={selected_date} />
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                    <SingleWeekPicker
+                        value={selected_date}
+                        onChange={(date, start_week, end_week) => {
+                            setSelectedDate(date);
+                            setWeekStart(start_week);
+                            setWeekEnd(end_week);
+                        }}
+                        weekStartsOn={0}
+                        day_statuses={day_statuses_array}
+                    />
+                    <CheckInCard date={selected_date} />
+                </div>
+                <div className="col-span-2">
+                    <NutritionSummaryCard date={selected_date} />
+                </div>
+                <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                    <SearchFoodCard date={selected_date} />
+                    <JournalMealCard date={selected_date} />
+                </div>
             </div>
         </>
     );

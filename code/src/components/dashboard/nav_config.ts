@@ -1,4 +1,4 @@
-import { ClipboardList, Calendar, LayoutDashboard, LucideIcon, CircleUser, MessageCircle, Flag, Utensils, Candy, Settings } from "lucide-react";
+import { ClipboardList, Calendar, BowArrow, LayoutDashboard, LucideIcon, CircleUser, MessageCircle, Flag, Utensils, Candy, Settings } from "lucide-react";
 
 export type NavItem = { title: string; url: string; icon: LucideIcon };
 
@@ -29,9 +29,14 @@ export const navMainItems: NavItem[] = [
         icon: Candy,
     },
     {
-        title: "Goals",
+        title: "Set Goals",
         url: "/goals",
         icon: Flag,
+    },
+    {
+        title: "Goal Tracking",
+        url: "/goal-tracking",
+        icon: BowArrow,
     },
     {
         title: "Chat",
