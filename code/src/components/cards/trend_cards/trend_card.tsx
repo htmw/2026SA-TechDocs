@@ -34,7 +34,7 @@ export function TrendCard() {
                     />
                     <TrendNotificationCard
                         trend_text={sleep_trend_text}
-                        label={sleep_trend_status ? "warning" : "info"}
+                        label={sleep_trend_status ? "info" : "warning"}
                     />
                 </CardContent>
             </Card>
