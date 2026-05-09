@@ -17,12 +17,11 @@ export function NutrientGapCard({ date }: { date: Date }) {
     const [guidelines, setGuidelines] = useState<NutrientGuidelines | null>(null);
 
     useEffect(() => {
-        const fetch = async () => {
-            const result = await calculateDietaryGuidelines(user?.profile, user?.profile?.goals);
-            setGuidelines(result);
-        };
-        if (user?.profile) fetch();
-    }, [user]);
+        const goals = user?.profile?.goals ?? [];
+        const result = calculateDietaryGuidelines(goals, user?.profile);
+        
+        setGuidelines(result);
+    }, []);
 
     const combined_meals: NutritionItem[] = meals.map(m => ({
         id: m._id?.toString() || "",

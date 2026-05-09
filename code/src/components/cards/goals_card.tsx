@@ -15,7 +15,7 @@ export function GoalsCard({ goals, goal }: { goals: UserGoals; goal: string }) {
     ];
 
     return (
-        <div className="w-xl space-y-3">
+        <div className="space-y-3 mx-auto">
             <Card className="p-5">
                 <div className="flex items-center justify-between mb-1">
                     <p className="text-sm text-muted-foreground">Your New Targets</p>

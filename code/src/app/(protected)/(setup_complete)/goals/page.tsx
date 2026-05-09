@@ -8,12 +8,8 @@ import { goal, Goal, goal_focus } from "@/lib/enums"
 import { GoalsCard } from "@/components/cards/goals_card"
 import { useAuth } from "@/lib/hooks/useAuthProvider"
 import { calculateGoals, UserGoals } from "@/services/goal-calculation-service"
-
-type Profile = {
-    height: number
-    weight: number
-    goals?: string[]
-}
+import { useRouter } from "next/navigation"
+import { calculateBmi } from "@/services/bmi-service"
 
 type Timeline = "slow" | "moderate" | "aggressive"
 
@@ -36,18 +32,19 @@ const GoalSchema = z.object({
 })
 
 export default function GoalsPage() {
-    const { user } = useAuth()
+    const { user } = useAuth();
+    const profile = user!.profile;
 
+    const router = useRouter();
     const [saved, setSaved] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
-    const [profile, setProfile] = useState<Profile | null>(null)
     const [calc, setCalc] = useState<UserGoals | null>(null);
 
     const form = useAppForm({
         defaultValues: {
-            goal: "",
-            targetWeight: "",
-            timeline: "",
+            goal: profile.goals?.[0] ?? "",
+            targetWeight: profile.goals?.[1] ?? "",
+            timeline: profile.goals?.[2] ?? "",
         },
         validators: {
             onBlur: GoalSchema,
@@ -70,7 +67,7 @@ export default function GoalsPage() {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        goals: [value.goal, value.timeline],
+                        goals: [value.goal, value.targetWeight, value.timeline],
                     }),
                 })
 
@@ -82,53 +79,24 @@ export default function GoalsPage() {
                     return message
                 }
 
-                setProfile((previousProfile) =>
-                    previousProfile
-                        ? {
-                            ...previousProfile,
-                            goals: [value.goal],
-                        }
-                        : previousProfile
-                )
-                const calc = await calculateGoals(user?.profile, [value.goal, value.timeline])
+                const calc = calculateGoals(user?.profile, [value.goal, value.targetWeight, value.timeline])
                 setCalc(calc)
                 setSaved(true)
+
+                router.refresh();
             },
         },
     })
 
-    // Loads saved profile data.
     useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const response = await fetch("/api/profile")
-                const data = await response.json()
-
-                if (!response.ok) {
-                    throw new Error("Failed to load profile.")
-                }
-
-                const profileData = data.data?.user?.profile
-
-                setProfile(profileData)
-                form.setFieldValue("goal", profileData?.goals?.[0] ?? "")
-            } catch (error) {
-                console.error("Failed to load profile", error)
-                setErrorMessage("Failed to load profile.")
-            }
-        }
-
-        fetchProfile()
-    }, [form])
+        const calc = calculateGoals(user?.profile, user?.profile.goals)
+        setCalc(calc)
+    }, [])
 
     // Calculates BMI from profile.
     const calculateBMI = () => {
         if (!profile?.height || !profile?.weight) return null
-
-        const h = Number(profile.height)
-        const w = Number(profile.weight)
-
-        return ((w * 703) / (h * h)).toFixed(1)
+        return calculateBmi(profile.weight, profile.height);
     }
 
     const weightDifference = () => {
@@ -150,7 +118,7 @@ export default function GoalsPage() {
         ? goal_focus.map[values.goal as keyof typeof goal_focus.map] ?? "Balanced Intake"
         : undefined
 
-    const bmi = calculateBMI()
+    const bmi = calculateBMI();
     const diff = weightDifference()
 
     return (
@@ -234,9 +202,6 @@ export default function GoalsPage() {
                                     </div>
                                 )}
                             </div>
-                            {saved && (
-                                <GoalsCard goals={calc!} goal={values.goal} />
-                            )}
                         </CardContent>
                         <CardFooter className="flex flex-col gap-2">
                             <form.SubmitButton label="Save Goal" />
@@ -250,6 +215,11 @@ export default function GoalsPage() {
                     </form.AppForm>
                 </Card>
             </form>
+            <div className="m-6">
+                {calc && values.goal && (
+                    <GoalsCard goals={calc!} goal={values.goal} />
+                )}
+            </div>
         </div>
     )
 }

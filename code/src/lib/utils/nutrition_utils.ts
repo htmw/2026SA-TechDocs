@@ -1,6 +1,6 @@
 import { calculateGoals } from "@/services/goal-calculation-service";
 import { NutritionItem } from "../zod_schemas/nutrition_schema";
-import { IUserProfile } from "../types/mongo_user_types";
+import { ClientUserProfile } from "../types/mongo_user_types";
 
 export type NutrientGuidelines = {
     calories: number;
@@ -21,7 +21,7 @@ export type NutrientGap = {
 };
 
 // Simplistic guideline generation based on generic goals
-export async function calculateDietaryGuidelines(profile?: any, goals?: string[]): Promise<NutrientGuidelines> {
+export function calculateDietaryGuidelines(goals: string[], profile?: ClientUserProfile): NutrientGuidelines {
     // defaults
     /*
     let calories = 2000;
@@ -38,7 +38,7 @@ export async function calculateDietaryGuidelines(profile?: any, goals?: string[]
         carbs: Math.round((calories * 0.45) / 4), // 45% from carbs
     };
     */
-    const targets = await calculateGoals(profile, goals);
+    const targets = calculateGoals(profile, goals);
     const calories = targets.calorieIntake
     return {
         calories,
