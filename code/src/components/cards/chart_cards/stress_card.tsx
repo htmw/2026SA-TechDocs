@@ -51,9 +51,9 @@ function toFrequencyData(stress_data: StressData[]) {
 }
 
 
-export function StressCard() {
+export function StressCard({ time }: { time: string }) {
     const { data: daily_logs = [], isLoading: loading_daily_logs } = useDailyLogs({
-        limit: 7,
+        limit: time == 'all' ? undefined : 7,
         sortDir: "desc",
     });
 
@@ -69,7 +69,7 @@ export function StressCard() {
             <CardHeader>
                 <CardTitle>Stress</CardTitle>
                 <CardDescription>
-                    Showing stress breakdown for the last 7 days
+                    Showing stress breakdown {time == 'all' ? ' over NutriAI journey' : ' for the last 7 days'}
                 </CardDescription>
             </CardHeader>
             <CardContent>
@@ -94,7 +94,7 @@ export function StressCard() {
                             />
                             <YAxis
                                 allowDecimals={false}
-                                domain={[0, 7]}
+                                domain={[0, time == 'all' ?  data.length : 7]}
                                 tickFormatter={(v) => `${v} days`}
                                 tickMargin={12}
                             />

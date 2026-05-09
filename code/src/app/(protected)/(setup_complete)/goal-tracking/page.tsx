@@ -10,6 +10,8 @@ import { useAuth } from "@/lib/hooks/useAuthProvider"
 import { calculateGoals } from "@/services/goal-calculation-service"
 import { IDailyLog } from "@/lib/types/mongo_daily_log_types"
 import { IUserProfile } from "@/lib/types/mongo_user_types"
+import { StressCard } from "@/components/cards/chart_cards/stress_card"
+import { EnergyCard } from "@/components/cards/chart_cards/energy_card"
 
 interface DailyGoalResult {
     date: Date;
@@ -240,6 +242,10 @@ export default function GoalTrackingPage() {
                     </div>
                 </CardContent>
             </Card>
+        <div className="mt-5 grid grid-cols-2 gap-3 w-fit">
+            <StressCard time='all' />
+            <EnergyCard time='all' />
+        </div>
         </div>
     );
 }
